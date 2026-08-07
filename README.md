@@ -1,6 +1,6 @@
 # when-again
 
-*"When was my appointment again?"*
+_"When was my appointment again?"_
 
 when-again is a free, open-source appointment reminder for small service
 providers and their clients. It replaces the paper notebook of a hairdresser
