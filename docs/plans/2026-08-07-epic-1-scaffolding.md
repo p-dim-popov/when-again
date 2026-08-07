@@ -544,12 +544,12 @@ export default defineConfig({
 - [ ] **Step 5: Add icon links to index.html `<head>`**
 
 ```html
-<link rel="icon" href="favicon.ico" sizes="48x48" />
-<link rel="icon" href="logo.svg" type="image/svg+xml" />
-<link rel="apple-touch-icon" href="apple-touch-icon-180x180.png" />
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
+<link rel="icon" href="/logo.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
 ```
 
-(Relative hrefs — Vite rewrites them against `base`. If Step 3 produced different file names, match them here and in the manifest.)
+(Root-relative hrefs (leading slash) — Vite rewrites those against `base`; bare-relative hrefs would resolve against the current route and 404 on deep links. If Step 3 produced different file names, match them here and in the manifest.)
 
 - [ ] **Step 6: Verify the build emits the PWA artifacts**
 
