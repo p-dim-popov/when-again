@@ -53,6 +53,36 @@ the settings.
 - **Privacy:** No analytics. No network calls after the app loads. The URL
   fragment mechanism (see Handoff) keeps appointment data off the wire.
 
+## Code structure
+
+The codebase is a modulith. Every piece of code belongs to exactly one
+module under `src/modules/`. There is no shared or utils folder.
+
+- `src/app/` only assembles the application: entry point, router assembly,
+  service-worker registration, global styles. No module imports `app`.
+- Each module exposes a public API through its `index.ts`. Cross-module
+  imports go through that file only, never into module internals.
+- Modules can import other modules, but the dependency graph must stay
+  acyclic. Entity modules (`appointments`, `clients`, `settings`) sit low.
+  UI modules (`booking`, `share`, `visits`) sit high. `db`, `i18n`, and
+  `time` are leaves.
+- A widget lives in the module that needs it first. Promote it to a `ui`
+  module only when a second consumer appears.
+
+| Module | Owns |
+|---|---|
+| `db` | IndexedDB connection, versioning, migration runner |
+| `appointments` | Appointment type, object store, queries, status rules |
+| `clients` | Client type, object store, queries, visit-history derivation |
+| `settings` | Provider profile, service presets, language, mode |
+| `i18n` | Language bundles, `t()`, detection, switching |
+| `time` | Wall-clock + timezone-name rules, countdown |
+| `booking` | Provider UI: schedule and edit screens |
+| `share` | Handoff: payload codec, QR, share and import screens |
+| `visits` | Client-mode UI: next-visit card, past visits, saved providers |
+| `calendar` | .ics generation (UID, SEQUENCE, CANCEL) |
+| `backup` | Export, import, staleness reminder |
+
 ## Data model (provider)
 
 | Store | Fields |

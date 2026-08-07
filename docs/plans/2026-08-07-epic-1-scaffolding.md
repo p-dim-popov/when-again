@@ -4,7 +4,7 @@
 
 **Goal:** An empty but real when-again app that installs to a phone home screen, loads offline, and auto-deploys from `main` to https://p-dim-popov.github.io/when-again/.
 
-**Architecture:** Plain Vite SPA (no SSR, no server — ever). React renders a placeholder Home screen behind TanStack Router (code-based routes). vite-plugin-pwa provides the service worker (app-shell precache) and web manifest. GitHub Actions runs CI on every push/PR and deploys `dist/` to GitHub Pages from `main` with zero external secrets.
+**Architecture:** Plain Vite SPA (no SSR, no server — ever), structured as a modulith: `src/app/` is the composition root (entry, router assembly, global css; nothing imports it), and all feature code lives in self-contained modules under `src/modules/<name>/` with an `index.ts` public API. Epic 1 creates `app/` plus the placeholder `home` module. vite-plugin-pwa provides the service worker (app-shell precache) and web manifest. GitHub Actions runs CI on every push/PR and deploys `dist/` to GitHub Pages from `main` with zero external secrets.
 
 **Tech Stack:** TypeScript, React 19, Vite, @tanstack/react-router, vite-plugin-pwa, Vitest, Playwright, ESLint (flat config) + Prettier, npm, GitHub Actions, GitHub Pages.
 
@@ -18,18 +18,19 @@
 - Working branch: create `epic-1-scaffolding` off `main`; commit per task; do NOT push to `main` directly until the finishing flow.
 - Commit messages: no Claude session links. "Generated with Claude Code"/Co-Authored-By attribution is fine.
 - User-facing UI strings are minimal placeholders in English for now (i18n is epic 2). Keep them in STE style: short, active, plain.
+- Modulith rules: cross-module imports only via `modules/<name>/index.ts`; no dependency cycles between modules; nothing imports `src/app/`.
 
 ---
 
 ### Task 1: Vite + React + TypeScript scaffold
 
 **Files:**
-- Create: `package.json`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, `vite.config.ts`, `index.html`, `.gitignore`, `src/main.tsx`, `src/screens/Home.tsx`, `src/index.css`
+- Create: `package.json`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, `vite.config.ts`, `index.html`, `.gitignore`, `src/app/main.tsx`, `src/app/index.css`, `src/modules/home/HomeScreen.tsx`, `src/modules/home/index.ts`
 - Test: none yet (build is the verification)
 
 **Interfaces:**
 - Consumes: nothing (first task).
-- Produces: npm scripts `dev`, `build`, `preview`, `typecheck`; `src/screens/Home.tsx` exporting `function Home(): JSX.Element` (named export); Vite `base` resolved from `BASE_PATH` env with default `/when-again/`.
+- Produces: npm scripts `dev`, `build`, `preview`, `typecheck`; the `home` module exporting `HomeScreen` via `src/modules/home/index.ts`; Vite `base` resolved from `BASE_PATH` env with default `/when-again/`.
 
 - [ ] **Step 1: Create branch**
 
@@ -151,12 +152,12 @@ export default defineConfig({
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/app/main.tsx"></script>
   </body>
 </html>
 ```
 
-- [ ] **Step 9: Write src/index.css**
+- [ ] **Step 9: Write src/app/index.css**
 
 ```css
 :root {
@@ -177,10 +178,12 @@ main {
 }
 ```
 
-- [ ] **Step 10: Write src/screens/Home.tsx**
+- [ ] **Step 10: Write the home module**
+
+`src/modules/home/HomeScreen.tsx`:
 
 ```tsx
-export function Home() {
+export function HomeScreen() {
   return (
     <main>
       <h1>when-again</h1>
@@ -190,17 +193,23 @@ export function Home() {
 }
 ```
 
-- [ ] **Step 11: Write src/main.tsx**
+`src/modules/home/index.ts`:
+
+```ts
+export { HomeScreen } from './HomeScreen';
+```
+
+- [ ] **Step 11: Write src/app/main.tsx**
 
 ```tsx
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Home } from './screens/Home';
+import { HomeScreen } from '../modules/home';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Home />
+    <HomeScreen />
   </StrictMode>,
 );
 ```
@@ -357,12 +366,12 @@ git add -A && git commit -m "chore: wire up Vitest (no unit-testable logic in ep
 ### Task 4: TanStack Router
 
 **Files:**
-- Create: `src/router.tsx`
-- Modify: `src/main.tsx`
+- Create: `src/app/router.tsx`
+- Modify: `src/app/main.tsx`
 
 **Interfaces:**
-- Consumes: `Home` from `src/screens/Home.tsx` (Task 1), `import.meta.env.BASE_URL` (from Vite's `base` config, Task 1).
-- Produces: `router` export from `src/router.tsx`; the route tree with `/` → Home. Future epics add routes here.
+- Consumes: `HomeScreen` from the `home` module (Task 1), `import.meta.env.BASE_URL` (from Vite's `base` config, Task 1).
+- Produces: `router` export from `src/app/router.tsx`; the route tree with `/` → HomeScreen. Future modules contribute their routes here.
 
 - [ ] **Step 1: Install**
 
@@ -370,11 +379,11 @@ git add -A && git commit -m "chore: wire up Vitest (no unit-testable logic in ep
 npm install @tanstack/react-router
 ```
 
-- [ ] **Step 2: Write src/router.tsx**
+- [ ] **Step 2: Write src/app/router.tsx**
 
 ```tsx
 import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
-import { Home } from './screens/Home';
+import { HomeScreen } from '../modules/home';
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -383,7 +392,7 @@ const rootRoute = createRootRoute({
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: Home,
+  component: HomeScreen,
 });
 
 const routeTree = rootRoute.addChildren([homeRoute]);
@@ -400,7 +409,7 @@ declare module '@tanstack/react-router' {
 }
 ```
 
-- [ ] **Step 3: Modify src/main.tsx to use the router**
+- [ ] **Step 3: Modify src/app/main.tsx to use the router**
 
 ```tsx
 import { StrictMode } from 'react';
@@ -764,5 +773,6 @@ On an Android phone: open https://p-dim-popov.github.io/when-again/ in Chrome �
 
 - Spec coverage: this plan covers only epic #1 (scaffolding & deployment) — Architecture bullets "Stack", "Hosting", "Offline" from the spec. Storage/i18n/handoff are later epics by design.
 - The epic's "done when" maps to: installs (Task 5 + 8.6), loads offline (Task 5 + 8.6), auto-deploys from main (Task 8).
-- Type consistency: `Home` named export defined in Task 1, consumed in Tasks 1/4/6. Base path flows exclusively through Vite `base` → `import.meta.env.BASE_URL` → router `basepath`; no custom wrapper (rejected as over-engineering — the platform config is the single source of truth).
+- Type consistency: `HomeScreen` exported via `modules/home/index.ts` in Task 1, consumed in Tasks 1/4 (Task 6 asserts only the heading text). Base path flows exclusively through Vite `base` → `import.meta.env.BASE_URL` → router `basepath`; no custom wrapper (rejected as over-engineering — the platform config is the single source of truth).
+- Modulith conformance: epic 1 ships `app/` + one module (`home`); the spec's Code structure section defines where every later epic lands.
 - Icon file names from the assets generator are verified against `ls public/` in Task 5 Step 3 before being referenced (Step 5 note handles drift).
