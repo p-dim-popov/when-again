@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - Package manager: **npm** (commit `package-lock.json`; CI uses `npm ci`).
-- Base path: `/when-again/` by default, overridable via `BASE_PATH` env var at build time (future custom domain = config change only). Never hardcode the base in app code — use `import.meta.env.BASE_URL` (exposed via `src/lib/basePath.ts`).
+- Base path: `/when-again/` by default, overridable via `BASE_PATH` env var at build time (future custom domain = config change only). Never hardcode the base in app code — the single source of truth is `base` in `vite.config.ts`; app code reads `import.meta.env.BASE_URL` directly (Vite guarantees it ends with `/`).
 - No server code, no analytics, no external network calls at runtime.
 - TypeScript `strict` everywhere.
 - Repo root IS the app root (`~/Projects/when-again` — package.json sits next to README.md, docs/ stays as is).
@@ -310,16 +310,15 @@ git add -A && git commit -m "chore: add ESLint (flat config) and Prettier"
 
 ---
 
-### Task 3: Vitest + base-path helper (TDD)
+### Task 3: Vitest wiring
 
 **Files:**
-- Create: `vitest.config.ts`, `src/lib/basePath.ts`
-- Test: `src/lib/basePath.test.ts`
+- Create: `vitest.config.ts`
 - Modify: `package.json` (script)
 
 **Interfaces:**
-- Consumes: nothing from the app yet (pure module).
-- Produces: `joinBase(base: string, path: string): string` and `withBase(path: string): string` plus `BASE_PATH: string` (= `import.meta.env.BASE_URL`) from `src/lib/basePath.ts`; npm script `test`. Task 4 uses `BASE_PATH` for the router basepath.
+- Consumes: nothing from the app.
+- Produces: npm script `test`. Epic 1 has no unit-testable logic — `passWithNoTests` keeps the CI stage honest until the first real pure modules arrive (payload codec and .ics generator in later epics), which drop straight into `src/**/*.test.ts`.
 
 - [ ] **Step 1: Install and configure Vitest**
 
@@ -335,70 +334,22 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['src/**/*.test.ts'],
+    passWithNoTests: true,
   },
 });
 ```
 
 Add to `package.json` scripts: `"test": "vitest"`.
 
-- [ ] **Step 2: Write the failing test**
-
-`src/lib/basePath.test.ts`:
-
-```ts
-import { describe, expect, it } from 'vitest';
-import { joinBase } from './basePath';
-
-describe('joinBase', () => {
-  it('joins a base with trailing slash and a path with leading slash', () => {
-    expect(joinBase('/when-again/', '/settings')).toBe('/when-again/settings');
-  });
-
-  it('joins a base without trailing slash and a bare path', () => {
-    expect(joinBase('/when-again', 'settings')).toBe('/when-again/settings');
-  });
-
-  it('handles the root base for a future custom domain', () => {
-    expect(joinBase('/', '/settings')).toBe('/settings');
-  });
-
-  it('returns the base itself for an empty path', () => {
-    expect(joinBase('/when-again/', '')).toBe('/when-again/');
-  });
-});
-```
-
-- [ ] **Step 3: Run test to verify it fails**
+- [ ] **Step 2: Verify**
 
 Run: `npm test -- --run`
-Expected: FAIL — cannot resolve `./basePath`.
+Expected: exits 0 with "no test files found" (passWithNoTests).
 
-- [ ] **Step 4: Write minimal implementation**
-
-`src/lib/basePath.ts`:
-
-```ts
-export const BASE_PATH = import.meta.env.BASE_URL;
-
-export function joinBase(base: string, path: string): string {
-  const withSlash = base.endsWith('/') ? base : `${base}/`;
-  return withSlash + path.replace(/^\//, '');
-}
-
-export function withBase(path: string): string {
-  return joinBase(BASE_PATH, path);
-}
-```
-
-- [ ] **Step 5: Run tests to verify they pass**
-
-Run: `npm test -- --run`
-Expected: 4 passing.
-
-- [ ] **Step 6: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add -A && git commit -m "feat: add base-path helper with Vitest wiring"
+git add -A && git commit -m "chore: wire up Vitest (no unit-testable logic in epic 1 yet)"
 ```
 
 ---
@@ -410,7 +361,7 @@ git add -A && git commit -m "feat: add base-path helper with Vitest wiring"
 - Modify: `src/main.tsx`
 
 **Interfaces:**
-- Consumes: `Home` from `src/screens/Home.tsx` (Task 1), `BASE_PATH` from `src/lib/basePath.ts` (Task 3).
+- Consumes: `Home` from `src/screens/Home.tsx` (Task 1), `import.meta.env.BASE_URL` (from Vite's `base` config, Task 1).
 - Produces: `router` export from `src/router.tsx`; the route tree with `/` → Home. Future epics add routes here.
 
 - [ ] **Step 1: Install**
@@ -423,7 +374,6 @@ npm install @tanstack/react-router
 
 ```tsx
 import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
-import { BASE_PATH } from './lib/basePath';
 import { Home } from './screens/Home';
 
 const rootRoute = createRootRoute({
@@ -440,7 +390,7 @@ const routeTree = rootRoute.addChildren([homeRoute]);
 
 export const router = createRouter({
   routeTree,
-  basepath: BASE_PATH,
+  basepath: import.meta.env.BASE_URL,
 });
 
 declare module '@tanstack/react-router' {
@@ -814,5 +764,5 @@ On an Android phone: open https://p-dim-popov.github.io/when-again/ in Chrome �
 
 - Spec coverage: this plan covers only epic #1 (scaffolding & deployment) — Architecture bullets "Stack", "Hosting", "Offline" from the spec. Storage/i18n/handoff are later epics by design.
 - The epic's "done when" maps to: installs (Task 5 + 8.6), loads offline (Task 5 + 8.6), auto-deploys from main (Task 8).
-- Type consistency: `joinBase`/`withBase`/`BASE_PATH` defined in Task 3, consumed in Task 4 as named. `Home` named export defined in Task 1, consumed in Tasks 1/4/6.
+- Type consistency: `Home` named export defined in Task 1, consumed in Tasks 1/4/6. Base path flows exclusively through Vite `base` → `import.meta.env.BASE_URL` → router `basepath`; no custom wrapper (rejected as over-engineering — the platform config is the single source of truth).
 - Icon file names from the assets generator are verified against `ls public/` in Task 5 Step 3 before being referenced (Step 5 note handles drift).
