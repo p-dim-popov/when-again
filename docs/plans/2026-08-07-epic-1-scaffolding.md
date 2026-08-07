@@ -25,10 +25,12 @@
 ### Task 1: Vite + React + TypeScript scaffold
 
 **Files:**
+
 - Create: `package.json`, `tsconfig.json`, `tsconfig.app.json`, `tsconfig.node.json`, `vite.config.ts`, `index.html`, `.gitignore`, `src/app/main.tsx`, `src/app/index.css`, `src/modules/home/HomeScreen.tsx`, `src/modules/home/index.ts`
 - Test: none yet (build is the verification)
 
 **Interfaces:**
+
 - Consumes: nothing (first task).
 - Produces: npm scripts `dev`, `build`, `preview`, `typecheck`; the `home` module exporting `HomeScreen` via `src/modules/home/index.ts`; Vite `base` resolved from `BASE_PATH` env with default `/when-again/`.
 
@@ -161,7 +163,12 @@ export default defineConfig({
 
 ```css
 :root {
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   color: #1f2937;
   background: #ffffff;
 }
@@ -246,10 +253,12 @@ git add -A && git commit -m "feat: scaffold Vite + React + TypeScript app with c
 ### Task 2: ESLint + Prettier
 
 **Files:**
+
 - Create: `eslint.config.js`, `.prettierrc.json`, `.prettierignore`
 - Modify: `package.json` (scripts)
 
 **Interfaces:**
+
 - Consumes: Task 1 file layout.
 - Produces: npm scripts `lint`, `format`, `format:check`. All later tasks must keep `npm run lint` green.
 
@@ -322,10 +331,12 @@ git add -A && git commit -m "chore: add ESLint (flat config) and Prettier"
 ### Task 3: Vitest wiring
 
 **Files:**
+
 - Create: `vitest.config.ts`
 - Modify: `package.json` (script)
 
 **Interfaces:**
+
 - Consumes: nothing from the app.
 - Produces: npm script `test`. Epic 1 has no unit-testable logic — `passWithNoTests` keeps the CI stage honest until the first real pure modules arrive (payload codec and .ics generator in later epics), which drop straight into `src/**/*.test.ts`.
 
@@ -366,10 +377,12 @@ git add -A && git commit -m "chore: wire up Vitest (no unit-testable logic in ep
 ### Task 4: TanStack Router
 
 **Files:**
+
 - Create: `src/app/router.tsx`
 - Modify: `src/app/main.tsx`
 
 **Interfaces:**
+
 - Consumes: `HomeScreen` from the `home` module (Task 1), `import.meta.env.BASE_URL` (from Vite's `base` config, Task 1).
 - Produces: `router` export from `src/app/router.tsx`; the route tree with `/` → HomeScreen. Future modules contribute their routes here.
 
@@ -382,7 +395,12 @@ npm install @tanstack/react-router
 - [ ] **Step 2: Write src/app/router.tsx**
 
 ```tsx
-import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/react-router';
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  Outlet,
+} from '@tanstack/react-router';
 import { HomeScreen } from '../modules/home';
 
 const rootRoute = createRootRoute({
@@ -443,10 +461,12 @@ git add -A && git commit -m "feat: add TanStack Router with base-path-aware rout
 ### Task 5: PWA — service worker, manifest, icons
 
 **Files:**
+
 - Create: `public/logo.svg` (icon source; generated PNGs land in `public/`)
 - Modify: `vite.config.ts`, `index.html`, `package.json`
 
 **Interfaces:**
+
 - Consumes: `base` constant in `vite.config.ts` (Task 1).
 - Produces: `dist/sw.js`, `dist/manifest.webmanifest`, icon files referenced by the manifest. Task 6 asserts the manifest link tag.
 
@@ -524,12 +544,12 @@ export default defineConfig({
 - [ ] **Step 5: Add icon links to index.html `<head>`**
 
 ```html
-    <link rel="icon" href="favicon.ico" sizes="48x48" />
-    <link rel="icon" href="logo.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="apple-touch-icon-180x180.png" />
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
+<link rel="icon" href="/logo.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
 ```
 
-(Relative hrefs — Vite rewrites them against `base`. If Step 3 produced different file names, match them here and in the manifest.)
+(Root-relative hrefs (leading slash) — Vite rewrites those against `base`; bare-relative hrefs would resolve against the current route and 404 on deep links. If Step 3 produced different file names, match them here and in the manifest.)
 
 - [ ] **Step 6: Verify the build emits the PWA artifacts**
 
@@ -547,10 +567,12 @@ git add -A && git commit -m "feat: add PWA manifest, icons, and service worker v
 ### Task 6: Playwright smoke tests
 
 **Files:**
+
 - Create: `playwright.config.ts`, `e2e/smoke.spec.ts`
 - Modify: `package.json` (script)
 
 **Interfaces:**
+
 - Consumes: `npm run build` + `npm run preview` (Tasks 1/5), Home heading text (Task 1).
 - Produces: npm script `test:e2e`; the `e2e/` directory pattern all later epics extend.
 
@@ -620,9 +642,11 @@ git add -A && git commit -m "test: add Playwright smoke tests for the app shell"
 ### Task 7: CI workflow
 
 **Files:**
+
 - Create: `.github/workflows/ci.yml`
 
 **Interfaces:**
+
 - Consumes: npm scripts `lint`, `format:check`, `typecheck`, `test`, `test:e2e` (Tasks 2/3/6).
 - Produces: a `CI` workflow that must be green before merge; Task 8's deploy workflow sits beside it.
 
@@ -666,7 +690,7 @@ git push -u origin epic-1-scaffolding
 Open a draft PR so the workflow triggers, then watch it:
 
 ```bash
-gh pr create --draft --title "Epic 1: PWA scaffolding & deployment" --body "Implements epic #1. Closes #1." 
+gh pr create --draft --title "Epic 1: PWA scaffolding & deployment" --body "Implements epic #1. Closes #1."
 gh pr checks --watch
 ```
 
@@ -677,10 +701,12 @@ Expected: the CI check passes. Fix and re-push if not.
 ### Task 8: GitHub Pages deployment
 
 **Files:**
+
 - Create: `.github/workflows/deploy.yml`
 - Modify: `README.md` (Status section)
 
 **Interfaces:**
+
 - Consumes: `npm run build` output `dist/` (Tasks 1/5); GitHub Pages enabled with `build_type=workflow`.
 - Produces: the live app at https://p-dim-popov.github.io/when-again/, redeployed on every push to `main`.
 

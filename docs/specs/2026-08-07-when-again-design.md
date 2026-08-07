@@ -69,27 +69,27 @@ module under `src/modules/`. There is no shared or utils folder.
 - A widget lives in the module that needs it first. Promote it to a `ui`
   module only when a second consumer appears.
 
-| Module | Owns |
-|---|---|
-| `db` | IndexedDB connection, versioning, migration runner |
-| `appointments` | Appointment type, object store, queries, status rules |
-| `clients` | Client type, object store, queries, visit-history derivation |
-| `settings` | Provider profile, service presets, language, mode |
-| `i18n` | Language bundles, `t()`, detection, switching |
-| `time` | Wall-clock + timezone-name rules, countdown |
-| `booking` | Provider UI: schedule and edit screens |
-| `share` | Handoff: payload codec, QR, share and import screens |
-| `visits` | Client-mode UI: next-visit card, past visits, saved providers |
-| `calendar` | .ics generation (UID, SEQUENCE, CANCEL) |
-| `backup` | Export, import, staleness reminder |
+| Module         | Owns                                                          |
+| -------------- | ------------------------------------------------------------- |
+| `db`           | IndexedDB connection, versioning, migration runner            |
+| `appointments` | Appointment type, object store, queries, status rules         |
+| `clients`      | Client type, object store, queries, visit-history derivation  |
+| `settings`     | Provider profile, service presets, language, mode             |
+| `i18n`         | Language bundles, `t()`, detection, switching                 |
+| `time`         | Wall-clock + timezone-name rules, countdown                   |
+| `booking`      | Provider UI: schedule and edit screens                        |
+| `share`        | Handoff: payload codec, QR, share and import screens          |
+| `visits`       | Client-mode UI: next-visit card, past visits, saved providers |
+| `calendar`     | .ics generation (UID, SEQUENCE, CANCEL)                       |
+| `backup`       | Export, import, staleness reminder                            |
 
 ## Data model (provider)
 
-| Store | Fields |
-|---|---|
-| Client | id, name, phone (optional), notes |
+| Store       | Fields                                                                                                                               |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Client      | id, name, phone (optional), notes                                                                                                    |
 | Appointment | id, clientId, start (local wall-clock + timezone name), duration, service label, price (optional), status: booked / done / cancelled |
-| Settings | provider name, address (optional), service presets with durations, language |
+| Settings    | provider name, address (optional), service presets with durations, language                                                          |
 
 Visit history is the set of past appointments grouped per client. There is
 no separate bookkeeping.

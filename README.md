@@ -1,6 +1,6 @@
 # when-again
 
-*"When was my appointment again?"*
+_"When was my appointment again?"_
 
 when-again is a free, open-source appointment reminder for small service
 providers and their clients. It replaces the paper notebook of a hairdresser
@@ -19,7 +19,9 @@ or any other provider. It has no server, no accounts, and no fees.
 
 ## Status
 
-The project is in the design phase. The founding spec is
+The app shell is live at
+[p-dim-popov.github.io/when-again](https://p-dim-popov.github.io/when-again/).
+The founding spec is
 [`docs/specs/2026-08-07-when-again-design.md`](docs/specs/2026-08-07-when-again-design.md).
 The GitHub issues and the project board track the work as epics.
 
