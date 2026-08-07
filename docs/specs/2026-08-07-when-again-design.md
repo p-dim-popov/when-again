@@ -39,8 +39,10 @@ The app is one static PWA with one codebase and two modes: **Provider** and
 **Client**. The user selects the mode at first launch and can change it in
 the settings.
 
-- **Stack:** Svelte + Vite. The bundle stays small.
-- **Hosting:** Cloudflare Pages free tier, static files only.
+- **Stack:** React + Vite + TanStack Router, in TypeScript.
+- **Hosting:** GitHub Pages, static files only. The app lives under
+  `/when-again/`, and the Vite base path matches. GitHub Actions deploys
+  from `main` with no external accounts or secrets.
 - **Offline:** A service worker caches the app shell. The app works fully
   offline after the first load.
 - **Storage:** IndexedDB on the device, behind a thin wrapper (for example
