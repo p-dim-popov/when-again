@@ -5,45 +5,51 @@
 
 ## Problem
 
-Small service providers (the founding example: a hairdresser) book the next
-appointment in a paper notebook. The client walks out, forgets the time, and
-has to call and ask. Existing salon platforms solve this with servers,
-subscriptions, or commissions — a cost barrier for a one-person business.
+Small service providers often book the next appointment in a paper notebook.
+The founding example is a hairdresser. The client leaves, forgets the time,
+and must call to ask. Existing salon platforms solve this with servers,
+subscriptions, or commissions. That cost is a barrier for a one-person
+business.
 
 ## Goal
 
-A free, open-source, installable web app (PWA) with **no backend** that:
+Build a free, open-source, installable web app (PWA) with no backend. The
+app has two jobs:
 
-- replaces the provider's paper notebook (schedule + client visit history), and
-- hands each appointment to the client's phone at the moment of booking, with
-  a reliable reminder via the phone's own calendar.
+- It replaces the provider's paper notebook with a schedule and a client
+  visit history.
+- It moves each appointment to the client's phone at the moment of booking.
+  The client's phone calendar then gives a reliable reminder.
 
-"No backend" is a hard constraint: static hosting serves the app's code; no
-user data ever reaches any server. Free for everyone, forever, by construction.
+"No backend" is a hard constraint. Static hosting serves the app code. No
+user data reaches any server. Because there is no infrastructure, the app
+is free for everyone.
 
 ## Non-goals (v1)
 
 - No accounts, login, or cloud sync.
-- No push notifications (impossible without a server; the OS calendar handles
-  reminders instead).
-- No online booking by clients — the provider owns the schedule.
+- No push notifications. They need a server. The phone calendar gives the
+  reminders instead.
+- No online booking by clients. The provider owns the schedule.
 - No payments, marketing, or discovery features.
 
 ## Architecture
 
-One static PWA, one codebase, two modes chosen on first launch (switchable in
-settings): **Provider** and **Client**.
+The app is one static PWA with one codebase and two modes: **Provider** and
+**Client**. The user selects the mode at first launch and can change it in
+the settings.
 
-- **Stack:** Svelte + Vite. Small bundle, no framework runtime bloat.
-- **Hosting:** Cloudflare Pages free tier (static files only).
-- **Offline:** service worker caches the app shell; the app works fully
-  offline after first load.
-- **Storage:** IndexedDB on the device (thin wrapper, e.g. `idb`). The app
-  requests persistent-storage permission to resist browser eviction.
-- **i18n:** Bulgarian and English at launch; language auto-detected,
-  manually switchable.
-- **Privacy:** no analytics, no network calls after the app loads. The URL
-  fragment mechanism (below) keeps appointment data off the wire.
+- **Stack:** Svelte + Vite. The bundle stays small.
+- **Hosting:** Cloudflare Pages free tier, static files only.
+- **Offline:** A service worker caches the app shell. The app works fully
+  offline after the first load.
+- **Storage:** IndexedDB on the device, behind a thin wrapper (for example
+  `idb`). The app requests persistent-storage permission to resist browser
+  eviction.
+- **i18n:** Bulgarian and English at launch. The app detects the language
+  from the device. The user can change it manually.
+- **Privacy:** No analytics. No network calls after the app loads. The URL
+  fragment mechanism (see Handoff) keeps appointment data off the wire.
 
 ## Data model (provider)
 
@@ -53,104 +59,120 @@ settings): **Provider** and **Client**.
 | Appointment | id, clientId, start (local wall-clock + timezone name), duration, service label, price (optional), status: booked / done / cancelled |
 | Settings | provider name, address (optional), service presets with durations, language |
 
-Visit history = past appointments grouped per client; no separate bookkeeping.
+Visit history is the set of past appointments grouped per client. There is
+no separate bookkeeping.
 
-**Backup:** one-tap JSON export (a single file the provider saves anywhere);
-import restores it. The app nags gently (about monthly) if no recent backup.
+**Backup:** One tap exports all data to a single JSON file. The provider
+saves the file anywhere. Import restores it. The app shows a gentle
+reminder (about monthly) if there is no recent backup.
 
 ## Handoff (core mechanism)
 
-Booking a slot builds a compact payload — provider name, address, service,
-start, duration, stable appointment id, payload version — encoded base64url
-into the URL **fragment**: `https://<app>/#a=...`. Fragments are never sent to
-any host, so the data travels only between the two phones.
+When the provider books a slot, the app builds a compact payload. The
+payload holds the provider name, address, service, start, duration, a
+stable appointment id, and a payload version. The app encodes the payload
+as base64url in the URL **fragment**: `https://<app>/#a=...`. Browsers do
+not send the fragment to any host, so the data travels only between the
+two phones.
 
-From that URL the provider's share screen offers:
+The provider's share screen offers two outputs from the same URL:
 
-1. **QR code** rendered on screen — client scans with the normal camera app.
-2. **Share link** via the system share sheet (Viber, SMS, anything).
+1. **QR code** on the screen. The client scans it with the normal camera
+   app.
+2. **Share link** through the system share sheet (Viber, SMS, or any other
+   app).
 
-Opening the URL loads the app (from cache or network), which decodes the
-payload, stores the appointment in the client's IndexedDB, and offers:
+When the client opens the URL, the app loads from cache or network. The
+app decodes the payload, stores the appointment in the client's IndexedDB,
+and offers two actions:
 
-- **Add to calendar** — generates an .ics with a built-in reminder.
-- **Save salon** — keeps provider name/phone for future visits.
+- **Add to calendar** — the app generates an .ics file with a built-in
+  reminder.
+- **Save provider** — the app keeps the provider name and phone for future
+  visits.
 
-**Updates and cancellations:** same appointment id ⇒ re-shared links overwrite
-in place on the client's phone (never duplicate). A `cancelled` flag in the
-payload marks the client's stored copy cancelled. Re-sharing is one tap from
-the edited appointment. The provider cannot *push* changes — re-sharing is the
-explicit, honest substitute.
+**Updates and cancellations:** The appointment id is stable. A re-shared
+link overwrites the stored appointment in place and never creates a
+duplicate. A `cancelled` flag in the payload marks the client's stored copy
+as cancelled. Re-share is one tap from the edited appointment. The provider
+cannot push changes. Re-share is the explicit, honest substitute.
 
-**Calendar dedupe:** the .ics uses a stable `UID` (derived from the
-appointment id) and an incrementing `SEQUENCE`; compliant calendar apps
-(Apple, Google) update the existing event in place. Cancellation exports
-`STATUS:CANCELLED`. Because some Android calendar apps mishandle UID matching
-on manual imports, the "appointment changed" screen explicitly says the time
-changed and shows the new one — the app is always authoritative.
+**Calendar dedupe:** The .ics uses a stable `UID` derived from the
+appointment id, and an incrementing `SEQUENCE`. Compliant calendar apps
+(Apple, Google) then update the existing event in place. A cancellation
+exports `STATUS:CANCELLED`. Some Android calendar apps do not match the UID
+correctly on manual imports. For that reason, the "appointment changed"
+screen states that the time changed and shows the new time. The app is
+always authoritative.
 
 ## Provider mode UI
 
-Bottom tabs, four screens:
+Bottom tabs with four screens:
 
-- **Today / Week** — agenda-style day list (default view), week strip on top,
-  arrows/swipe between days. Tapping an empty area starts a booking there.
-- **New/edit appointment** — client (search-as-you-type or inline new),
-  service (presets, free text allowed), date/time, duration (pre-filled from
-  service), optional price. Saving lands on the **share screen** (big QR,
-  share-link button). Cancel/reschedule live on the same edit screen and also
-  end at the share screen, so re-sharing is the natural last step.
-- **Clients** — alphabetical list → client page: phone (tap to call), notes,
-  visit history (service + price, newest first).
-- **Settings** — salon name/address, service presets, language, export/import
-  backup, mode switch.
+- **Today / Week** — the default view. An agenda-style day list with a week
+  strip on top. Arrows or a swipe move between days. A tap on an empty area
+  starts a booking at that time.
+- **New/edit appointment** — client (search while you type, or create a new
+  client inline), service (presets, free text allowed), date and time,
+  duration (pre-filled from the service), optional price. Save leads to the
+  **share screen** with a large QR code and a share-link button. Cancel and
+  reschedule live on the same edit screen. They also end at the share
+  screen, so re-share is the natural last step.
+- **Clients** — an alphabetical list. The client page shows the phone (tap
+  to call), notes, and the visit history (service and price, newest first).
+- **Settings** — provider name and address, service presets, language,
+  backup export and import, mode switch.
 
 ## Client mode UI
 
-Two screens, deliberately minimal:
+Two screens:
 
-- **Home** — next appointment as a big card (date, time, service, salon,
-  countdown), with Add to calendar and the salon's phone if saved. Past
-  visits listed below. Multiple salons coexist, grouped by provider name.
-- **Import screen** (opening a shared link) — what, when, from whom, one
-  confirm button; distinct variants for changed and cancelled appointments.
+- **Home** — the next appointment as a large card (date, time, service,
+  provider, countdown). The card offers "Add to calendar" and the
+  provider's phone if saved. Past visits appear below. Multiple providers
+  coexist, grouped by provider name.
+- **Import screen** — opens from a shared link. It shows what, when, and
+  from whom, with one confirm button. Changed and cancelled appointments
+  get distinct variants.
 
 ## Edge cases
 
-- **Offline scan:** service worker serves the app from cache; the payload is
-  in the URL itself, so import works with zero connectivity. Only a
-  first-ever open needs internet once; the share screen says so.
-- **Malformed/truncated payload:** friendly "link is damaged — ask for it
-  again" screen; never a crash.
-- **Time semantics:** local wall-clock time + timezone name. 15:00 means
-  15:00 at the salon.
-- **Duplicate client names:** allowed; disambiguated by phone/notes; never
-  merged silently.
-- **Storage eviction:** persistent-storage request + backup nag.
-- **Version skew:** payload carries a version; unknown fields ignored;
-  incompatible versions show "update the app (reload)".
+- **Offline scan:** The service worker serves the app from cache. The
+  payload is in the URL itself, so import works with zero connectivity.
+  Only the first-ever open needs internet, once. The share screen says so.
+- **Malformed payload:** The app shows a friendly screen: "This link is
+  damaged — ask for it again." It never crashes to a blank screen.
+- **Time semantics:** The app stores local wall-clock time plus the
+  timezone name. 15:00 means 15:00 at the provider's location.
+- **Duplicate client names:** Allowed. The provider tells them apart by
+  phone or notes. The app never merges them silently.
+- **Storage eviction:** The app requests persistent storage. The backup
+  reminder is the second line of defense.
+- **Version skew:** The payload carries a version. The app ignores unknown
+  fields. For an incompatible version, the app shows "update the app
+  (reload)".
 
 ## Testing
 
 - **Unit (Vitest):** payload encode/decode round-trips, .ics generation
-  (UID/SEQUENCE/cancel), date handling, import/merge rules.
-- **E2E (Playwright):** the two golden paths — provider books → link
-  produced; client opens link → appointment stored → calendar file offered.
-  Runs in CI (GitHub Actions).
-- **Manual device pass:** camera QR scan, add-to-calendar on real Android and
-  iOS, offline install behavior.
+  (UID, SEQUENCE, cancel), date handling, import and merge rules.
+- **E2E (Playwright):** the two golden paths. One: the provider books, and
+  the app produces a link. Two: the client opens the link, and the app
+  stores the appointment and offers the calendar file. CI runs both
+  (GitHub Actions).
+- **Manual device pass:** camera QR scan, add-to-calendar on real Android
+  and iOS devices, offline install behavior.
 
-## Open source & AI transparency
+## Open source and AI transparency
 
 - MIT license. Public repo: `p-dim-popov/when-again`.
-- Developed in the open with substantial AI assistance (Claude Code). The
-  README states this plainly; AI-assisted commits carry the standard
+- We develop the project in the open with substantial AI help (Claude
+  Code). The README states this plainly. AI-assisted commits carry the
   "Generated with Claude Code" attribution.
-- This design document is itself the product of an AI-assisted brainstorming
-  session and is committed to the repo as the project's founding spec.
+- This design document is the product of an AI-assisted brainstorming
+  session. It is the founding spec of the project.
 
 ## Delivery
 
-Work is tracked as epics (GitHub issues on a project board), derived from
-this spec. Implementation follows per-epic; each epic becomes its own
-plan → implement → review cycle.
+GitHub issues track the work as epics on a project board. The epics derive
+from this spec. Each epic gets its own plan → implement → review cycle.
