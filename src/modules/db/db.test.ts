@@ -47,6 +47,21 @@ describe('getDb', () => {
       name: 'Maria',
     });
   });
+
+  it('concurrent getDb calls after close resolve to same connection', async () => {
+    const db = await getDb();
+    await db.put(STORE_CLIENTS, { id: 'c1', name: 'Maria' });
+    db.close();
+    // Fire two concurrent getDb() calls while connection is stale
+    const [reopened1, reopened2] = await Promise.all([getDb(), getDb()]);
+    // Both should resolve to the same database instance
+    expect(reopened1).toBe(reopened2);
+    // And both should be able to read the persisted data
+    const data1 = await reopened1.get(STORE_CLIENTS, 'c1');
+    const data2 = await reopened2.get(STORE_CLIENTS, 'c1');
+    expect(data1).toEqual({ id: 'c1', name: 'Maria' });
+    expect(data2).toEqual({ id: 'c1', name: 'Maria' });
+  });
 });
 
 describe('requestPersistentStorage', () => {

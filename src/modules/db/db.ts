@@ -11,15 +11,31 @@ let dbPromise: Promise<IDBPDatabase> | null = null;
 
 export function getDb(): Promise<IDBPDatabase> {
   if (dbPromise) {
-    return dbPromise.then((db) => {
+    const currentPromise = dbPromise;
+    return currentPromise.then((db) => {
+      // Get store-agnostic liveness probe: use first available store
+      const firstStoreName = db.objectStoreNames[0];
+      if (!firstStoreName) {
+        // No stores, database is likely closed
+        if (dbPromise === currentPromise) {
+          dbPromise = null;
+        }
+        return getDb();
+      }
+
       // Verify database is still open by attempting a transaction
       try {
-        db.transaction([STORE_CLIENTS], 'readonly');
+        db.transaction([firstStoreName], 'readonly');
         return db;
       } catch {
-        // Database closed, reset memoization
-        dbPromise = null;
-        return getDb();
+        // Database closed; only reset if this is still the current promise
+        // This guard prevents race condition when multiple concurrent getDb() calls fail
+        if (dbPromise === currentPromise) {
+          dbPromise = null;
+          return getDb();
+        }
+        // Another caller already reset and recovered; await the recovered promise
+        return currentPromise.then(() => getDb());
       }
     });
   }
