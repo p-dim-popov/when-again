@@ -2,6 +2,7 @@
 export interface TranslationKeys {}
 export { detectLanguage } from './detect';
 export { getActiveLanguage, initI18n, registerStrings, t } from './i18n';
+export { formatCurrency, formatNumber } from './format';
 export type {
   Language,
   PluralForms,
