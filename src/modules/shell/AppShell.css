@@ -1,0 +1,135 @@
+/* Design tokens + bottom tab bar, ported from
+   docs/design/epic-4/schedule-and-booking-flow.html (.tabs block). Scoped to
+   .appShell so it does not leak into the rest of the app. */
+
+.appShell {
+  --bg: #e9ebe8;
+  --surface: #ffffff;
+  --surface-2: #f3f5f2;
+  --ink: #1c2320;
+  --muted: #67706b;
+  --faint: #97a09a;
+  --line: #d8dcd7;
+  --accent: #2f6d5b;
+  --accent-ink: #215343;
+  --accent-soft: #dcebe4;
+  --accent-line: #bcd8cc;
+  --shadow:
+    0 1px 2px rgba(28, 35, 32, 0.06), 0 18px 40px -20px rgba(28, 35, 32, 0.34);
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  .appShell {
+    --bg: #101512;
+    --surface: #191f1c;
+    --surface-2: #141a17;
+    --ink: #e8ede9;
+    --muted: #99a29c;
+    --faint: #6d766f;
+    --line: #28302c;
+    --accent: #62c3a5;
+    --accent-ink: #bfe7d8;
+    --accent-soft: #1e2d28;
+    --accent-line: #2c433b;
+    --shadow:
+      0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 42px -20px rgba(0, 0, 0, 0.72);
+  }
+}
+
+:root[data-theme='light'] .appShell {
+  --bg: #e9ebe8;
+  --surface: #ffffff;
+  --surface-2: #f3f5f2;
+  --ink: #1c2320;
+  --muted: #67706b;
+  --faint: #97a09a;
+  --line: #d8dcd7;
+  --accent: #2f6d5b;
+  --accent-ink: #215343;
+  --accent-soft: #dcebe4;
+  --accent-line: #bcd8cc;
+  --shadow:
+    0 1px 2px rgba(28, 35, 32, 0.06), 0 18px 40px -20px rgba(28, 35, 32, 0.34);
+}
+
+:root[data-theme='dark'] .appShell {
+  --bg: #101512;
+  --surface: #191f1c;
+  --surface-2: #141a17;
+  --ink: #e8ede9;
+  --muted: #99a29c;
+  --faint: #6d766f;
+  --line: #28302c;
+  --accent: #62c3a5;
+  --accent-ink: #bfe7d8;
+  --accent-soft: #1e2d28;
+  --accent-line: #2c433b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 42px -20px rgba(0, 0, 0, 0.72);
+}
+
+.appShell-content {
+  flex: 1;
+}
+
+.tabs {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  border-top: 1px solid var(--line);
+  padding: 9px 6px;
+  background: var(--surface);
+}
+
+.tab {
+  text-align: center;
+  font-size: 10px;
+  color: var(--faint);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  text-decoration: none;
+}
+
+.tab .ic {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tab[data-status='active'] {
+  color: var(--accent);
+  font-weight: 640;
+}
+
+.tab.primary {
+  color: var(--accent);
+  font-weight: 680;
+  gap: 5px;
+}
+
+.tab.primary .fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 25px;
+  line-height: 1;
+  transform: translateY(-15px);
+  margin-bottom: -13px;
+  box-shadow: 0 10px 20px -6px
+    color-mix(in srgb, var(--accent) 62%, transparent);
+  border: 3px solid var(--surface);
+}

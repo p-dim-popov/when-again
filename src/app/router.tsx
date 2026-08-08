@@ -2,21 +2,45 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
-  Outlet,
 } from '@tanstack/react-router';
-import { HomeScreen } from '../modules/home';
+import { AppShell, Placeholder } from '../modules/shell';
 
 const rootRoute = createRootRoute({
-  component: () => <Outlet />,
+  component: AppShell,
 });
 
-const homeRoute = createRoute({
+const todayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: HomeScreen,
+  // Temporary: the schedule (Днес) screen ships in Task 3.
+  component: () => <Placeholder titleKey="shell.tab.today" />,
 });
 
-const routeTree = rootRoute.addChildren([homeRoute]);
+const clientsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/clients',
+  component: () => <Placeholder titleKey="shell.placeholder.clients" />,
+});
+
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/settings',
+  component: () => <Placeholder titleKey="shell.placeholder.settings" />,
+});
+
+const bookRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/book',
+  // Temporary: the month-picker booking funnel ships in a later task.
+  component: () => <Placeholder titleKey="shell.tab.new" />,
+});
+
+const routeTree = rootRoute.addChildren([
+  todayRoute,
+  clientsRoute,
+  settingsRoute,
+  bookRoute,
+]);
 
 export const router = createRouter({
   routeTree,
