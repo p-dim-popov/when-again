@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@tanstack/react-router": "^1.170.23",
+    "idb": "^8.0.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -29,6 +30,7 @@
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.5",
     "prettier": "^3.9.6",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.66.0",
