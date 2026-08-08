@@ -35,6 +35,13 @@ describe('settings', () => {
     expect(s.mode).toBe('provider');
   });
 
+  it('does not share the DEFAULT_SETTINGS.services array reference across calls', async () => {
+    const first = await getSettings();
+    first.services.push({ name: 'Haircut', durationMinutes: 45 });
+    const second = await getSettings();
+    expect(second.services).toEqual([]);
+  });
+
   it('replaceSettings overwrites everything', async () => {
     await updateSettings({ providerName: 'Old' });
     const next = {

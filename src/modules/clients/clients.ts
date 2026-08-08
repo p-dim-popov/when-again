@@ -1,6 +1,11 @@
 import { listAppointmentsByClient, type Appointment } from '../appointments';
 import { getDb, STORE_CLIENTS } from '../db';
-import { isBefore, wallClockNow, type WallClock } from '../time';
+import {
+  compareWallClock,
+  isBefore,
+  wallClockNow,
+  type WallClock,
+} from '../time';
 
 export interface Client {
   id: string;
@@ -47,5 +52,5 @@ export async function getVisitHistory(
   const all = await listAppointmentsByClient(clientId);
   return all
     .filter((a) => a.status !== 'cancelled' && isBefore(a.start, now))
-    .sort((a, b) => (a.start.dateTime < b.start.dateTime ? 1 : -1));
+    .sort((a, b) => compareWallClock(b.start, a.start));
 }

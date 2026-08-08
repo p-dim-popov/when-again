@@ -44,6 +44,7 @@ export function parseBackup(data: unknown): BackupFile {
     typeof d.exportedAt !== 'string' ||
     typeof d.settings !== 'object' ||
     d.settings === null ||
+    Array.isArray(d.settings) ||
     !Array.isArray(d.clients) ||
     !Array.isArray(d.appointments)
   ) {
@@ -65,5 +66,6 @@ export function isBackupStale(
 ): boolean {
   if (!lastBackupAt) return true;
   const ageMs = now.getTime() - new Date(lastBackupAt).getTime();
+  if (Number.isNaN(ageMs)) return true;
   return ageMs > STALE_AFTER_DAYS * 24 * 60 * 60 * 1000;
 }

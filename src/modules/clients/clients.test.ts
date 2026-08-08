@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { afterEach, describe, expect, it } from 'vitest';
-import { addAppointment } from '../appointments';
+import { addAppointment, replaceAllAppointments } from '../appointments';
 import { destroyDb } from '../db';
 import {
   addClient,
@@ -77,6 +77,45 @@ describe('getVisitHistory', () => {
     expect(history.map((a) => a.start.dateTime)).toEqual([
       '2026-07-01T10:00',
       '2026-05-10T10:00',
+    ]);
+  });
+
+  it('keeps both visits and preserves stable order when start dateTimes are equal', async () => {
+    // Fixed ids (rather than addAppointment's random uuids) make the
+    // pre-sort order deterministic, since listAppointmentsByClient breaks
+    // ties in its underlying index by primary key.
+    const c = await addClient({ name: 'Elena' });
+    await replaceAllAppointments([
+      {
+        ...base,
+        id: 'a-1',
+        clientId: c.id,
+        start: at('2026-05-10T10:00'),
+        service: 'Haircut',
+      },
+      {
+        ...base,
+        id: 'a-2',
+        clientId: c.id,
+        start: at('2026-05-10T10:00'),
+        service: 'Manicure',
+      },
+      {
+        ...base,
+        id: 'a-3',
+        clientId: c.id,
+        start: at('2026-07-01T10:00'),
+        service: 'Coloring',
+      },
+    ]);
+    const history = await getVisitHistory(c.id, now);
+    expect(history).toHaveLength(3);
+    // newest first, and equal-timestamp entries keep their relative order
+    // (i.e. neither is dropped, and ties aren't spuriously reversed).
+    expect(history.map((a) => a.service)).toEqual([
+      'Coloring',
+      'Haircut',
+      'Manicure',
     ]);
   });
 });

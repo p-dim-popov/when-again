@@ -35,10 +35,13 @@ export async function getSettings(): Promise<Settings> {
   const db = await getDb();
   const stored = (await db.get(STORE_SETTINGS, SINGLETON_ID)) as
     StoredSettings | undefined;
-  if (!stored) return { ...DEFAULT_SETTINGS };
+  // Fresh services array each call: DEFAULT_SETTINGS.services must never be
+  // shared/mutated across callers.
+  const defaults: Settings = { ...DEFAULT_SETTINGS, services: [] };
+  if (!stored) return defaults;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id: _id, ...settings } = stored;
-  return { ...DEFAULT_SETTINGS, ...settings };
+  return { ...defaults, ...settings };
 }
 
 export async function updateSettings(

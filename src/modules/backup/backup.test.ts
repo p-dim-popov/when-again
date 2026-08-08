@@ -71,6 +71,19 @@ describe('parseBackup', () => {
       'invalid backup file',
     );
   });
+
+  it('rejects an array for settings', () => {
+    expect(() =>
+      parseBackup({
+        app: 'when-again',
+        version: 1,
+        exportedAt: 's',
+        settings: [],
+        clients: [],
+        appointments: [],
+      }),
+    ).toThrow('invalid backup file');
+  });
 });
 
 describe('isBackupStale', () => {
@@ -83,5 +96,8 @@ describe('isBackupStale', () => {
   });
   it('is stale after 31 days', () => {
     expect(isBackupStale('2026-06-01T00:00:00.000Z', now)).toBe(true);
+  });
+  it('fails safe to stale when lastBackupAt is unparseable', () => {
+    expect(isBackupStale('not-a-date', now)).toBe(true);
   });
 });
