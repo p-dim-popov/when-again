@@ -1,0 +1,185 @@
+<style>
+  :root {
+    --bg: #e9ebe8; --surface: #ffffff; --surface-2: #f3f5f2; --ink: #1c2320;
+    --muted: #67706b; --faint: #97a09a; --line: #d8dcd7; --accent: #2f6d5b;
+    --accent-ink: #215343; --accent-soft: #dcebe4; --accent-line: #bcd8cc;
+    --page-max: 460px; --phone-max: 340px;
+    --shadow: 0 1px 2px rgba(28,35,32,.06), 0 18px 40px -20px rgba(28,35,32,.34);
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#101512; --surface:#191f1c; --surface-2:#141a17; --ink:#e8ede9; --muted:#99a29c; --faint:#6d766f; --line:#28302c; --accent:#62c3a5; --accent-ink:#bfe7d8; --accent-soft:#1e2d28; --accent-line:#2c433b; --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 42px -20px rgba(0,0,0,.72); }
+  }
+  :root[data-theme="light"] { --bg:#e9ebe8; --surface:#ffffff; --surface-2:#f3f5f2; --ink:#1c2320; --muted:#67706b; --faint:#97a09a; --line:#d8dcd7; --accent:#2f6d5b; --accent-ink:#215343; --accent-soft:#dcebe4; --accent-line:#bcd8cc; --shadow:0 1px 2px rgba(28,35,32,.06),0 18px 40px -20px rgba(28,35,32,.34); }
+  :root[data-theme="dark"] { --bg:#101512; --surface:#191f1c; --surface-2:#141a17; --ink:#e8ede9; --muted:#99a29c; --faint:#6d766f; --line:#28302c; --accent:#62c3a5; --accent-ink:#bfe7d8; --accent-soft:#1e2d28; --accent-line:#2c433b; --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 42px -20px rgba(0,0,0,.72); }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .wrap { background: var(--bg); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; min-height: 100vh; padding: 28px 16px 56px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .intro { width: 100%; max-width: var(--page-max); margin-bottom: 8px; }
+  .kicker { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 650; margin: 0 0 8px; }
+  .intro h1 { font-size: clamp(22px, 6vw, 28px); line-height: 1.13; margin: 0 0 10px; letter-spacing: -.01em; text-wrap: balance; font-weight: 700; }
+  .intro p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; max-width: 46ch; }
+
+  /* step scaffold */
+  .step { width: 100%; max-width: var(--phone-max); display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .stephead { width: 100%; display: flex; align-items: center; gap: 10px; }
+  .stepnum { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13px; color: #fff; background: var(--accent); width: 24px; height: 24px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .stepq { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+  .stepq small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0; margin-top: 1px; }
+
+  .connector { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 0; color: var(--faint); }
+  .connector .ln { width: 2px; height: 16px; background: var(--accent-line); }
+  .connector .cap { font-size: 11.5px; color: var(--faint); }
+
+  .phone { width: 100%; background: var(--surface-2); border: 1px solid var(--line); border-radius: 30px; padding: 9px; box-shadow: var(--shadow); }
+  .screen { position: relative; background: var(--surface); border-radius: 23px; overflow: hidden; }
+
+  .status { display: flex; align-items: center; justify-content: space-between; padding: 9px 15px 3px; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+  .appbar { display: flex; align-items: center; gap: 10px; padding: 4px 13px 10px; }
+  .appbar .arrow { width: 30px; height: 30px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex: none; }
+  .appbar .date { text-align: center; flex: 1; }
+  .appbar .date .d { font-size: 15px; font-weight: 680; letter-spacing: -.01em; }
+  .appbar .date .m { font-size: 11px; color: var(--faint); letter-spacing: .04em; }
+  .appbar .x { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; }
+
+  /* month picker */
+  .cal { padding: 2px 14px 16px; }
+  .calgrid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+  .calgrid .wd { font-size: 9.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); text-align: center; padding: 4px 0 6px; }
+  .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--ink); border-radius: 10px; position: relative; }
+  .day.past { color: var(--faint); opacity: .5; }
+  .day.today { box-shadow: inset 0 0 0 1.5px var(--accent-line); }
+  .day.sel { background: var(--accent); color: #fff; font-weight: 700; }
+  .day .dot { width: 4px; height: 4px; border-radius: 999px; background: var(--accent); margin-top: 2px; }
+  .day.sel .dot { background: rgba(255,255,255,.85); }
+  .day.empty { visibility: hidden; }
+
+  /* day list (reused schedule) */
+  .week { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; padding: 0 12px 10px; }
+  .week div { text-align: center; font-size: 12px; padding: 6px 0; border-radius: 9px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .week div .wd { font-size: 9px; letter-spacing: .05em; color: var(--faint); text-transform: uppercase; }
+  .week div.on { background: var(--accent); color: #fff; }
+  .week div.on .wd { color: rgba(255,255,255,.7); }
+
+  .list { border-top: 1px solid var(--line); padding: 6px 0 12px; }
+  .appt { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 10px 15px 10px 12px; align-items: start; }
+  .appt .t { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 13.5px; padding-top: 1px; }
+  .appt .t .end { display: block; font-size: 10.5px; font-weight: 500; color: var(--faint); margin-top: 1px; }
+  .appt .block { border-left: 2px solid var(--accent); background: var(--accent-soft); border-radius: 10px; padding: 8px 11px; }
+  .appt .who { font-size: 14px; font-weight: 620; color: var(--ink); }
+  .appt .svc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .gap { display: grid; grid-template-columns: 44px 1fr; gap: 10px; padding: 6px 15px 6px 12px; align-items: start; }
+  .gap .glabel { font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--faint); padding-top: 6px; }
+  .slots { display: flex; flex-wrap: wrap; gap: 6px; padding: 2px 0; }
+  .slot { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--accent-ink); border: 1px dashed var(--accent-line); background: color-mix(in srgb, var(--accent-soft) 45%, transparent); border-radius: 9px; padding: 6px 10px; display: inline-flex; align-items: center; gap: 5px; }
+  .slot::before { content: "+"; font-weight: 700; color: var(--accent); }
+  .slot.sel { background: var(--accent); color: #fff; border-style: solid; border-color: var(--accent); }
+  .slot.sel::before { content: "+"; color: #fff; }
+  .slot.more { border-style: solid; color: var(--muted); }
+  .slot.more::before { content: ""; }
+
+  /* form */
+  .form { padding: 6px 15px 16px; display: flex; flex-direction: column; gap: 13px; }
+  .field label { display: block; font-size: 10.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); margin-bottom: 5px; }
+  .input { border: 1px solid var(--line); background: var(--surface-2); border-radius: 11px; padding: 11px 12px; font-size: 14px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .input.ph { color: var(--faint); }
+  .input .lead { color: var(--faint); font-size: 15px; }
+  .whenrow { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-ink); font-weight: 600; font-variant-numeric: tabular-nums; justify-content: space-between; }
+  .whenrow .edit { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+  .recent { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+  .recent .rc { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .save { background: var(--accent); color: #fff; text-align: center; font-weight: 650; font-size: 15px; padding: 13px; border-radius: 12px; margin-top: 2px; }
+
+  .tabs { position: relative; display: grid; grid-template-columns: repeat(4,1fr); align-items: end; border-top: 1px solid var(--line); padding: 9px 6px; background: var(--surface); }
+  .tab { text-align: center; font-size: 10px; color: var(--faint); display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .tab .ic { font-size: 16px; line-height: 1; }
+  .tab.on { color: var(--accent); font-weight: 640; }
+  .tab.primary { color: var(--accent); font-weight: 680; gap: 5px; }
+  .tab.primary .fab { width: 48px; height: 48px; border-radius: 999px; background: var(--accent); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 25px; line-height: 1; transform: translateY(-15px); margin-bottom: -13px; box-shadow: 0 10px 20px -6px color-mix(in srgb, var(--accent) 62%, transparent); border: 3px solid var(--surface); }
+
+  .foot { width: 100%; max-width: var(--page-max); border-top: 1px solid var(--line); padding-top: 18px; margin-top: 20px; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
+  .foot b { color: var(--ink); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .intro, .step, .connector, .foot { animation: rise .5s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: none; } }
+  }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <p class="kicker">when-again · epic 4 · booking flow</p>
+    <h1>Book ahead — one funnel, always the same screen</h1>
+    <p>Appointments are usually weeks out, so ＋ Нов час asks <b>which day</b> first, then reuses the ordinary day screen to pick the time. Nothing new to learn at any step.</p>
+  </div>
+
+  <!-- STEP 1: MONTH PICKER -->
+  <div class="step">
+    <div class="stephead"><span class="stepnum">1</span><span class="stepq">Кога?<small>＋ Нов час opens the month</small></span></div>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>17:43</span><span>▓▓▓ 42</span></div>
+      <div class="appbar"><div class="x">‹</div><div class="date"><div class="d">Изберете ден</div><div class="m">‹ Август 2026 ›</div></div><div class="x">✕</div></div>
+      <div class="cal"><div class="calgrid">
+        <div class="wd">пн</div><div class="wd">вт</div><div class="wd">ср</div><div class="wd">чт</div><div class="wd">пт</div><div class="wd">сб</div><div class="wd">нд</div>
+        <div class="day empty"></div><div class="day empty"></div><div class="day empty"></div><div class="day empty"></div>
+        <div class="day past">1</div><div class="day past">2</div><div class="day past">3</div>
+        <div class="day past">4</div><div class="day past">5</div><div class="day past">6</div><div class="day past">7</div><div class="day past">8</div>
+        <div class="day today">9<span class="dot"></span></div><div class="day">10</div>
+        <div class="day">11</div><div class="day">12<span class="dot"></span></div><div class="day">13</div><div class="day">14</div><div class="day">15<span class="dot"></span></div><div class="day">16</div><div class="day">17</div>
+        <div class="day">18</div><div class="day">19</div><div class="day">20</div><div class="day">21</div><div class="day sel">22<span class="dot"></span></div><div class="day">23</div><div class="day">24</div>
+        <div class="day">25</div><div class="day">26</div><div class="day">27</div><div class="day">28<span class="dot"></span></div><div class="day">29</div><div class="day">30</div><div class="day">31</div>
+      </div></div>
+    </div></div>
+  </div>
+
+  <div class="connector"><div class="ln"></div><div class="cap">tap 22 авг ↓</div><div class="ln"></div></div>
+
+  <!-- STEP 2: DAY VIEW REUSED -->
+  <div class="step">
+    <div class="stephead"><span class="stepnum">2</span><span class="stepq">В колко часа?<small>the day opens — the same schedule screen — pick a free slot</small></span></div>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>17:43</span><span>▓▓▓ 42</span></div>
+      <div class="appbar"><div class="arrow">‹</div><div class="date"><div class="d">Петък, 22 авг</div><div class="m">след 13 дни</div></div><div class="arrow">›</div></div>
+      <div class="week">
+        <div><div class="wd">пн</div>18</div><div><div class="wd">вт</div>19</div><div><div class="wd">ср</div>20</div><div><div class="wd">чт</div>21</div><div class="on"><div class="wd">пт</div>22</div><div><div class="wd">сб</div>23</div><div><div class="wd">нд</div>24</div>
+      </div>
+      <div class="list">
+        <div class="appt"><div class="t">10:00<span class="end">10:30</span></div><div class="block"><div class="who">Елена Тодорова</div><div class="svc">Подстригване · 30 мин</div></div></div>
+        <div class="gap"><div class="glabel">свободно</div><div class="slots"><span class="slot">10:30</span><span class="slot sel">11:00</span><span class="slot">11:30</span><span class="slot">12:00</span><span class="slot more">още…</span></div></div>
+      </div>
+      <div class="tabs">
+        <div class="tab on"><span class="ic">▤</span>Днес</div><div class="tab"><span class="ic">☺</span>Клиенти</div><div class="tab primary"><span class="fab">＋</span>Нов час</div><div class="tab"><span class="ic">⚙</span>Настройки</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="connector"><div class="ln"></div><div class="cap">tap 11:00 ↓</div><div class="ln"></div></div>
+
+  <!-- STEP 3: FORM -->
+  <div class="step">
+    <div class="stephead"><span class="stepnum">3</span><span class="stepq">Кой и какво?<small>day + time already filled — add client &amp; service, save</small></span></div>
+    <div class="phone"><div class="screen">
+      <div class="status"><span>17:43</span><span>▓▓▓ 42</span></div>
+      <div class="appbar"><div class="arrow">‹</div><div class="date"><div class="d">Нов час</div></div><div class="x"></div></div>
+      <div class="form">
+        <div class="field"><label>Клиент</label><div class="input ph"><span class="lead">☺</span>Търси или създай…</div></div>
+        <div class="field"><label>Услуга</label><div class="input">Подстригване</div>
+          <div class="recent"><span class="rc">Боядисване</span><span class="rc">Брада</span><span class="rc">Кола маска</span></div>
+        </div>
+        <div class="field"><label>Кога</label><div class="input whenrow"><span>Петък, 22 авг · 11:00</span><span class="edit">Промени</span></div></div>
+        <div class="row2">
+          <div class="field"><label>Времетраене</label><div class="input">30 мин</div></div>
+          <div class="field"><label>Цена (по избор)</label><div class="input ph">—</div></div>
+        </div>
+        <div class="save">Запази · сподели</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="foot">
+    <b>Why this is the whole booking flow:</b> ＋ Нов час → <b>month picker</b> (which day) → the day opens in the <b>ordinary schedule screen</b> → tap a free <b>slot</b> (which time) → <b>form</b> with day + time already filled → Запази leads to the share screen (epic 6). Step 2 is not a special picker — it's the same Днес screen, so reading a day and booking into it are the same gesture. Near-term bookings skip step 1 entirely: just tap a slot on today's view.
+    <p style="margin:12px 0 0">Good to lock as the direction? Then the last open piece is where the <b>provider ↔ client mode switch</b> lives.</p>
+  </div>
+</div>

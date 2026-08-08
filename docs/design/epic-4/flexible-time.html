@@ -1,0 +1,130 @@
+<style>
+  :root {
+    --bg:#e9ebe8; --surface:#ffffff; --surface-2:#f3f5f2; --ink:#1c2320; --muted:#67706b; --faint:#97a09a;
+    --line:#d8dcd7; --accent:#2f6d5b; --accent-ink:#215343; --accent-soft:#dcebe4; --accent-line:#bcd8cc;
+    --page-max:460px; --phone-max:340px;
+    --shadow:0 1px 2px rgba(28,35,32,.06),0 18px 40px -20px rgba(28,35,32,.34);
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){ :root{ --bg:#101512; --surface:#191f1c; --surface-2:#141a17; --ink:#e8ede9; --muted:#99a29c; --faint:#6d766f; --line:#28302c; --accent:#62c3a5; --accent-ink:#bfe7d8; --accent-soft:#1e2d28; --accent-line:#2c433b; --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 42px -20px rgba(0,0,0,.72);} }
+  :root[data-theme="light"]{ --bg:#e9ebe8; --surface:#ffffff; --surface-2:#f3f5f2; --ink:#1c2320; --muted:#67706b; --faint:#97a09a; --line:#d8dcd7; --accent:#2f6d5b; --accent-ink:#215343; --accent-soft:#dcebe4; --accent-line:#bcd8cc; --shadow:0 1px 2px rgba(28,35,32,.06),0 18px 40px -20px rgba(28,35,32,.34); }
+  :root[data-theme="dark"]{ --bg:#101512; --surface:#191f1c; --surface-2:#141a17; --ink:#e8ede9; --muted:#99a29c; --faint:#6d766f; --line:#28302c; --accent:#62c3a5; --accent-ink:#bfe7d8; --accent-soft:#1e2d28; --accent-line:#2c433b; --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 42px -20px rgba(0,0,0,.72); }
+
+  * { box-sizing:border-box; }
+  body { margin:0; }
+  .wrap { background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; min-height:100vh; padding:28px 16px 56px; display:flex; flex-direction:column; align-items:center; gap:18px; }
+  .intro { width:100%; max-width:var(--page-max); }
+  .kicker { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:650; margin:0 0 8px; }
+  .intro h1 { font-size:clamp(21px,5.6vw,27px); line-height:1.14; margin:0 0 10px; letter-spacing:-.01em; text-wrap:balance; font-weight:700; }
+  .intro p { margin:0; color:var(--muted); font-size:15px; line-height:1.5; max-width:46ch; }
+
+  .stage { width:100%; max-width:var(--phone-max); }
+  .phone { width:100%; background:var(--surface-2); border:1px solid var(--line); border-radius:30px; padding:9px; box-shadow:var(--shadow); }
+  .screen { position:relative; background:var(--surface); border-radius:23px; overflow:hidden; min-height:560px; }
+
+  .status { display:flex; align-items:center; justify-content:space-between; padding:9px 15px 3px; font-size:11px; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .appbar { display:flex; align-items:center; gap:10px; padding:4px 13px 10px; }
+  .appbar .arrow { width:30px; height:30px; border-radius:9px; border:1px solid var(--line); background:var(--surface); color:var(--muted); display:inline-flex; align-items:center; justify-content:center; font-size:14px; flex:none; }
+  .appbar .date { text-align:center; flex:1; }
+  .appbar .date .d { font-size:15px; font-weight:680; letter-spacing:-.01em; }
+  .appbar .date .m { font-size:11px; color:var(--faint); }
+
+  .list { border-top:1px solid var(--line); padding:6px 0 12px; }
+  .appt { display:grid; grid-template-columns:44px 1fr; gap:10px; padding:10px 15px 10px 12px; align-items:start; }
+  .appt .t { font-variant-numeric:tabular-nums; font-weight:700; font-size:13.5px; padding-top:1px; }
+  .appt .t .end { display:block; font-size:10.5px; font-weight:500; color:var(--faint); margin-top:1px; }
+  .appt .block { border-left:2px solid var(--accent); background:var(--accent-soft); border-radius:10px; padding:8px 11px; }
+  .appt .who { font-size:14px; font-weight:620; color:var(--ink); }
+  .appt .svc { font-size:12px; color:var(--muted); margin-top:2px; }
+  .gap { display:grid; grid-template-columns:44px 1fr; gap:10px; padding:6px 15px 6px 12px; align-items:start; }
+  .gap .glabel { font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); padding-top:6px; }
+  .slots { display:flex; flex-wrap:wrap; gap:6px; padding:2px 0; }
+  .slot { font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--accent-ink); border:1px dashed var(--accent-line); background:color-mix(in srgb,var(--accent-soft) 45%,transparent); border-radius:9px; padding:6px 10px; display:inline-flex; align-items:center; gap:5px; }
+  .slot::before { content:"+"; font-weight:700; color:var(--accent); }
+  .slot.custom { border-style:solid; color:var(--accent); font-weight:600; }
+  .slot.custom::before { content:"◷"; font-weight:700; }
+  .slot.custom.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .slot.custom.on::before { color:#fff; }
+
+  /* dim + bottom sheet */
+  .scrim { position:absolute; inset:0; background:color-mix(in srgb,var(--ink) 34%,transparent); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:var(--surface); border-radius:22px 22px 0 0; box-shadow:0 -12px 34px -12px rgba(0,0,0,.4); padding:10px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .handle { width:36px; height:4px; border-radius:999px; background:var(--line); margin:2px auto 12px; }
+  .sheettitle { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:2px; }
+  .sheettitle .h { font-size:16px; font-weight:700; letter-spacing:-.01em; }
+  .sheettitle .win { font-size:12px; color:var(--faint); font-variant-numeric:tabular-nums; }
+  .subnote { font-size:11.5px; color:var(--muted); margin:4px 0 6px; }
+
+  .wheel { position:relative; display:flex; align-items:center; justify-content:center; gap:6px; padding:8px 0 4px; }
+  .selband { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:150px; height:42px; border-radius:12px; background:var(--accent-soft); border:1px solid var(--accent-line); }
+  .col { position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; width:56px; }
+  .col .v { font-variant-numeric:tabular-nums; font-size:15px; color:var(--faint); line-height:1; }
+  .col .v.sel { color:var(--accent-ink); font-weight:800; font-size:22px; }
+  .sep { position:relative; font-size:20px; font-weight:800; color:var(--accent-ink); padding-bottom:2px; }
+  .wheelcap { text-align:center; font-size:11px; color:var(--faint); margin-top:6px; }
+
+  .save { background:var(--accent); color:#fff; text-align:center; font-weight:650; font-size:15px; padding:13px; border-radius:12px; margin-top:12px; font-variant-numeric:tabular-nums; }
+
+  .callout { width:100%; max-width:var(--phone-max); font-size:12.5px; color:var(--faint); text-align:center; line-height:1.5; }
+  .callout b { color:var(--ink); font-weight:600; }
+
+  .foot { width:100%; max-width:var(--page-max); border-top:1px solid var(--line); padding-top:18px; margin-top:6px; color:var(--muted); font-size:13.5px; line-height:1.55; }
+  .foot b { color:var(--ink); }
+  .foot ul { margin:10px 0 0; padding-left:18px; }
+  .foot li { margin:6px 0; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .intro,.stage,.callout,.foot { animation:rise .5s cubic-bezier(.2,.7,.2,1) both; }
+    .stage{animation-delay:.05s}.callout{animation-delay:.1s}.foot{animation-delay:.15s}
+    @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  }
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <p class="kicker">when-again · epic 4 · flexible time</p>
+    <h1>Quick slots for the 90% — “друг час” for the 11:15s</h1>
+    <p>The gap keeps its one-tap slots. A “друг час” chip opens a precise picker, held inside the free window so it can never overlap the next appointment.</p>
+  </div>
+
+  <div class="stage">
+    <div class="phone"><div class="screen">
+      <div class="status"><span>17:43</span><span>▓▓▓ 42</span></div>
+      <div class="appbar"><div class="arrow">‹</div><div class="date"><div class="d">Петък, 22 авг</div><div class="m">след 13 дни</div></div><div class="arrow">›</div></div>
+      <div class="list">
+        <div class="appt"><div class="t">10:00<span class="end">10:30</span></div><div class="block"><div class="who">Елена Тодорова</div><div class="svc">Подстригване · 30 мин</div></div></div>
+        <div class="gap"><div class="glabel">свободно</div><div class="slots">
+          <span class="slot">10:30</span><span class="slot">11:00</span><span class="slot">11:30</span><span class="slot custom on">друг час</span>
+        </div></div>
+        <div class="appt"><div class="t">12:00<span class="end">13:30</span></div><div class="block"><div class="who">Никола Иванов</div><div class="svc">Боядисване · 90 мин</div></div></div>
+      </div>
+
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="handle"></div>
+        <div class="sheettitle"><span class="h">Друг час</span><span class="win">свободно 10:30 – 12:00</span></div>
+        <div class="subnote">Изберете точен час в свободния прозорец.</div>
+        <div class="wheel">
+          <div class="selband"></div>
+          <div class="col"><div class="v">10</div><div class="v sel">11</div><div class="v">12</div></div>
+          <div class="sep">:</div>
+          <div class="col"><div class="v">10</div><div class="v sel">15</div><div class="v">20</div></div>
+        </div>
+        <div class="wheelcap">стъпка 5 мин · плъзнете за друг час</div>
+        <div class="save">Избери · 11:15</div>
+      </div>
+    </div></div>
+  </div>
+
+  <p class="callout">The <b>◷ друг час</b> chip sits after the quick slots — tapped here, it opens the picker at the gap start. Choose 11:15 → straight to the form, day + time filled.</p>
+
+  <div class="foot">
+    <b>How flexible time works:</b>
+    <ul>
+      <li><b>Quick slots</b> stay for the common case — one tap, no thinking.</li>
+      <li><b>◷ друг час</b> opens a minute picker <b>bounded to the free window</b> (10:30–12:00 here), so an odd time like 11:15 is easy and a clash is impossible. Default step 5 min (fine enough for a salon; configurable).</li>
+      <li>It's the <b>same picker</b> the form's “Промени” uses — so whether you set the time from the slot or fix it later on the form, it behaves identically. One way to pick a time, two doors to it.</li>
+    </ul>
+    <p style="margin:12px 0 0">Sound right? Or tweak — minute step (5 vs to-the-minute), or make every slot a range that opens the picker. Then the last piece is the <b>mode switch</b> placement.</p>
+  </div>
+</div>
