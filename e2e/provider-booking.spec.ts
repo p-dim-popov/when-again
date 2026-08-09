@@ -115,7 +115,7 @@ test("другчас: the day view's inline time sheet carries an off-grid time 
   // The gap chip labelled "◷ other time" opens a bottom sheet OVER the day
   // view (not inside the form) — the key design-update behaviour.
   await page.getByRole('button', { name: 'other time' }).click();
-  await expect(page.locator('.schedule-tpSheet')).toBeVisible();
+  await expect(page.getByTestId('time-sheet')).toBeVisible();
 
   // Nudge one 5-minute step off the 30-minute quick-slot grid, then confirm.
   await page.getByRole('button', { name: 'Later minute' }).click();
