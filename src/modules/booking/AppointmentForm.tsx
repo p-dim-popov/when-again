@@ -551,7 +551,7 @@ export function AppointmentForm({
           <div
             className={`${FIELD_BOX} bg-accent-soft border-accent-line text-accent-ink justify-between font-semibold tabular-nums`}
           >
-            <span>{whenLabel}</span>
+            <span className="text-sm">{whenLabel}</span>
             <button
               type="button"
               className="text-accent cursor-pointer border-0 bg-transparent p-0 text-[11px] font-semibold tracking-[0.04em] uppercase"
@@ -632,7 +632,7 @@ export function AppointmentForm({
 
         <button
           type="submit"
-          className="rounded-card bg-accent text-on-accent shadow-fab min-h-12 w-full cursor-pointer border-0 text-center text-[15px] font-semibold disabled:cursor-default disabled:opacity-60"
+          className="rounded-card bg-accent text-on-accent shadow-fab flex min-h-12 w-full cursor-pointer items-center justify-center border-0 text-center text-[15px] font-semibold disabled:cursor-default disabled:opacity-60"
           disabled={isSaving}
         >
           {isSaving ? t('booking.form.saving') : t('booking.form.save')}
