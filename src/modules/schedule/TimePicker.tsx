@@ -72,7 +72,7 @@ export function TimePicker({
   return (
     <div
       data-testid="time-sheet"
-      className="bg-surface shadow-card fixed inset-x-0 bottom-0 z-[3] rounded-t-[22px] px-4 pt-2.5 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+      className="bg-surface shadow-sheet fixed inset-x-0 bottom-0 z-[3] rounded-t-[22px] px-4 pt-2.5 pb-[calc(1rem+env(safe-area-inset-bottom))]"
     >
       <div className="bg-line mx-auto mt-0.5 mb-3 h-1 w-9 rounded-full" />
       <div className="mb-0.5 flex items-baseline justify-between gap-2.5">
@@ -92,7 +92,7 @@ export function TimePicker({
 
       <div className="relative flex items-center justify-center gap-1.5 pt-2 pb-1">
         <div
-          className="bg-accent-soft border-accent-line absolute top-1/2 left-1/2 h-[42px] w-[150px] -translate-x-1/2 -translate-y-1/2 rounded-xl border"
+          className="bg-accent-soft border-accent-line rounded-card absolute top-1/2 left-1/2 h-[42px] w-[150px] -translate-x-1/2 -translate-y-1/2 border"
           aria-hidden="true"
         />
 
@@ -155,7 +155,7 @@ export function TimePicker({
 
       <button
         type="button"
-        className="bg-accent text-on-accent mt-3 w-full cursor-pointer rounded-xl border-0 p-[13px] text-center text-[15px] font-[650] tabular-nums"
+        className="bg-accent text-on-accent rounded-card mt-3 w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650] tabular-nums"
         // `selected` is always the output of clampToGap (set at init, on
         // every re-derive, and on every stepper click), so this can never
         // emit a time outside [gap.start, latestStart] — a clash with the

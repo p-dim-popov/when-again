@@ -641,7 +641,7 @@ export function AppointmentForm({
         {isEditing && (
           <button
             type="button"
-            className="rounded-card border-danger-line text-danger cursor-pointer border bg-transparent py-[11px] text-center text-sm font-semibold disabled:cursor-default disabled:opacity-60"
+            className="rounded-card border-danger-line text-danger min-h-11 cursor-pointer border bg-transparent py-[11px] text-center text-sm font-semibold disabled:cursor-default disabled:opacity-60"
             onClick={() => void handleCancel()}
             disabled={cancelAppointmentMutation.isPending}
           >

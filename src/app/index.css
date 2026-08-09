@@ -19,6 +19,7 @@
   --sh-card:
     0 1px 2px rgba(22, 33, 28, 0.05), 0 14px 30px -20px rgba(22, 33, 28, 0.22);
   --sh-fab: 0 10px 20px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+  --sh-sheet: 0 -12px 34px -12px rgba(0, 0, 0, 0.4);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -105,6 +106,7 @@
   --radius-chip: 11px;
   --shadow-card: var(--sh-card);
   --shadow-fab: var(--sh-fab);
+  --shadow-sheet: var(--sh-sheet);
 }
 
 @layer base {
