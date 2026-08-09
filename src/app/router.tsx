@@ -14,11 +14,19 @@ import { t } from '../modules/i18n';
 
 interface TodaySearch {
   date?: string;
+  // Carried through the reschedule detour: when the day view was reached via
+  // the form's "Промени" in edit mode, `appt` is the id being edited so the
+  // next slot tap forwards it back to the form (keeping the round trip an
+  // edit rather than a new booking).
+  appt?: string;
 }
 
 interface NewAppointmentSearch {
   date?: string;
   time?: string;
+  // The appointment id being edited (absent ⇒ new booking). See
+  // `AppointmentForm`'s mount logic.
+  appt?: string;
 }
 
 const rootRoute = createRootRoute({
@@ -30,13 +38,14 @@ const todayRoute = createRoute({
   path: '/',
   validateSearch: (search: Record<string, unknown>): TodaySearch => ({
     date: typeof search.date === 'string' ? search.date : undefined,
+    appt: typeof search.appt === 'string' ? search.appt : undefined,
   }),
   component: TodayRoute,
 });
 
 function TodayRoute() {
-  const { date } = todayRoute.useSearch();
-  return <ScheduleScreen dateKey={date ?? todayKey(new Date())} />;
+  const { date, appt } = todayRoute.useSearch();
+  return <ScheduleScreen dateKey={date ?? todayKey(new Date())} appt={appt} />;
 }
 
 const clientsRoute = createRoute({
@@ -71,13 +80,14 @@ const newAppointmentRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): NewAppointmentSearch => ({
     date: typeof search.date === 'string' ? search.date : undefined,
     time: typeof search.time === 'string' ? search.time : undefined,
+    appt: typeof search.appt === 'string' ? search.appt : undefined,
   }),
   component: NewAppointmentRoute,
 });
 
 function NewAppointmentRoute() {
-  const { date, time } = newAppointmentRoute.useSearch();
-  return <AppointmentForm date={date} time={time} />;
+  const { date, time, appt } = newAppointmentRoute.useSearch();
+  return <AppointmentForm date={date} time={time} appt={appt} />;
 }
 
 // Placeholder: Task 8 replaces this with the real ShareLanding (a summary +

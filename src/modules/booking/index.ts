@@ -11,4 +11,9 @@ export {
 } from './draftStore';
 export type { BookingDraft } from './draftStore';
 export { rememberService } from './remembered';
-export { useAddClient, useSaveAppointment } from './mutations';
+export {
+  useAddClient,
+  useCancelAppointment,
+  useSaveAppointment,
+  useUpdateAppointment,
+} from './mutations';

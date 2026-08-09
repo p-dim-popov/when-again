@@ -73,17 +73,14 @@ function handleMoreTapStub() {
   // Unspecified; not part of this task.
 }
 
-// Tapping an appointment opens the edit form in Task 7; a no-op stub here.
-function handleAppointmentTapStub() {
-  // Wired in Task 7.
-}
-
 function AppointmentBlock({
   appt,
   clientName,
+  onTap,
 }: {
   appt: DayLayoutItem & { kind: 'appt' };
   clientName: string;
+  onTap: (id: string) => void;
 }) {
   const start = appt.appt.start.dateTime.slice(11);
   const startMin = Number(start.slice(0, 2)) * 60 + Number(start.slice(3, 5));
@@ -104,7 +101,7 @@ function AppointmentBlock({
       <button
         type="button"
         className="schedule-appt-block"
-        onClick={handleAppointmentTapStub}
+        onClick={() => onTap(appt.appt.id)}
       >
         <div className="schedule-appt-who">
           {clientName}
@@ -180,7 +177,17 @@ function GapRow({
   );
 }
 
-export function ScheduleScreen({ dateKey: dateKeyProp }: { dateKey: string }) {
+export function ScheduleScreen({
+  dateKey: dateKeyProp,
+  appt,
+}: {
+  dateKey: string;
+  // Present only during a reschedule detour: the id of the appointment being
+  // edited, forwarded from the form's "Промени". `schedule` only reads and
+  // re-emits this string on navigation — it never imports `booking`, so the
+  // module graph stays acyclic.
+  appt?: string;
+}) {
   const navigate = useNavigate();
   const dateKey = parseDateKey(dateKeyProp)
     ? dateKeyProp
@@ -220,17 +227,33 @@ export function ScheduleScreen({ dateKey: dateKeyProp }: { dateKey: string }) {
     [appointments],
   );
 
+  // Day navigation (‹ ›, week strip) preserves `appt` so a provider can
+  // reschedule to a different day: the edit identity survives the day change.
   function goTo(newDateKey: string) {
-    void navigate({ to: '/', search: { date: newDateKey } });
+    void navigate({
+      to: '/',
+      search: { date: newDateKey, ...(appt ? { appt } : {}) },
+    });
   }
 
   // Both doors to picking a time — a quick-slot chip and the "друг час"
   // sheet — land on the same route with the same search-param shape.
   // `schedule` navigates by route string only; it never imports `booking`,
-  // so the module graph stays acyclic.
+  // so the module graph stays acyclic. `appt`, when present, is forwarded so
+  // the pick returns to the form as an edit (reschedule) rather than a new
+  // booking.
   function goToForm(time: string) {
     setOtherTimeGap(null);
-    void navigate({ to: '/appointment/new', search: { date: dateKey, time } });
+    void navigate({
+      to: '/appointment/new',
+      search: { date: dateKey, time, ...(appt ? { appt } : {}) },
+    });
+  }
+
+  // Tapping an existing appointment opens the shared form in edit mode; the id
+  // travels in the URL (no `booking` import).
+  function openAppointment(id: string) {
+    void navigate({ to: '/appointment/new', search: { appt: id } });
   }
 
   return (
@@ -294,6 +317,7 @@ export function ScheduleScreen({ dateKey: dateKeyProp }: { dateKey: string }) {
                 clientName={
                   clientNameById.get(item.appt.clientId) ?? item.appt.clientId
                 }
+                onTap={openAppointment}
               />
             ) : (
               <GapRow

@@ -1,14 +1,20 @@
 import { useForm } from '@tanstack/react-form';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getActiveLanguage, t } from '../i18n';
-import { listClients, type Client } from '../clients';
+import { getClient, listClients, type Client } from '../clients';
+import { getAppointment, type Appointment } from '../appointments';
 import { getSettings, updateSettings, type ServicePreset } from '../settings';
 import { wallClockNow, type WallClock } from '../time';
 import { parseDateKey } from '../schedule';
 import { draftStore, patchDraft, useBookingDraft } from './draftStore';
-import { useAddClient, useSaveAppointment } from './mutations';
+import {
+  useAddClient,
+  useCancelAppointment,
+  useSaveAppointment,
+  useUpdateAppointment,
+} from './mutations';
 import { rememberService } from './remembered';
 import { presetPatch } from './servicePreset';
 import './AppointmentForm.css';
@@ -39,30 +45,68 @@ interface ServiceFormValues {
   price: number | null;
 }
 
-// The draft-backed "new appointment" form — the funnel's last step. Day/time
-// picking happens only on the day view (`schedule/ScheduleScreen.tsx`); this
-// component never renders a time picker. It reads `date`/`time` from the
-// `/appointment/new` route's search params (passed down by
-// `src/app/router.tsx`) and seeds the draft store with them on mount,
-// merging over any client/service/duration/price already in the draft from
-// an earlier visit — that's what makes the "Промени" (change time) round
-// trip back to the day view lossless.
+// The draft-backed appointment form — the funnel's last step, shared by both
+// "new" and "edit". Day/time picking happens only on the day view
+// (`schedule/ScheduleScreen.tsx`); this component never renders a time picker.
+// It reads `date`/`time`/`appt` from the `/appointment/new` route's search
+// params (passed down by `src/app/router.tsx`).
+//
+// `appt` is the id of an appointment being edited (absent ⇒ new booking). It
+// travels in the URL so an edit survives the "Промени" → day-view detour and
+// never leaks into a fresh booking. On first entry to edit the appointment is
+// loaded and its fields seed the draft + form; a round-trip return keeps the
+// (possibly user-edited) draft and only re-applies the re-picked date/time.
 export function AppointmentForm({
   date,
   time,
+  appt,
 }: {
   date?: string;
   time?: string;
+  appt?: string;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const draft = useBookingDraft();
 
+  const editingId = appt ?? null;
+
   // Snapshot the draft once, synchronously, at first render — before the
   // mount effect below overwrites dateKey/time. This is what a "Промени"
   // round trip returns to fill back in: client/service/duration/price
-  // survived in the draft while the day view was on screen.
+  // survived in the draft while the day view was on screen. On a round-trip
+  // return in edit mode the draft already holds the edited fields (they were
+  // patched on first entry and persisted through the detour), so this snapshot
+  // seeds the form with them exactly the same way as a new-booking round trip.
   const [initialDraft] = useState(() => draftStore.state);
+
+  // First-entry load for edit mode: the appointment plus its client's name
+  // (the form's client field shows the name, but the appointment only carries
+  // `clientId`). Cached under `['appointment', id]` — the same key
+  // `useUpdateAppointment`/`useCancelAppointment` invalidate. Also the source
+  // of truth for the ORIGINAL `status`, which must be preserved on save (a
+  // reschedule must not silently flip a 'done'/'cancelled' record to
+  // 'booked').
+  const { data: editLoad } = useQuery({
+    queryKey: ['appointment', editingId],
+    queryFn: async (): Promise<{
+      appointment: Appointment;
+      clientName: string;
+    } | null> => {
+      const appointment = await getAppointment(editingId as string);
+      if (!appointment) return null;
+      const client = await getClient(appointment.clientId);
+      return { appointment, clientName: client?.name ?? '' };
+    },
+    enabled: editingId != null,
+  });
+
+  // Distinguishes first-entry (draft.appointmentId !== editingId, hydrate from
+  // the loaded appointment) from a round-trip return (draft.appointmentId ===
+  // editingId, keep the draft). The ref guards against re-hydrating within a
+  // single mount once we've seeded the form fields. The hydrate effect itself
+  // lives below the `form`/client-state declarations it writes to.
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     const patch: { dateKey?: string; time?: string } = {};
@@ -81,6 +125,8 @@ export function AppointmentForm({
   });
 
   const saveAppointment = useSaveAppointment();
+  const updateAppointmentMutation = useUpdateAppointment();
+  const cancelAppointmentMutation = useCancelAppointment();
   const addClientMutation = useAddClient();
 
   const [clientQuery, setClientQuery] = useState(initialDraft.clientName ?? '');
@@ -138,6 +184,58 @@ export function AppointmentForm({
     },
   });
 
+  // Edit-mode mount logic (placed here so it can seed `form`/client state):
+  //  - no editingId → clear a stale appointmentId, keep other fields (handled
+  //    by the effect above? no — done here to keep all three branches in one
+  //    place).
+  //  - editingId set, draft.appointmentId !== editingId → FIRST entry: hydrate
+  //    from the loaded appointment (fields + client name + its own date/time).
+  //  - editingId set, draft.appointmentId === editingId → round-trip return:
+  //    keep the draft; the date/time effect above re-applies the re-picked
+  //    slot. So a reschedule is just an edit whose Кога changed.
+  useEffect(() => {
+    if (editingId == null) {
+      // New booking: clear any stale `appointmentId` left over from a previous
+      // edit so this booking can't be mistaken for an edit. Other fields are
+      // intentionally kept (new-booking Промени round-trip preservation, per
+      // the plan); a fresh booking's reset happens elsewhere (month picker /
+      // landing's Готово).
+      if (draft.appointmentId !== null) patchDraft({ appointmentId: null });
+      return;
+    }
+    if (draft.appointmentId === editingId) return; // round-trip return
+    if (hydratedRef.current) return;
+    if (!editLoad) return; // wait for the load
+    hydratedRef.current = true;
+
+    const a = editLoad.appointment;
+    const dateKey = a.start.dateTime.slice(0, 10);
+    const timeOfDay = a.start.dateTime.slice(11, 16);
+    patchDraft({
+      appointmentId: a.id,
+      clientId: a.clientId,
+      clientName: editLoad.clientName,
+      service: a.service,
+      durationMinutes: a.durationMinutes,
+      price: a.price ?? null,
+      dateKey,
+      time: timeOfDay,
+    });
+    // The `initialDraft` snapshot didn't hold the appointment (it loads
+    // async), so push the loaded values into the form fields + client input
+    // state directly. This one-time seed of local state from async query data
+    // is exactly the "reset state when identity changes" pattern; the
+    // `hydratedRef`/`draft.appointmentId` guards make it fire once per edit.
+    form.setFieldValue('service', a.service);
+    form.setFieldValue('durationMinutes', a.durationMinutes);
+    form.setFieldValue('price', a.price ?? null);
+    /* eslint-disable react-hooks/set-state-in-effect */
+    setClientId(a.clientId);
+    setClientQuery(editLoad.clientName);
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId, draft.appointmentId, editLoad]);
+
   function applyPreset(preset: ServicePreset) {
     // Both the form fields and the draft derive from the same patch object
     // (see `servicePreset.ts`) so they can never disagree on `price` —
@@ -150,8 +248,17 @@ export function AppointmentForm({
     patchDraft(patch);
   }
 
+  // "Промени" returns to the day view to re-pick a time. In edit mode it
+  // forwards `appt` so the day view hands it back on the next slot tap and the
+  // round trip stays an edit (rather than starting a new booking).
   function goChangeWhen() {
-    void navigate({ to: '/', search: { date: draft.dateKey ?? undefined } });
+    void navigate({
+      to: '/',
+      search: {
+        date: draft.dateKey ?? undefined,
+        ...(editingId ? { appt: editingId } : {}),
+      },
+    });
   }
 
   async function handleSave(value: ServiceFormValues) {
@@ -174,14 +281,37 @@ export function AppointmentForm({
       timeZone,
     };
 
-    const appointment = await saveAppointment.mutateAsync({
-      clientId,
-      service: trimmedService,
-      start,
-      durationMinutes: value.durationMinutes,
-      ...(value.price !== null ? { price: value.price } : {}),
-      status: 'booked',
-    });
+    let savedId: string;
+    if (draft.appointmentId) {
+      // Edit / reschedule. Preserve the ORIGINAL status (read from the loaded
+      // appointment, not hardcoded 'booked') so editing a 'done'/'cancelled'
+      // record — or rescheduling one — keeps its state. `editLoad` is served
+      // from the `['appointment', id]` cache in edit mode, so its status is
+      // available synchronously; fall back to 'booked' only if it is somehow
+      // absent (should not happen once appointmentId is set).
+      const status = editLoad?.appointment?.status ?? 'booked';
+      const updated: Appointment = {
+        id: draft.appointmentId,
+        clientId,
+        service: trimmedService,
+        start,
+        durationMinutes: value.durationMinutes,
+        ...(value.price !== null ? { price: value.price } : {}),
+        status,
+      };
+      await updateAppointmentMutation.mutateAsync(updated);
+      savedId = updated.id;
+    } else {
+      const appointment = await saveAppointment.mutateAsync({
+        clientId,
+        service: trimmedService,
+        start,
+        durationMinutes: value.durationMinutes,
+        ...(value.price !== null ? { price: value.price } : {}),
+        status: 'booked',
+      });
+      savedId = appointment.id;
+    }
 
     // Best-effort: the appointment is already saved at this point, so a
     // failure remembering the service (IndexedDB quota, txn conflict, etc.)
@@ -203,9 +333,25 @@ export function AppointmentForm({
 
     // Keep the draft — the placeholder/eventual `/appointment/saved` screen
     // (Task 8) reads `appointmentId` to show the just-saved summary.
-    patchDraft({ appointmentId: appointment.id });
+    patchDraft({ appointmentId: savedId });
     void navigate({ to: '/appointment/saved' });
   }
+
+  // Cancel (edit mode only): flip the loaded appointment's status to
+  // 'cancelled' via the update path (the record stays, de-emphasised, on the
+  // day view). The draft's appointmentId is kept so the saved landing can show
+  // which appointment it was.
+  async function handleCancel() {
+    if (!editLoad?.appointment) return;
+    setSaveError(null);
+    await cancelAppointmentMutation.mutateAsync(editLoad.appointment);
+    patchDraft({ appointmentId: editLoad.appointment.id });
+    void navigate({ to: '/appointment/saved' });
+  }
+
+  const isEditing = draft.appointmentId != null;
+  const isSaving =
+    saveAppointment.isPending || updateAppointmentMutation.isPending;
 
   const remembered = (settings?.services ?? []).slice(
     0,
@@ -220,7 +366,9 @@ export function AppointmentForm({
   return (
     <div className="apptForm">
       <div className="apptForm-appbar">
-        <h1 className="apptForm-title">{t('booking.form.title')}</h1>
+        <h1 className="apptForm-title">
+          {t(isEditing ? 'booking.form.editTitle' : 'booking.form.title')}
+        </h1>
       </div>
 
       <form
@@ -381,15 +529,20 @@ export function AppointmentForm({
 
         {saveError && <p className="apptForm-error">{saveError}</p>}
 
-        <button
-          type="submit"
-          className="apptForm-save"
-          disabled={saveAppointment.isPending}
-        >
-          {saveAppointment.isPending
-            ? t('booking.form.saving')
-            : t('booking.form.save')}
+        <button type="submit" className="apptForm-save" disabled={isSaving}>
+          {isSaving ? t('booking.form.saving') : t('booking.form.save')}
         </button>
+
+        {isEditing && (
+          <button
+            type="button"
+            className="apptForm-cancel"
+            onClick={() => void handleCancel()}
+            disabled={cancelAppointmentMutation.isPending}
+          >
+            {t('booking.form.cancel')}
+          </button>
+        )}
       </form>
     </div>
   );

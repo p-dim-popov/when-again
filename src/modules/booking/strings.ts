@@ -13,6 +13,9 @@ const en = {
 
   // AppointmentForm (Task 6b)
   'booking.form.title': 'New appointment',
+  // Edit mode (Task 7): shown when the form opened on an existing appointment.
+  'booking.form.editTitle': 'Edit appointment',
+  'booking.form.cancel': 'Cancel appointment',
   'booking.form.client': 'Client',
   'booking.form.client.placeholder': 'Search or create…',
   'booking.form.client.create': 'Create "{name}"',
@@ -37,6 +40,8 @@ const bg = {
   'booking.saved.placeholder.title': 'Записан час',
 
   'booking.form.title': 'Нов час',
+  'booking.form.editTitle': 'Промяна на час',
+  'booking.form.cancel': 'Откажи часа',
   'booking.form.client': 'Клиент',
   'booking.form.client.placeholder': 'Търси или създай…',
   'booking.form.client.create': 'Създай „{name}“',
@@ -64,6 +69,8 @@ declare module '../i18n' {
     'booking.saved.placeholder.title': true;
 
     'booking.form.title': true;
+    'booking.form.editTitle': true;
+    'booking.form.cancel': true;
     'booking.form.client': true;
     'booking.form.client.placeholder': true;
     'booking.form.client.create': true;
