@@ -16,6 +16,7 @@ import {
   useUpdateAppointment,
 } from './mutations';
 import { rememberService } from './remembered';
+import { resolveClientId } from './resolveClient';
 import { presetPatch } from './servicePreset';
 
 // Shared field-box treatment (Tailwind v4 "Elevated & warm" restyle): the
@@ -175,8 +176,6 @@ export function AppointmentForm({
   const hasExactClientMatch = (clients ?? []).some(
     (c) => c.name.toLowerCase() === trimmedClientQuery.toLowerCase(),
   );
-  const showCreateClient =
-    trimmedClientQuery.length > 0 && !hasExactClientMatch;
   // A selected client whose name still matches the query verbatim (the
   // normal post-pick state) must not reopen the list — it would only ever
   // self-match. `suggestionsDismissed` additionally covers Escape/blur.
@@ -191,7 +190,7 @@ export function AppointmentForm({
     trimmedClientQuery.length > 0 &&
     !suggestionsDismissed &&
     !querySelectsClient &&
-    (clientSuggestions.length > 0 || showCreateClient);
+    clientSuggestions.length > 0;
 
   function selectClient(client: Client) {
     setClientId(client.id);
@@ -206,13 +205,6 @@ export function AppointmentForm({
     // require an explicit (re-)pick before saving.
     setClientId(null);
     patchDraft({ clientId: null, clientName: null });
-  }
-
-  async function handleCreateClient() {
-    const name = trimmedClientQuery;
-    if (!name) return;
-    const created = await addClientMutation.mutateAsync({ name });
-    selectClient(created);
   }
 
   // Default Времетраене to 30 minutes, but only for a brand-new booking that
@@ -328,7 +320,7 @@ export function AppointmentForm({
   async function handleSave(value: ServiceFormValues) {
     const trimmedService = value.service.trim();
     if (
-      !clientId ||
+      !trimmedClientQuery ||
       !trimmedService ||
       !draft.dateKey ||
       !draft.time ||
@@ -338,6 +330,17 @@ export function AppointmentForm({
       return;
     }
     setSaveError(null);
+
+    const resolvedClientId = await resolveClientId({
+      clientId,
+      name: trimmedClientQuery,
+      clients: clients ?? [],
+      createClient: (name) => addClientMutation.mutateAsync({ name }),
+    });
+    if (!resolvedClientId) {
+      setSaveError(t('booking.form.error.required'));
+      return;
+    }
 
     const timeZone = wallClockNow().timeZone;
     const start: WallClock = {
@@ -356,7 +359,7 @@ export function AppointmentForm({
       const status = editLoad?.appointment?.status ?? 'booked';
       const updated: Appointment = {
         id: draft.appointmentId,
-        clientId,
+        clientId: resolvedClientId,
         service: trimmedService,
         start,
         durationMinutes: value.durationMinutes,
@@ -367,7 +370,7 @@ export function AppointmentForm({
       savedId = updated.id;
     } else {
       const appointment = await saveAppointment.mutateAsync({
-        clientId,
+        clientId: resolvedClientId,
         service: trimmedService,
         start,
         durationMinutes: value.durationMinutes,
@@ -508,22 +511,15 @@ export function AppointmentForm({
                   {client.name}
                 </button>
               ))}
-              {showCreateClient && (
-                <button
-                  type="button"
-                  className="rounded-sm2 text-accent-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px] font-semibold"
-                  role="option"
-                  aria-selected={false}
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => void handleCreateClient()}
-                >
-                  {t('booking.form.client.create', {
-                    name: trimmedClientQuery,
-                  })}
-                </button>
-              )}
             </div>
           )}
+          {trimmedClientQuery.length > 0 &&
+            !hasExactClientMatch &&
+            clientId == null && (
+              <p className="text-faint mt-[5px] text-[11.5px]">
+                {t('booking.form.client.willCreate')}
+              </p>
+            )}
         </div>
 
         <form.Field name="service">

@@ -50,9 +50,9 @@ function firstFreeSlot(page: Page) {
   return page.getByTestId('free-slot').first();
 }
 
-/** Books ahead: month picker → future day → free quick-slot → form (inline
- * client create + service + duration) → Save → landing → Готово. Returns
- * what was booked so callers can assert on it. */
+/** Books ahead: month picker → future day → free quick-slot → form (client
+ * name auto-creates on save + service + duration) → Save → landing → Готово.
+ * Returns what was booked so callers can assert on it. */
 async function bookAppointment(
   page: Page,
   { clientName, service }: { clientName: string; service: string },
@@ -69,12 +69,11 @@ async function bookAppointment(
   ).toBeVisible();
   await expect(page.getByText(time)).toBeVisible();
 
+  // New name → inline hint; the client is auto-created on save (no tap needed).
   await page.locator('#apptForm-client').fill(clientName);
-  // The inline "Create '<name>'" suggestion carries `role="option"` (it's a
-  // member of the client-search listbox — see AppointmentForm.tsx) which
-  // overrides its host `<button>`'s implicit role, so it resolves by the
-  // "option" role rather than "button".
-  await page.getByRole('option', { name: `Create "${clientName}"` }).click();
+  await expect(
+    page.getByText('New client — will be added when you save.'),
+  ).toBeVisible();
 
   await page.locator('#apptForm-service').fill(service);
   await page.locator('#apptForm-duration').fill('30');
