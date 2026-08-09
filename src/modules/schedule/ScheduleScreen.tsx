@@ -91,11 +91,8 @@ function AppointmentBlock({
 
   return (
     <div
-      // `schedule-appt` / `schedule-appt-cancelled` carry no styling of their
-      // own (ScheduleScreen.css is gone) — they're kept as stable selector
-      // hooks for e2e/provider-booking.spec.ts, which locates this block and
-      // its cancelled state by class name.
-      className={`schedule-appt grid grid-cols-[44px_1fr] items-start gap-2.5 py-2.5 pr-[15px] pl-3 ${cancelled ? 'schedule-appt-cancelled' : ''}`}
+      data-testid={cancelled ? 'appt-cancelled' : undefined}
+      className="grid grid-cols-[44px_1fr] items-start gap-2.5 py-2.5 pr-[15px] pl-3"
     >
       <div className="pt-px text-[13.5px] font-bold tabular-nums">
         {start}
@@ -105,7 +102,8 @@ function AppointmentBlock({
       </div>
       <button
         type="button"
-        className={`schedule-appt-block rounded-card border-line bg-surface shadow-card w-full cursor-pointer border px-[11px] py-2 text-left ${
+        data-testid="appt-block"
+        className={`rounded-card border-line bg-surface shadow-card w-full cursor-pointer border px-[11px] py-2 text-left ${
           cancelled ? 'text-muted' : 'border-l-gold border-l-[3px]'
         }`}
         onClick={() => onTap(appt.appt.id)}
@@ -161,9 +159,8 @@ function GapRow({
           <button
             key={time}
             type="button"
-            // `schedule-slot` carries no styling of its own — kept as a
-            // stable e2e selector hook (see the block comment above).
-            className="schedule-slot rounded-chip border-line bg-surface-2 text-accent-ink before:text-accent inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums before:font-bold before:content-['+']"
+            data-testid="free-slot"
+            className="rounded-chip border-line bg-surface-2 text-accent-ink before:text-accent inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums before:font-bold before:content-['+']"
             onClick={() => onSlotTap(time)}
           >
             {time}
@@ -172,7 +169,7 @@ function GapRow({
         {mayHaveMore && (
           <button
             type="button"
-            className="schedule-slot schedule-slot-more rounded-chip border-line bg-surface-2 text-accent-ink inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums"
+            className="rounded-chip border-line bg-surface-2 text-accent-ink inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums"
             onClick={handleMoreTapStub}
           >
             {t('schedule.more')}
@@ -180,7 +177,7 @@ function GapRow({
         )}
         <button
           type="button"
-          className="schedule-slot schedule-slot-other rounded-chip border-line bg-surface-2 text-muted inline-flex min-h-11 cursor-pointer items-center gap-1.5 border border-dashed px-3 text-[12.5px] tabular-nums"
+          className="rounded-chip border-line bg-surface-2 text-muted inline-flex min-h-11 cursor-pointer items-center gap-1.5 border border-dashed px-3 text-[12.5px] tabular-nums"
           onClick={() => onOtherTime(item.gap)}
         >
           <span aria-hidden="true">◷</span> {t('schedule.otherTime')}
@@ -296,9 +293,8 @@ export function ScheduleScreen({
   return (
     <div className="flex flex-col pb-2">
       <div
-        // `schedule-appbar` carries no styling of its own — kept as a
-        // stable e2e selector hook (see the block comment in AppointmentBlock).
-        className="schedule-appbar flex items-center gap-2.5 px-[13px] py-2.5"
+        data-testid="day-appbar"
+        className="flex items-center gap-2.5 px-[13px] py-2.5"
       >
         <button
           type="button"
