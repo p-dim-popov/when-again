@@ -298,7 +298,7 @@ export function ScheduleScreen({
       >
         <button
           type="button"
-          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-11 flex-none cursor-pointer items-center justify-center border text-lg"
           aria-label={t('schedule.nav.prevDay')}
           onClick={() => goTo(addDays(dateKey, -1))}
         >
@@ -326,7 +326,7 @@ export function ScheduleScreen({
         </button>
         <button
           type="button"
-          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-11 flex-none cursor-pointer items-center justify-center border text-lg"
           aria-label={t('schedule.nav.nextDay')}
           onClick={() => goTo(addDays(dateKey, 1))}
         >

@@ -109,7 +109,7 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
       <div className="flex items-center justify-center gap-2.5 px-[13px] pt-2 pb-1.5">
         <button
           type="button"
-          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-11 flex-none cursor-pointer items-center justify-center border text-lg"
           aria-label={t('booking.nav.prevMonth')}
           onClick={goToPrevMonth}
         >
@@ -120,7 +120,7 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
         </div>
         <button
           type="button"
-          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-11 flex-none cursor-pointer items-center justify-center border text-lg"
           aria-label={t('booking.nav.nextMonth')}
           onClick={goToNextMonth}
         >
