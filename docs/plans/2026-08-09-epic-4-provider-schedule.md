@@ -487,3 +487,26 @@ detour and never leaks into a fresh booking.
   `addAppointment`; reschedule is just an edit whose Кога changed. Cancel (edit
   mode only) sets `status: 'cancelled'` via `updateAppointment`, keeping the
   appointment as a de-emphasised record. All three end on `/appointment/saved`.
+
+### Day-view → month jump + fresh-booking reset (Task 7b, under the design update)
+
+Gap found during execution: the day view could only step day-by-day, so a
+reschedule (or a new booking) could not jump to a far month without abandoning
+the flow via ＋ Нов час. Fix: open the month picker FROM the day view, carrying
+context. The same entry signal also resolves the deferred fresh-booking draft
+reset (Tasks 6b/7 concern #2).
+
+- **`/book` gains search `{ date?: string; appt?: string }`.**
+- **Day-view month header is tappable** → `navigate({ to: '/book', search: { date: <current dateKey>, ...(appt ? { appt } : {}) } })`. Plain route
+  string — `schedule` still never imports `booking`. Add a subtle affordance +
+  an aria-label (`schedule.chooseMonth`).
+- **`MonthPicker`** reads the search: initial shown month = `date` (else today);
+  on day-select → `navigate({ to: '/', search: { date: key, ...(appt ? { appt } : {}) } })` (forwards reschedule identity through the month jump).
+- **Fresh-booking reset via the entry signal.** On `MonthPicker` mount, if there
+  is NO `date` AND NO `appt` (the canonical ＋ Нов час entry), call
+  `resetDraft()` once — a brand-new booking starts clean, so a prior edit's or
+  booking's fields can't pre-fill. When `date` is present (came from a day view
+  mid-flow) or `appt` is present (reschedule), do NOT reset — in-flight fields
+  and reschedule context are preserved. (The landing's Готово, Task 8, also
+  resets.) Residual minor: browsing → month-header → slot without ＋ can still
+  carry stale fields; acceptable, noted for whole-branch.
