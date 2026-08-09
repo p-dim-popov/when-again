@@ -10,6 +10,7 @@ import { parseDateKey } from '../schedule';
 import { draftStore, patchDraft, useBookingDraft } from './draftStore';
 import { useAddClient, useSaveAppointment } from './mutations';
 import { rememberService } from './remembered';
+import { presetPatch } from './servicePreset';
 import './AppointmentForm.css';
 
 // Same cache entries the schedule screen reads/writes (see
@@ -138,14 +139,15 @@ export function AppointmentForm({
   });
 
   function applyPreset(preset: ServicePreset) {
-    form.setFieldValue('service', preset.name);
-    form.setFieldValue('durationMinutes', preset.durationMinutes);
-    if (preset.price !== undefined) form.setFieldValue('price', preset.price);
-    patchDraft({
-      service: preset.name,
-      durationMinutes: preset.durationMinutes,
-      price: preset.price ?? null,
-    });
+    // Both the form fields and the draft derive from the same patch object
+    // (see `servicePreset.ts`) so they can never disagree on `price` —
+    // notably, switching from a priced preset to an unpriced one always
+    // clears it on both sides instead of leaving a stale value on one.
+    const patch = presetPatch(preset);
+    form.setFieldValue('service', patch.service);
+    form.setFieldValue('durationMinutes', patch.durationMinutes);
+    form.setFieldValue('price', patch.price);
+    patchDraft(patch);
   }
 
   function goChangeWhen() {
@@ -181,14 +183,23 @@ export function AppointmentForm({
       status: 'booked',
     });
 
-    const currentServices = (settings ?? (await getSettings())).services;
-    const nextServices = rememberService(currentServices, {
-      name: trimmedService,
-      durationMinutes: value.durationMinutes,
-      ...(value.price !== null ? { price: value.price } : {}),
-    });
-    await updateSettings({ services: nextServices });
-    void queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
+    // Best-effort: the appointment is already saved at this point, so a
+    // failure remembering the service (IndexedDB quota, txn conflict, etc.)
+    // must not strand the user on the form — that would both hide the
+    // successful save and risk a duplicate booking if they tap Save again.
+    try {
+      const currentServices = (settings ?? (await getSettings())).services;
+      const nextServices = rememberService(currentServices, {
+        name: trimmedService,
+        durationMinutes: value.durationMinutes,
+        ...(value.price !== null ? { price: value.price } : {}),
+      });
+      await updateSettings({ services: nextServices });
+      void queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
+    } catch {
+      // best-effort: a failed remember-service write must not block
+      // navigation to the saved landing — the appointment itself is safe.
+    }
 
     // Keep the draft — the placeholder/eventual `/appointment/saved` screen
     // (Task 8) reads `appointmentId` to show the just-saved summary.
