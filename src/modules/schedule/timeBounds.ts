@@ -129,7 +129,8 @@ export function wheelColumns(times: string[]): {
 
 /**
  * The valid minute in `minutes` closest to `target` ('mm'); on a tie the lower
- * minute wins. `minutes` must be non-empty (a valid hour always has ≥1 minute).
+ * minute wins. `minutes` must be non-empty (a valid hour always has ≥1 minute)
+ * and in ascending order (ties resolve to the lower minute).
  */
 export function nearestMinute(minutes: string[], target: string): string {
   const t = Number(target);

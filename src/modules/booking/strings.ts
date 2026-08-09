@@ -27,7 +27,7 @@ const en = {
   'booking.form.editTitle': 'Edit appointment',
   'booking.form.cancel': 'Cancel appointment',
   'booking.form.client': 'Client',
-  'booking.form.client.placeholder': 'Search or create…',
+  'booking.form.client.placeholder': 'Search or add a name…',
   'booking.form.client.willCreate':
     'New client — will be added when you save.',
   'booking.form.service': 'Service',
@@ -64,7 +64,7 @@ const bg = {
   'booking.form.editTitle': 'Промяна на час',
   'booking.form.cancel': 'Откажи часа',
   'booking.form.client': 'Клиент',
-  'booking.form.client.placeholder': 'Търси или създай…',
+  'booking.form.client.placeholder': 'Търси или добави име…',
   'booking.form.client.willCreate': 'Нов клиент — ще бъде добавен при запис.',
   'booking.form.service': 'Услуга',
   'booking.form.service.placeholder': 'Име на услугата',

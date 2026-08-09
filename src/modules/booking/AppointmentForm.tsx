@@ -97,7 +97,8 @@ export function AppointmentForm({
   // once, synchronously, in a useState initializer — before the
   // `initialDraft` snapshot below — so the cleared draft is what seeds the
   // form. date/time are re-applied from the URL by the mount effect further
-  // down.
+  // down. Relies on useSyncExternalStore's tearing-recovery so the pre-reset
+  // value captured earlier in the same render never reaches the committed DOM.
   useState(() => {
     if (shouldResetDraft({ appt, resume })) resetDraft();
     return null;
