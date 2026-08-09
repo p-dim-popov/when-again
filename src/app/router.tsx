@@ -5,12 +5,7 @@ import {
 } from '@tanstack/react-router';
 import { AppShell, Placeholder, SettingsScreen } from '../modules/shell';
 import { ScheduleScreen, todayKey } from '../modules/schedule';
-import {
-  AppointmentForm,
-  MonthPicker,
-  useBookingDraft,
-} from '../modules/booking';
-import { t } from '../modules/i18n';
+import { AppointmentForm, MonthPicker, ShareLanding } from '../modules/booking';
 
 interface TodaySearch {
   date?: string;
@@ -107,36 +102,15 @@ function NewAppointmentRoute() {
   return <AppointmentForm date={date} time={time} appt={appt} />;
 }
 
-// Placeholder: Task 8 replaces this with the real ShareLanding (a summary +
-// disabled "Сподели" + "Готово" back to the day). This only exists so the
-// form's `navigate({ to: '/appointment/saved' })` type-checks and the funnel
-// can be smoke-tested end to end now.
+// Save, cancel, and reschedule (Tasks 6b/7) all navigate here after
+// `patchDraft({ appointmentId })`; `ShareLanding` reads that id, shows a
+// calm confirmation, and is the funnel's reset point (its "Готово" calls
+// `resetDraft()`). No payload/QR here — that's Epic 6.
 const appointmentSavedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/appointment/saved',
-  component: AppointmentSavedPlaceholder,
+  component: ShareLanding,
 });
-
-function AppointmentSavedPlaceholder() {
-  const draft = useBookingDraft();
-  return (
-    <main
-      style={{
-        display: 'grid',
-        placeItems: 'center',
-        minHeight: '60vh',
-        textAlign: 'center',
-        padding: 24,
-      }}
-    >
-      <div>
-        <h1>{t('booking.saved.placeholder.title')}</h1>
-        <p>{t('shell.soon')}</p>
-        {draft.appointmentId && <p>{draft.appointmentId}</p>}
-      </div>
-    </main>
-  );
-}
 
 const routeTree = rootRoute.addChildren([
   todayRoute,

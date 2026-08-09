@@ -108,6 +108,16 @@ export function AppointmentForm({
   // lives below the `form`/client-state declarations it writes to.
   const hydratedRef = useRef(false);
 
+  // Set right before save/cancel patches `appointmentId` and navigates away
+  // (see `handleSave`/`handleCancel`). Guards the mount effect below: without
+  // it, patching a NEW booking's `appointmentId` to the just-saved id
+  // re-triggers that effect (the draft store notifies subscribers
+  // synchronously, and this component is still mounted until the route
+  // transition commits) — its "no editingId → clear appointmentId" branch
+  // would then read the fresh id as "stale" and immediately null it back out
+  // from under the landing screen.
+  const leavingRef = useRef(false);
+
   useEffect(() => {
     const patch: { dateKey?: string; time?: string } = {};
     if (date) patch.dateKey = date;
@@ -194,6 +204,7 @@ export function AppointmentForm({
   //    keep the draft; the date/time effect above re-applies the re-picked
   //    slot. So a reschedule is just an edit whose Кога changed.
   useEffect(() => {
+    if (leavingRef.current) return; // save/cancel already claimed this draft
     if (editingId == null) {
       // New booking: clear any stale `appointmentId` left over from a previous
       // edit so this booking can't be mistaken for an edit. Other fields are
@@ -331,8 +342,11 @@ export function AppointmentForm({
       // navigation to the saved landing — the appointment itself is safe.
     }
 
-    // Keep the draft — the placeholder/eventual `/appointment/saved` screen
-    // (Task 8) reads `appointmentId` to show the just-saved summary.
+    // Keep the draft — the `/appointment/saved` `ShareLanding` (Task 8) reads
+    // `appointmentId` to show the just-saved summary. `leavingRef` stops the
+    // mount effect above from clearing it back out on the re-render this
+    // patch triggers (see the ref's comment).
+    leavingRef.current = true;
     patchDraft({ appointmentId: savedId });
     void navigate({ to: '/appointment/saved' });
   }
@@ -345,6 +359,7 @@ export function AppointmentForm({
     if (!editLoad?.appointment) return;
     setSaveError(null);
     await cancelAppointmentMutation.mutateAsync(editLoad.appointment);
+    leavingRef.current = true;
     patchDraft({ appointmentId: editLoad.appointment.id });
     void navigate({ to: '/appointment/saved' });
   }

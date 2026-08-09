@@ -7,9 +7,19 @@ const en = {
   'booking.pickDay': 'Choose a day',
   'booking.nav.prevMonth': 'Previous month',
   'booking.nav.nextMonth': 'Next month',
-  // Placeholder-route copy: `/appointment/saved` renders a stand-in screen
-  // until the real ShareLanding lands (Task 8).
-  'booking.saved.placeholder.title': 'Appointment saved',
+
+  // ShareLanding (Task 8) — the funnel's terminal screen after save, cancel,
+  // or reschedule.
+  'booking.landing.savedTitle': 'Appointment saved',
+  'booking.landing.cancelledTitle': 'Appointment cancelled',
+  'booking.landing.client': 'Client',
+  'booking.landing.service': 'Service',
+  'booking.landing.when': 'When',
+  'booking.landing.duration': 'Duration',
+  'booking.landing.price': 'Price',
+  'booking.landing.shareSoon': 'Sharing (QR / link) coming soon',
+  'booking.landing.done': 'Done',
+  'booking.landing.empty': 'Nothing to show',
 
   // AppointmentForm (Task 6b)
   'booking.form.title': 'New appointment',
@@ -37,7 +47,17 @@ const bg = {
   'booking.pickDay': 'Изберете ден',
   'booking.nav.prevMonth': 'Предишен месец',
   'booking.nav.nextMonth': 'Следващ месец',
-  'booking.saved.placeholder.title': 'Записан час',
+
+  'booking.landing.savedTitle': 'Часът е записан',
+  'booking.landing.cancelledTitle': 'Часът е отменен',
+  'booking.landing.client': 'Клиент',
+  'booking.landing.service': 'Услуга',
+  'booking.landing.when': 'Кога',
+  'booking.landing.duration': 'Времетраене',
+  'booking.landing.price': 'Цена',
+  'booking.landing.shareSoon': 'Споделяне (QR/връзка) идва скоро',
+  'booking.landing.done': 'Готово',
+  'booking.landing.empty': 'Няма какво да се покаже',
 
   'booking.form.title': 'Нов час',
   'booking.form.editTitle': 'Промяна на час',
@@ -66,7 +86,17 @@ declare module '../i18n' {
     'booking.pickDay': true;
     'booking.nav.prevMonth': true;
     'booking.nav.nextMonth': true;
-    'booking.saved.placeholder.title': true;
+
+    'booking.landing.savedTitle': true;
+    'booking.landing.cancelledTitle': true;
+    'booking.landing.client': true;
+    'booking.landing.service': true;
+    'booking.landing.when': true;
+    'booking.landing.duration': true;
+    'booking.landing.price': true;
+    'booking.landing.shareSoon': true;
+    'booking.landing.done': true;
+    'booking.landing.empty': true;
 
     'booking.form.title': true;
     'booking.form.editTitle': true;
