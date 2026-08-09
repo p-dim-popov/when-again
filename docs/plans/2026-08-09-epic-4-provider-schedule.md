@@ -413,3 +413,44 @@ git commit -m "feat: add the month picker and booking-draft store"
 - **Store vs router.** The schedule _date_ is a route search param (deep-linkable, back-button friendly). The TanStack Store holds only the transient booking _draft_ (date/time/appointmentId in flight). Do not duplicate the date in both as the source of truth — the route param wins for the schedule; the draft is set when entering the form.
 - **i18n from day one.** No hardcoded user-facing strings; every new module ships `strings.ts` and augments `TranslationKeys`. BG copy is a draft.
 - **Deferred (tracked):** QR/payload/share (#6), Клиенти screen (#5), Настройки + mode switch (Settings/#7), configurable working hours & slot step, `.ics` (#8).
+
+---
+
+## Design update (2026-08-09, during execution) — time picking lives on the day view
+
+Supersedes the parts of Tasks 5–9 that placed the time picker in `booking` and
+opened it from the form. Rationale: keep the module graph acyclic
+(`schedule` must not import `booking`) AND match the approved flexible-time
+mockup, which shows the "друг час" sheet opening **over the day view**. Decided
+with the repo owner.
+
+- **The time picker moves into `schedule`.** `timeBounds.ts`/`.test.ts`,
+  `TimePicker.tsx`/`.css`, and the picker's i18n strings relocate from
+  `booking` to `schedule`. `booking` no longer exports or renders them.
+- **A time is only ever chosen on the day view (Днес).** Quick-slot chips and
+  the "◷ друг час" inline sheet both live there. Picking either navigates to
+  the form route with the choice as **search params**
+  (`/appointment/new?date=<YYYY-MM-DD>&time=<HH:mm>`). `schedule` navigates by
+  route string only — it never imports `booking`, so no cycle.
+- **The form's "Промени" (Change) returns to the day view**, not an in-form
+  picker: it navigates to `/?date=<dateKey>` so the provider re-picks against
+  the surrounding slots (the "notebook" view), then a slot tap returns them to
+  the form. This means the form does NOT render `TimePicker`.
+- **The booking draft preserves in-progress fields across that round trip.**
+  The `draftStore` is extended from `{ dateKey, time, appointmentId }` to also
+  hold the in-progress appointment fields (`clientId`, `clientName`, `service`,
+  `durationMinutes`, `price`). The form is draft-backed: it seeds `dateKey`/
+  `time` from the search params on mount (merging over any preserved draft),
+  binds its other fields to the draft, and so a Промени → day view → re-pick
+  round trip keeps client/service/price intact. The draft is **kept through
+  save** (save sets `appointmentId` on it) so the share landing can render the
+  summary; `resetDraft()` runs on the landing's **Готово** (Task 8) or when a
+  new booking begins — NOT on save.
+- **Task 6 is executed in two dispatches:** (6a) relocate the picker + make the
+  day view bookable (друг час inline sheet; quick-slot & друг-час picks →
+  `/appointment/new` search-param route, added as a placeholder here); (6b) the
+  real draft-backed `AppointmentForm` + `remembered` + `mutations`, replacing
+  the placeholder, with Промени → day view.
+- **Downstream:** Task 7 (edit) preloads the draft incl. `appointmentId` and
+  uses the same Промени → day view flow to reschedule. Task 9 e2e asserts the
+  round trip (друг час over the day → form → Промени → day → re-pick → save).
