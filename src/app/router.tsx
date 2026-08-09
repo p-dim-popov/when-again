@@ -3,7 +3,7 @@ import {
   createRoute,
   createRouter,
 } from '@tanstack/react-router';
-import { AppShell, Placeholder } from '../modules/shell';
+import { AppShell, Placeholder, SettingsScreen } from '../modules/shell';
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -25,7 +25,9 @@ const clientsRoute = createRoute({
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/settings',
-  component: () => <Placeholder titleKey="shell.placeholder.settings" />,
+  // Temporary: Epic 7 ships the real Settings screen; for now this keeps the
+  // БГ/EN/Auto language toggle reachable (see modules/shell/SettingsScreen).
+  component: SettingsScreen,
 });
 
 const bookRoute = createRoute({

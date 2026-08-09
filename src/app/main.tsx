@@ -11,13 +11,10 @@ import {
   registerStrings,
   type Language,
 } from '../modules/i18n';
-import { homeStrings } from '../modules/home';
 import { shellStrings } from '../modules/shell';
 import './index.css';
 
 async function bootstrap() {
-  registerStrings('en', homeStrings.en);
-  registerStrings('bg', homeStrings.bg);
   registerStrings('en', shellStrings.en);
   registerStrings('bg', shellStrings.bg);
   let language: Language;

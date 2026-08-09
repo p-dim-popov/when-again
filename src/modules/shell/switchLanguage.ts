@@ -7,9 +7,10 @@ export interface SwitchDeps {
 
 const defaultDeps: SwitchDeps = { reload: () => location.reload() };
 
-// TEMPORARY: powers the home-screen language toggle until the Settings UI epic
-// adds the permanent control. That control calls the same persist + reload
-// contract, so removing this widget does not touch the mechanism.
+// TEMPORARY: powers the settings-screen language toggle until Epic 7 ships
+// the real Settings screen (and the provider/client mode switch). That
+// control calls the same persist + reload contract, so removing this widget
+// does not touch the mechanism.
 export async function applyLanguageChoice(
   language: Language | null,
   deps: SwitchDeps = defaultDeps,

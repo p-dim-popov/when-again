@@ -2,3 +2,4 @@ dist
 dev-dist
 package-lock.json
 .superpowers
+docs/design/

@@ -8,6 +8,9 @@ const en = {
   'shell.soon': 'Coming soon',
   'shell.placeholder.clients': 'Clients',
   'shell.placeholder.settings': 'Settings',
+  'shell.settings.tagline':
+    'Appointment reminders. No server. No accounts. No fees.',
+  'shell.settings.lang.auto': 'Auto',
 } satisfies Strings;
 
 const bg = {
@@ -18,6 +21,9 @@ const bg = {
   'shell.soon': 'Скоро',
   'shell.placeholder.clients': 'Клиенти',
   'shell.placeholder.settings': 'Настройки',
+  'shell.settings.tagline':
+    'Напомняния за часове. Без сървър. Без акаунти. Без такси.',
+  'shell.settings.lang.auto': 'Автоматично',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -31,5 +37,7 @@ declare module '../i18n' {
     'shell.soon': true;
     'shell.placeholder.clients': true;
     'shell.placeholder.settings': true;
+    'shell.settings.tagline': true;
+    'shell.settings.lang.auto': true;
   }
 }
