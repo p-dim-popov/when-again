@@ -165,8 +165,8 @@ exact token values from the spec's color table.
   --ink:#16211c; --muted:#6b7a72; --faint:#9aa79e; --line:#e4ded1;
   --accent:#0e5a48; --accent-ink:#0b4638; --accent-soft:#e5ede7; --accent-line:#cfe0d6;
   --gold:#c9a96a; --danger:#c0504c; --danger-line:#e2c3c3; --on-accent:#fbfaf6;
-  --shadow-card:0 1px 2px rgba(22,33,28,.05), 0 14px 30px -20px rgba(22,33,28,.22);
-  --shadow-fab:0 10px 20px -6px color-mix(in srgb, var(--accent) 55%, transparent);
+  --sh-card:0 1px 2px rgba(22,33,28,.05), 0 14px 30px -20px rgba(22,33,28,.22);
+  --sh-fab:0 10px 20px -6px color-mix(in srgb, var(--accent) 55%, transparent);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -174,7 +174,7 @@ exact token values from the spec's color table.
     --ink:#e9ede9; --muted:#97a29b; --faint:#6c766f; --line:#262d28;
     --accent:#58b899; --accent-ink:#bfe3d5; --accent-soft:#17251f; --accent-line:#294138;
     --gold:#cbb079; --danger:#e08a87; --danger-line:#5a3435; --on-accent:#0f1512;
-    --shadow-card:0 1px 2px rgba(0,0,0,.4), 0 16px 34px -20px rgba(0,0,0,.7);
+    --sh-card:0 1px 2px rgba(0,0,0,.4), 0 16px 34px -20px rgba(0,0,0,.7);
   }
 }
 :root[data-theme="light"] { color-scheme: light; /* light values, same as :root */ }
@@ -201,8 +201,8 @@ exact token values from the spec's color table.
   --radius-sm2: 9px;
   --radius-card: 13px;
   --radius-chip: 11px;
-  --shadow-card: var(--shadow-card);
-  --shadow-fab: var(--shadow-fab);
+  --shadow-card: var(--sh-card);
+  --shadow-fab: var(--sh-fab);
 }
 
 @layer base {
