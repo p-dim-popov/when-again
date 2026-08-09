@@ -10,7 +10,6 @@ import {
   monthYearLabel,
   weekdayShortLabels,
 } from './calendarGrid';
-import './MonthPicker.css';
 
 // Step 1 of the booking funnel, ported from the "month picker" section of
 // docs/design/epic-4/schedule-and-booking-flow.html. Selecting a day hands
@@ -100,26 +99,28 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
   }
 
   return (
-    <div className="booking">
-      <div className="booking-head">
-        <h1 className="booking-title">{t('booking.pickDay')}</h1>
+    <div className="flex flex-col pb-2">
+      <div className="px-[15px] pt-3.5 text-center">
+        <h1 className="font-serif text-[15px] font-[680] tracking-[-0.01em]">
+          {t('booking.pickDay')}
+        </h1>
       </div>
 
-      <div className="booking-monthNav">
+      <div className="flex items-center justify-center gap-2.5 px-[13px] pt-2 pb-1.5">
         <button
           type="button"
-          className="booking-navBtn"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
           aria-label={t('booking.nav.prevMonth')}
           onClick={goToPrevMonth}
         >
           ‹
         </button>
-        <div className="booking-monthLabel">
+        <div className="text-ink min-w-[120px] text-center text-xs font-[620] capitalize">
           {monthYearLabel(language, viewYear, viewMonth)}
         </div>
         <button
           type="button"
-          className="booking-navBtn"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
           aria-label={t('booking.nav.nextMonth')}
           onClick={goToNextMonth}
         >
@@ -127,20 +128,20 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
         </button>
       </div>
 
-      <div className="booking-cal">
-        <div className="booking-calGrid">
+      <div className="px-3.5 pt-0.5 pb-4">
+        <div className="grid grid-cols-7 gap-[3px]">
           {weekdayLabels.map((label, i) => (
-            <div key={`wd-${i}`} className="booking-wd">
+            <div
+              key={`wd-${i}`}
+              className="text-faint pt-1 pb-1.5 text-center text-[9.5px] tracking-[0.05em] uppercase"
+            >
               {label}
             </div>
           ))}
           {cells.map((cell, i) => {
             if (!cell) {
               return (
-                <div
-                  key={`empty-${i}`}
-                  className="booking-day booking-day-empty"
-                />
+                <div key={`empty-${i}`} className="invisible aspect-square" />
               );
             }
             const isPast = cell.dateKey < todayDateKey;
@@ -148,10 +149,13 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
             const isSelected = cell.dateKey === draft.dateKey;
             const hasDot = dottedDays.has(cell.dateKey);
             const className = [
-              'booking-day',
-              isPast && 'booking-day-past',
-              isToday && 'booking-day-today',
-              isSelected && 'booking-day-selected',
+              'relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-[10px] border-0 bg-transparent p-0 text-[13px] tabular-nums',
+              isSelected
+                ? 'bg-accent text-on-accent font-bold'
+                : isPast
+                  ? 'text-faint opacity-50'
+                  : 'text-ink',
+              isToday && 'ring-accent-line ring-1 ring-inset',
             ]
               .filter(Boolean)
               .join(' ');
@@ -163,7 +167,14 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
                 onClick={() => handleSelectDay(cell.dateKey)}
               >
                 {cell.day}
-                {hasDot && <span className="booking-dot" aria-hidden="true" />}
+                {hasDot && (
+                  <span
+                    aria-hidden="true"
+                    className={`mt-0.5 size-1 rounded-full ${
+                      isSelected ? 'bg-on-accent/85' : 'bg-accent'
+                    }`}
+                  />
+                )}
               </button>
             );
           })}
