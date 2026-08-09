@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { homeStrings } from './strings';
+import { bookingStrings } from './strings';
 
-describe('homeStrings', () => {
+describe('bookingStrings', () => {
   it('exposes identical keys for en and bg', () => {
-    expect(Object.keys(homeStrings.bg).sort()).toEqual(
-      Object.keys(homeStrings.en).sort(),
+    expect(Object.keys(bookingStrings.bg).sort()).toEqual(
+      Object.keys(bookingStrings.en).sort(),
     );
   });
 
   it('has non-empty string values', () => {
-    for (const bundle of [homeStrings.en, homeStrings.bg]) {
+    for (const bundle of [bookingStrings.en, bookingStrings.bg]) {
       for (const value of Object.values(bundle)) {
         const length =
           typeof value === 'string' ? value.length : Object.keys(value).length;

@@ -1,7 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { router } from './router';
+import { createQueryClient } from './queryClient';
 import { getSettings } from '../modules/settings';
 import {
   detectLanguage,
@@ -9,12 +11,22 @@ import {
   registerStrings,
   type Language,
 } from '../modules/i18n';
-import { homeStrings } from '../modules/home';
+import { shellStrings } from '../modules/shell';
+import { scheduleStrings } from '../modules/schedule';
+import { bookingStrings } from '../modules/booking';
 import './index.css';
 
 async function bootstrap() {
-  registerStrings('en', homeStrings.en);
-  registerStrings('bg', homeStrings.bg);
+  registerStrings('en', {
+    ...shellStrings.en,
+    ...scheduleStrings.en,
+    ...bookingStrings.en,
+  });
+  registerStrings('bg', {
+    ...shellStrings.bg,
+    ...scheduleStrings.bg,
+    ...bookingStrings.bg,
+  });
   let language: Language;
   try {
     const settings = await getSettings();
@@ -24,9 +36,13 @@ async function bootstrap() {
   }
   initI18n(language);
 
+  const queryClient = createQueryClient();
+
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <RouterProvider router={router} />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
     </StrictMode>,
   );
 }
