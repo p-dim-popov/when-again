@@ -1,6 +1,4 @@
 export { MonthPicker } from './MonthPicker';
-export { TimePicker } from './TimePicker';
-export { clampToGap, latestStartInGap } from './timeBounds';
 export { bookingStrings } from './strings';
 export {
   draftStore,

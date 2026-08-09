@@ -32,6 +32,15 @@ const en = {
   'schedule.emptyDay': 'The whole day is free.',
   'schedule.nav.prevDay': 'Previous day',
   'schedule.nav.nextDay': 'Next day',
+  'schedule.timePicker.title': 'Other time',
+  'schedule.timePicker.window': 'free {start} – {end}',
+  'schedule.timePicker.subnote': 'Choose an exact time within the free window.',
+  'schedule.timePicker.stepCaption': 'step {step} min',
+  'schedule.timePicker.confirm': 'Choose · {time}',
+  'schedule.timePicker.hourDown': 'Earlier hour',
+  'schedule.timePicker.hourUp': 'Later hour',
+  'schedule.timePicker.minuteDown': 'Earlier minute',
+  'schedule.timePicker.minuteUp': 'Later minute',
 } satisfies Strings;
 
 const bg = {
@@ -69,6 +78,15 @@ const bg = {
   'schedule.emptyDay': 'Целият ден е свободен.',
   'schedule.nav.prevDay': 'Предишен ден',
   'schedule.nav.nextDay': 'Следващ ден',
+  'schedule.timePicker.title': 'Друг час',
+  'schedule.timePicker.window': 'свободно {start} – {end}',
+  'schedule.timePicker.subnote': 'Изберете точен час в свободния прозорец.',
+  'schedule.timePicker.stepCaption': 'стъпка {step} мин',
+  'schedule.timePicker.confirm': 'Избери · {time}',
+  'schedule.timePicker.hourDown': 'По-ранен час',
+  'schedule.timePicker.hourUp': 'По-късен час',
+  'schedule.timePicker.minuteDown': 'По-ранна минута',
+  'schedule.timePicker.minuteUp': 'По-късна минута',
 } satisfies Strings;
 
 export const scheduleStrings = { en, bg };
@@ -103,5 +121,14 @@ declare module '../i18n' {
     'schedule.emptyDay': true;
     'schedule.nav.prevDay': true;
     'schedule.nav.nextDay': true;
+    'schedule.timePicker.title': true;
+    'schedule.timePicker.window': true;
+    'schedule.timePicker.subnote': true;
+    'schedule.timePicker.stepCaption': true;
+    'schedule.timePicker.confirm': true;
+    'schedule.timePicker.hourDown': true;
+    'schedule.timePicker.hourUp': true;
+    'schedule.timePicker.minuteDown': true;
+    'schedule.timePicker.minuteUp': true;
   }
 }

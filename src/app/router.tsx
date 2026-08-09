@@ -6,9 +6,15 @@ import {
 import { AppShell, Placeholder, SettingsScreen } from '../modules/shell';
 import { ScheduleScreen, todayKey } from '../modules/schedule';
 import { MonthPicker } from '../modules/booking';
+import { t } from '../modules/i18n';
 
 interface TodaySearch {
   date?: string;
+}
+
+interface NewAppointmentSearch {
+  date?: string;
+  time?: string;
 }
 
 const rootRoute = createRootRoute({
@@ -49,11 +55,49 @@ const bookRoute = createRoute({
   component: MonthPicker,
 });
 
+// Placeholder: the day view (schedule) navigates here on a quick-slot or
+// "друг час" pick, passing the choice as search params so `schedule` never
+// has to import `booking`. A later dispatch of this task replaces this
+// component with the real, draft-backed AppointmentForm.
+const newAppointmentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/appointment/new',
+  validateSearch: (search: Record<string, unknown>): NewAppointmentSearch => ({
+    date: typeof search.date === 'string' ? search.date : undefined,
+    time: typeof search.time === 'string' ? search.time : undefined,
+  }),
+  component: NewAppointmentPlaceholder,
+});
+
+function NewAppointmentPlaceholder() {
+  const { date, time } = newAppointmentRoute.useSearch();
+  return (
+    <main
+      style={{
+        display: 'grid',
+        placeItems: 'center',
+        minHeight: '60vh',
+        textAlign: 'center',
+        padding: 24,
+      }}
+    >
+      <div>
+        <h1>{t('booking.new.placeholder.title')}</h1>
+        <p>{t('shell.soon')}</p>
+        {date && time && (
+          <p>{t('booking.new.placeholder.echo', { date, time })}</p>
+        )}
+      </div>
+    </main>
+  );
+}
+
 const routeTree = rootRoute.addChildren([
   todayRoute,
   clientsRoute,
   settingsRoute,
   bookRoute,
+  newAppointmentRoute,
 ]);
 
 export const router = createRouter({

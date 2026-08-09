@@ -1,21 +1,22 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { getActiveLanguage, t, type TranslationKeys } from '../i18n';
 import { wallClockNow } from '../time';
-import { computeDayLayout, generateSlots, type DayLayoutItem } from './slots';
+import {
+  computeDayLayout,
+  generateSlots,
+  type DayLayoutItem,
+  type FreeGap,
+} from './slots';
 import { addDays, parseDateKey, todayKey, weekOf } from './dateParam';
 import {
   useAllClients,
   useDayAppointments,
   useProviderSettings,
 } from './queries';
+import { DAY_START, DAY_END } from './dayWindow';
+import { TimePicker } from './TimePicker';
 import './ScheduleScreen.css';
-
-// The bookable day window for slot-chip generation only ("другa час" is not
-// bound by it beyond the free gap itself). There is no working-hours setting
-// yet — a later Settings epic may make this configurable.
-const DAY_START = '08:00';
-const DAY_END = '20:00';
 
 // Fallback slot step when there is no remembered service duration yet.
 const DEFAULT_STEP_MINUTES = 30;
@@ -66,12 +67,10 @@ function monthShortLabel(dateKey: string): string {
   }).format(date);
 }
 
-// Slot chips and the "друг час" chip are visual-only stubs in this task: Task
-// 6 wires a slot tap to the booking draft + navigation to the new-appointment
-// form. Keep them as no-op buttons for now so nothing crashes or links to a
-// route that doesn't exist yet.
-function handleSlotTapStub() {
-  // Wired in Task 6.
+// The "still more" affordance (beyond generateSlots' MAX_SLOTS cap) has no
+// defined behaviour yet — leave it a no-op stub for now.
+function handleMoreTapStub() {
+  // Unspecified; not part of this task.
 }
 
 // Tapping an appointment opens the edit form in Task 7; a no-op stub here.
@@ -128,9 +127,13 @@ function AppointmentBlock({
 function GapRow({
   item,
   stepMinutes,
+  onSlotTap,
+  onOtherTime,
 }: {
   item: DayLayoutItem & { kind: 'gap' };
   stepMinutes: number;
+  onSlotTap: (time: string) => void;
+  onOtherTime: (gap: FreeGap) => void;
 }) {
   const slots = generateSlots(item.gap, {
     stepMinutes,
@@ -151,7 +154,7 @@ function GapRow({
             key={time}
             type="button"
             className="schedule-slot"
-            onClick={handleSlotTapStub}
+            onClick={() => onSlotTap(time)}
           >
             {time}
           </button>
@@ -160,7 +163,7 @@ function GapRow({
           <button
             type="button"
             className="schedule-slot schedule-slot-more"
-            onClick={handleSlotTapStub}
+            onClick={handleMoreTapStub}
           >
             {t('schedule.more')}
           </button>
@@ -168,7 +171,7 @@ function GapRow({
         <button
           type="button"
           className="schedule-slot schedule-slot-other"
-          onClick={handleSlotTapStub}
+          onClick={() => onOtherTime(item.gap)}
         >
           <span aria-hidden="true">◷</span> {t('schedule.otherTime')}
         </button>
@@ -183,6 +186,11 @@ export function ScheduleScreen({ dateKey: dateKeyProp }: { dateKey: string }) {
     ? dateKeyProp
     : todayKey(new Date());
   const todayDateKey = wallClockNow().dateTime.slice(0, 10);
+
+  // The gap currently open in the "друг час" bottom sheet (over the day
+  // view), or null when the sheet is closed. Only one gap can be open at a
+  // time, so a single piece of state is enough.
+  const [otherTimeGap, setOtherTimeGap] = useState<FreeGap | null>(null);
 
   const { data: appointments, isPending } = useDayAppointments(dateKey);
   const { data: clients } = useAllClients();
@@ -214,6 +222,15 @@ export function ScheduleScreen({ dateKey: dateKeyProp }: { dateKey: string }) {
 
   function goTo(newDateKey: string) {
     void navigate({ to: '/', search: { date: newDateKey } });
+  }
+
+  // Both doors to picking a time — a quick-slot chip and the "друг час"
+  // sheet — land on the same route with the same search-param shape.
+  // `schedule` navigates by route string only; it never imports `booking`,
+  // so the module graph stays acyclic.
+  function goToForm(time: string) {
+    setOtherTimeGap(null);
+    void navigate({ to: '/appointment/new', search: { date: dateKey, time } });
   }
 
   return (
@@ -279,10 +296,31 @@ export function ScheduleScreen({ dateKey: dateKeyProp }: { dateKey: string }) {
                 }
               />
             ) : (
-              <GapRow key={`gap-${i}`} item={item} stepMinutes={stepMinutes} />
+              <GapRow
+                key={`gap-${i}`}
+                item={item}
+                stepMinutes={stepMinutes}
+                onSlotTap={goToForm}
+                onOtherTime={setOtherTimeGap}
+              />
             ),
           )}
         </div>
+      )}
+
+      {otherTimeGap && (
+        <>
+          <div
+            className="schedule-scrim"
+            onClick={() => setOtherTimeGap(null)}
+          />
+          <TimePicker
+            gap={otherTimeGap}
+            serviceMinutes={stepMinutes}
+            dayEnd={DAY_END}
+            onPick={goToForm}
+          />
+        </>
       )}
     </div>
   );
