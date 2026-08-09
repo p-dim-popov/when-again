@@ -3,20 +3,9 @@ import { useNavigate } from '@tanstack/react-router';
 import { formatCurrency, getActiveLanguage, t } from '../i18n';
 import { getAppointment, type Appointment } from '../appointments';
 import { getClient } from '../clients';
-import { parseDateKey } from '../schedule';
+import { formatDayLabel } from '../schedule';
 import { resetDraft, useBookingDraft } from './draftStore';
 import './ShareLanding.css';
-
-function formatDay(dateKey: string): string {
-  const parsed = parseDateKey(dateKey);
-  if (!parsed) return dateKey;
-  const date = new Date(parsed.y, parsed.m - 1, parsed.d);
-  return new Intl.DateTimeFormat(getActiveLanguage(), {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  }).format(date);
-}
 
 // The booking funnel's terminal screen. Save, cancel, and reschedule (Tasks
 // 6b/7) all `patchDraft({ appointmentId })` just before navigating here, so
@@ -137,7 +126,7 @@ export function ShareLanding() {
             <div className="shareLanding-row">
               <dt>{t('booking.landing.when')}</dt>
               <dd>
-                {formatDay(dateKey)}
+                {formatDayLabel(dateKey, getActiveLanguage())}
                 {time ? ` · ${time}` : ''}
               </dd>
             </div>

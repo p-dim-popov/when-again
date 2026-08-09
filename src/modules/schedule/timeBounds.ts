@@ -17,12 +17,14 @@ interface Gap {
   end: string | null;
 }
 
-function toMinutes(hhmm: string): number {
+/** Parses an `'HH:mm'` string into minutes since midnight. */
+export function toMinutes(hhmm: string): number {
   const [hours, minutes] = hhmm.split(':').map(Number);
   return hours * 60 + minutes;
 }
 
-function toHHMM(minutes: number): string {
+/** Formats minutes since midnight as `'HH:mm'`. */
+export function toHHMM(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
   return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;

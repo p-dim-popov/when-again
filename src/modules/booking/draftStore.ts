@@ -41,10 +41,6 @@ export function setDraftDate(dateKey: string): void {
   draftStore.setState((state) => ({ ...state, dateKey }));
 }
 
-export function setDraftTime(time: string): void {
-  draftStore.setState((state) => ({ ...state, time }));
-}
-
 /** Merges `partial` into the draft without touching any other field. */
 export function patchDraft(partial: Partial<BookingDraft>): void {
   draftStore.setState((state) => ({ ...state, ...partial }));

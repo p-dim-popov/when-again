@@ -65,3 +65,24 @@ export function weekOf(key: string): string[] {
   const monday = addDays(key, -OFFSET_FROM_MONDAY[date.getDay()]);
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 }
+
+/**
+ * Formats a date key as a short "when" label — weekday-short, day, and
+ * month-short (e.g. "Mon, 22 Aug" / "пн, 22 авг" depending on `language`).
+ * `language` is passed in rather than read from `i18n` here so this file
+ * stays a pure leaf; callers pass `getActiveLanguage()`.
+ *
+ * Shared by the booking funnel's "when" summaries (the appointment form's
+ * When row and the post-save/cancel landing screen) so they can never drift
+ * out of sync with each other.
+ */
+export function formatDayLabel(dateKey: string, language: string): string {
+  const parsed = parseDateKey(dateKey);
+  if (!parsed) return dateKey;
+  const date = new Date(parsed.y, parsed.m - 1, parsed.d);
+  return new Intl.DateTimeFormat(language, {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(date);
+}

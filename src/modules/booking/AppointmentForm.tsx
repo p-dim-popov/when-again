@@ -7,7 +7,7 @@ import { getClient, listClients, type Client } from '../clients';
 import { getAppointment, type Appointment } from '../appointments';
 import { getSettings, updateSettings, type ServicePreset } from '../settings';
 import { wallClockNow, type WallClock } from '../time';
-import { parseDateKey } from '../schedule';
+import { formatDayLabel } from '../schedule';
 import { draftStore, patchDraft, useBookingDraft } from './draftStore';
 import {
   useAddClient,
@@ -27,17 +27,6 @@ const SETTINGS_QUERY_KEY = ['settings'];
 
 const MAX_CLIENT_SUGGESTIONS = 6;
 const MAX_SERVICE_SUGGESTIONS = 6;
-
-function formatWhenDay(dateKey: string): string {
-  const parsed = parseDateKey(dateKey);
-  if (!parsed) return dateKey;
-  const date = new Date(parsed.y, parsed.m - 1, parsed.d);
-  return new Intl.DateTimeFormat(getActiveLanguage(), {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  }).format(date);
-}
 
 interface ServiceFormValues {
   service: string;
@@ -375,7 +364,7 @@ export function AppointmentForm({
 
   const whenLabel =
     draft.dateKey && draft.time
-      ? `${formatWhenDay(draft.dateKey)} · ${draft.time}`
+      ? `${formatDayLabel(draft.dateKey, getActiveLanguage())} · ${draft.time}`
       : '';
 
   return (

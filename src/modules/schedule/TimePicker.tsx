@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { t } from '../i18n';
-import { clampToGap } from './timeBounds';
+import { clampToGap, toHHMM, toMinutes } from './timeBounds';
 import { DAY_END } from './dayWindow';
 import './TimePicker.css';
 
@@ -12,18 +12,6 @@ const STEP_MINUTES = 5;
 interface Gap {
   start: string;
   end: string | null;
-}
-
-function toMinutes(hhmm: string): number {
-  const [hours, minutes] = hhmm.split(':').map(Number);
-  return hours * 60 + minutes;
-}
-
-function toHHMM(minutes: number): string {
-  const bounded = Math.min(Math.max(minutes, 0), 24 * 60 - 1);
-  const hours = Math.floor(bounded / 60);
-  const mins = bounded % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
 }
 
 export function TimePicker({

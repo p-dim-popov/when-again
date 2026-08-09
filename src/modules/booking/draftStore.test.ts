@@ -1,11 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import {
-  draftStore,
-  patchDraft,
-  resetDraft,
-  setDraftDate,
-  setDraftTime,
-} from './draftStore';
+import { draftStore, patchDraft, resetDraft, setDraftDate } from './draftStore';
 
 const EMPTY = {
   dateKey: null,
@@ -32,19 +26,9 @@ describe('draftStore', () => {
     expect(draftStore.state).toEqual({ ...EMPTY, dateKey: '2026-08-22' });
   });
 
-  it('setDraftTime sets the time and leaves an already-set date untouched', () => {
-    setDraftDate('2026-08-22');
-    setDraftTime('11:00');
-    expect(draftStore.state).toEqual({
-      ...EMPTY,
-      dateKey: '2026-08-22',
-      time: '11:00',
-    });
-  });
-
   it('resetDraft clears a fully-populated draft back to empty', () => {
     setDraftDate('2026-08-22');
-    setDraftTime('11:00');
+    patchDraft({ time: '11:00' });
     patchDraft({
       clientId: 'c1',
       clientName: 'Elena',
@@ -60,7 +44,7 @@ describe('draftStore', () => {
   describe('patchDraft', () => {
     it('merges the given fields without clobbering the rest', () => {
       setDraftDate('2026-08-22');
-      setDraftTime('11:00');
+      patchDraft({ time: '11:00' });
       patchDraft({ clientId: 'c1', clientName: 'Elena' });
       expect(draftStore.state).toEqual({
         ...EMPTY,
@@ -108,7 +92,7 @@ describe('draftStore', () => {
 
     it('sets appointmentId alone, leaving everything else in place', () => {
       setDraftDate('2026-08-22');
-      setDraftTime('11:00');
+      patchDraft({ time: '11:00' });
       patchDraft({ clientId: 'c1', service: 'Haircut', durationMinutes: 30 });
       patchDraft({ appointmentId: 'a1' });
 
