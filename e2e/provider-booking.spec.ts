@@ -268,3 +268,33 @@ test('client suggestion list closes after picking an existing client', async ({
   await expect(client).toHaveValue(clientName);
   await expect(client).toHaveAttribute('aria-expanded', 'false');
 });
+
+test('client suggestion list closes after keyboard-selecting an existing client', async ({
+  page,
+}) => {
+  // This combobox has no arrow-key/aria-activedescendant navigation, so Tab
+  // is the only keyboard path onto a suggestion option. Guards against a
+  // regression where an unconditional blur-dismiss on the input would close
+  // the listbox before Tab ever lands on the option.
+  const clientName = 'Petya Nikolova';
+  await bookAppointment(page, { clientName, service: 'Manicure' });
+
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+
+  const client = page.locator('#apptForm-client');
+  await client.fill(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'true');
+
+  await page.keyboard.press('Tab');
+  const option = page.getByRole('option', { name: clientName, exact: true });
+  await expect(option).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  // Selected via keyboard → field holds the name and the listbox is closed.
+  await expect(client).toHaveValue(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'false');
+});

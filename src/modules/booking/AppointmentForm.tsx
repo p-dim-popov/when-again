@@ -447,7 +447,19 @@ export function AppointmentForm({
           void form.handleSubmit();
         }}
       >
-        <div className="relative">
+        <div
+          className="relative"
+          onBlur={(e) => {
+            // Dismiss only when focus leaves the whole combobox widget
+            // (input + listbox), not when it moves onto a suggestion option
+            // (keyboard Tab) — the options have no arrow-key navigation, so
+            // Tab is the only keyboard path onto them, and it must not be
+            // eaten by the blur that fires as focus leaves the input.
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setSuggestionsDismissed(true);
+            }
+          }}
+        >
           <label
             htmlFor="apptForm-client"
             className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase"
@@ -473,7 +485,6 @@ export function AppointmentForm({
               onKeyDown={(e) => {
                 if (e.key === 'Escape') setSuggestionsDismissed(true);
               }}
-              onBlur={() => setSuggestionsDismissed(true)}
               autoComplete="off"
               className={FIELD_INPUT}
             />
