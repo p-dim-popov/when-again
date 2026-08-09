@@ -4,6 +4,11 @@ import {
   createRouter,
 } from '@tanstack/react-router';
 import { AppShell, Placeholder, SettingsScreen } from '../modules/shell';
+import { ScheduleScreen, todayKey } from '../modules/schedule';
+
+interface TodaySearch {
+  date?: string;
+}
 
 const rootRoute = createRootRoute({
   component: AppShell,
@@ -12,9 +17,16 @@ const rootRoute = createRootRoute({
 const todayRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  // Temporary: the schedule (Днес) screen ships in Task 3.
-  component: () => <Placeholder titleKey="shell.tab.today" />,
+  validateSearch: (search: Record<string, unknown>): TodaySearch => ({
+    date: typeof search.date === 'string' ? search.date : undefined,
+  }),
+  component: TodayRoute,
 });
+
+function TodayRoute() {
+  const { date } = todayRoute.useSearch();
+  return <ScheduleScreen dateKey={date ?? todayKey(new Date())} />;
+}
 
 const clientsRoute = createRoute({
   getParentRoute: () => rootRoute,

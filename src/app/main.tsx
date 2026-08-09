@@ -12,11 +12,12 @@ import {
   type Language,
 } from '../modules/i18n';
 import { shellStrings } from '../modules/shell';
+import { scheduleStrings } from '../modules/schedule';
 import './index.css';
 
 async function bootstrap() {
-  registerStrings('en', shellStrings.en);
-  registerStrings('bg', shellStrings.bg);
+  registerStrings('en', { ...shellStrings.en, ...scheduleStrings.en });
+  registerStrings('bg', { ...shellStrings.bg, ...scheduleStrings.bg });
   let language: Language;
   try {
     const settings = await getSettings();
