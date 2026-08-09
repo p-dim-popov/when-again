@@ -3,3 +3,5 @@ dev-dist
 package-lock.json
 .superpowers
 docs/design/
+docs/plans/
+docs/specs/

@@ -47,11 +47,7 @@ async function pickFutureDay(page: Page): Promise<string> {
 /** First free (non-more, non-"other time") quick-slot chip on the day
  * currently shown. */
 function firstFreeSlot(page: Page) {
-  return page
-    .locator(
-      '.schedule-slot:not(.schedule-slot-more):not(.schedule-slot-other)',
-    )
-    .first();
+  return page.getByTestId('free-slot').first();
 }
 
 /** Books ahead: month picker → future day → free quick-slot → form (inline
@@ -105,7 +101,7 @@ test('books an appointment ahead of time via the month picker and a quick slot',
 
   await bookAppointment(page, { clientName, service });
 
-  const block = page.locator('.schedule-appt-block').first();
+  const block = page.getByTestId('appt-block').first();
   await expect(block).toBeVisible();
   await expect(block).toContainText(clientName);
   await expect(block).toContainText(service);
@@ -119,7 +115,7 @@ test("другчас: the day view's inline time sheet carries an off-grid time 
   // The gap chip labelled "◷ other time" opens a bottom sheet OVER the day
   // view (not inside the form) — the key design-update behaviour.
   await page.getByRole('button', { name: 'other time' }).click();
-  await expect(page.locator('.schedule-tpSheet')).toBeVisible();
+  await expect(page.getByTestId('time-sheet')).toBeVisible();
 
   // Nudge one 5-minute step off the 30-minute quick-slot grid, then confirm.
   await page.getByRole('button', { name: 'Later minute' }).click();
@@ -145,7 +141,7 @@ test('edit, reschedule, and cancel an existing appointment', async ({
   });
 
   // Tap the appointment block: the form opens in edit mode.
-  await page.locator('.schedule-appt-block').first().click();
+  await page.getByTestId('appt-block').first().click();
   await expect(
     page.getByRole('heading', { name: 'Edit appointment' }),
   ).toBeVisible();
@@ -159,7 +155,7 @@ test('edit, reschedule, and cancel an existing appointment', async ({
   // the round trip stays an edit rather than starting a new booking.
   await page.getByRole('button', { name: 'Change', exact: true }).click();
   await expect(page).toHaveURL(/appt=/);
-  await expect(page.locator('.schedule-appbar')).toBeVisible();
+  await expect(page.getByTestId('day-appbar')).toBeVisible();
 
   // The originally-booked time is now occupied, so the next free chip is a
   // different time. Pick it.
@@ -188,9 +184,9 @@ test('edit, reschedule, and cancel an existing appointment', async ({
   await expect(page.getByText(rescheduledTime)).toBeVisible();
   await page.getByRole('button', { name: 'Done' }).click();
 
-  const rescheduledBlock = page.locator('.schedule-appt-block').first();
+  const rescheduledBlock = page.getByTestId('appt-block').first();
   await expect(rescheduledBlock).toContainText(clientName);
-  await expect(page.locator('.schedule-appt-cancelled')).toHaveCount(0);
+  await expect(page.getByTestId('appt-cancelled')).toHaveCount(0);
 
   // Tap it again, then cancel.
   await rescheduledBlock.click();
@@ -205,7 +201,7 @@ test('edit, reschedule, and cancel an existing appointment', async ({
   await page.getByRole('button', { name: 'Done' }).click();
 
   // Still present on the day, but de-emphasised — not removed.
-  const cancelledAppt = page.locator('.schedule-appt-cancelled');
+  const cancelledAppt = page.getByTestId('appt-cancelled');
   await expect(cancelledAppt).toBeVisible();
   await expect(cancelledAppt).toContainText(clientName);
   await expect(cancelledAppt).toContainText('Cancelled');

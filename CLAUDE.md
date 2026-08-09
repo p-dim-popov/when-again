@@ -28,10 +28,20 @@ ever reaches a server.
 - TypeScript is pinned `~6.0.3` — typescript-eslint's peer ceiling is `<6.1.0`
   and TS 7 is unsupported by it. Do not loosen the pin.
 - Storage: IndexedDB via `idb`; unit tests use `fake-indexeddb`.
+- Styling: **Tailwind CSS v4** via `@tailwindcss/vite` — utilities in JSX, no
+  per-module CSS files. Design tokens live in `src/app/index.css` behind
+  `@theme inline`; that file (plus self-hosted fonts, imported in
+  `src/app/main.tsx`) is the only CSS in `src/`. Dark mode is a **token
+  flip** — no `dark:` variants anywhere. No `@apply` component-class layer:
+  compose utilities directly, promote a repeated combination to a component
+  only when the module needs one. Fonts are self-hosted via `@fontsource`
+  (Lora + IBM Plex Sans, Latin+Cyrillic subsets) — never load fonts from a
+  CDN.
 - Tests: **Vitest** for module logic (`src/**/*.test.ts`), **Playwright** for
   end-to-end smoke (`e2e/`). Both run in CI.
-- Lint/format: ESLint (flat config) + Prettier. `.superpowers/` is in
-  `.prettierignore`.
+- Lint/format: ESLint (flat config) + Prettier, with `prettier-plugin-tailwindcss`
+  ordering Tailwind classes. `.superpowers/`, `docs/design/`, `docs/plans/`, and
+  `docs/specs/` are in `.prettierignore`.
 
 ## Hosting & base path
 

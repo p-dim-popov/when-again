@@ -5,7 +5,6 @@ import { getAppointment, type Appointment } from '../appointments';
 import { getClient } from '../clients';
 import { formatDayLabel } from '../schedule';
 import { resetDraft, useBookingDraft } from './draftStore';
-import './ShareLanding.css';
 
 // The booking funnel's terminal screen. Save, cancel, and reschedule (Tasks
 // 6b/7) all `patchDraft({ appointmentId })` just before navigating here, so
@@ -65,12 +64,14 @@ export function ShareLanding() {
   // calm "nothing to show" instead of rendering a blank/broken summary.
   if (appointmentId == null) {
     return (
-      <main className="shareLanding">
-        <div className="shareLanding-card">
-          <h1 className="shareLanding-title">{t('booking.landing.empty')}</h1>
+      <main className="grid min-h-[60vh] place-items-center px-[15px] py-6">
+        <div className="flex w-full max-w-[360px] flex-col gap-3.5 text-center">
+          <h1 className="font-serif text-[19px] font-[680] tracking-[-0.01em]">
+            {t('booking.landing.empty')}
+          </h1>
           <button
             type="button"
-            className="shareLanding-done"
+            className="rounded-card bg-accent text-on-accent shadow-fab w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650]"
             onClick={() => void navigate({ to: '/' })}
           >
             {t('booking.landing.done')}
@@ -98,10 +99,15 @@ export function ShareLanding() {
     void navigate({ to: '/', search: { date: returnDateKey ?? undefined } });
   }
 
+  const rowClassName =
+    '[&+&]:border-line [&+&]:border-t flex items-baseline justify-between gap-2.5 py-[9px]';
+  const dtClassName = 'text-faint text-[10.5px] tracking-[0.05em] uppercase';
+  const ddClassName = 'text-ink m-0 text-right text-sm font-[550]';
+
   return (
-    <main className="shareLanding">
-      <div className="shareLanding-card">
-        <h1 className="shareLanding-title">
+    <main className="grid min-h-[60vh] place-items-center px-[15px] py-6">
+      <div className="flex w-full max-w-[360px] flex-col gap-3.5 text-center">
+        <h1 className="font-serif text-[19px] font-[680] tracking-[-0.01em]">
           {t(
             cancelled
               ? 'booking.landing.cancelledTitle'
@@ -109,47 +115,47 @@ export function ShareLanding() {
           )}
         </h1>
 
-        <dl className="shareLanding-summary">
+        <dl className="border-line bg-surface-2 rounded-card border px-3.5 py-1 text-left">
           {clientName && (
-            <div className="shareLanding-row">
-              <dt>{t('booking.landing.client')}</dt>
-              <dd>{clientName}</dd>
+            <div className={rowClassName}>
+              <dt className={dtClassName}>{t('booking.landing.client')}</dt>
+              <dd className={ddClassName}>{clientName}</dd>
             </div>
           )}
           {service && (
-            <div className="shareLanding-row">
-              <dt>{t('booking.landing.service')}</dt>
-              <dd>{service}</dd>
+            <div className={rowClassName}>
+              <dt className={dtClassName}>{t('booking.landing.service')}</dt>
+              <dd className={ddClassName}>{service}</dd>
             </div>
           )}
           {dateKey && (
-            <div className="shareLanding-row">
-              <dt>{t('booking.landing.when')}</dt>
-              <dd>
+            <div className={rowClassName}>
+              <dt className={dtClassName}>{t('booking.landing.when')}</dt>
+              <dd className={ddClassName}>
                 {formatDayLabel(dateKey, getActiveLanguage())}
                 {time ? ` · ${time}` : ''}
               </dd>
             </div>
           )}
           {durationMinutes != null && (
-            <div className="shareLanding-row">
-              <dt>{t('booking.landing.duration')}</dt>
-              <dd>
+            <div className={rowClassName}>
+              <dt className={dtClassName}>{t('booking.landing.duration')}</dt>
+              <dd className={ddClassName}>
                 {durationMinutes} {t('booking.form.duration.suffix')}
               </dd>
             </div>
           )}
           {price != null && (
-            <div className="shareLanding-row">
-              <dt>{t('booking.landing.price')}</dt>
-              <dd>{formatCurrency(price)}</dd>
+            <div className={rowClassName}>
+              <dt className={dtClassName}>{t('booking.landing.price')}</dt>
+              <dd className={ddClassName}>{formatCurrency(price)}</dd>
             </div>
           )}
         </dl>
 
         <button
           type="button"
-          className="shareLanding-share"
+          className="bg-surface-2 text-faint border-line rounded-card w-full cursor-not-allowed border p-3 text-center text-sm font-semibold"
           disabled
           aria-disabled="true"
         >
@@ -158,7 +164,7 @@ export function ShareLanding() {
 
         <button
           type="button"
-          className="shareLanding-done"
+          className="rounded-card bg-accent text-on-accent shadow-fab w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650]"
           onClick={handleDone}
         >
           {t('booking.landing.done')}

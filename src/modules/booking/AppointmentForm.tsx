@@ -17,7 +17,15 @@ import {
 } from './mutations';
 import { rememberService } from './remembered';
 import { presetPatch } from './servicePreset';
-import './AppointmentForm.css';
+
+// Shared field-box treatment (Tailwind v4 "Elevated & warm" restyle): the
+// WHOLE box is the tap target — ≥44px tall, padding on the wrapper, the
+// `<input>` itself only carries `flex-1 min-w-0 bg-transparent outline-none`
+// so it fills the box instead of leaving a thin hit-strip (fixes #17-6b).
+const FIELD_BOX =
+  'flex items-center gap-2 min-h-11 rounded-card border border-line bg-surface px-3 focus-within:border-accent';
+const FIELD_INPUT =
+  'flex-1 min-w-0 bg-transparent outline-none text-sm text-ink placeholder:text-faint';
 
 // Same cache entries the schedule screen reads/writes (see
 // `schedule/queries.ts`) so a save here is immediately visible there without
@@ -410,25 +418,33 @@ export function AppointmentForm({
       : '';
 
   return (
-    <div className="apptForm">
-      <div className="apptForm-appbar">
-        <h1 className="apptForm-title">
+    <div className="flex flex-col">
+      <div className="px-[15px] pt-1 pb-2.5 text-center">
+        <h1 className="font-serif text-[15px] font-[680] tracking-[-0.01em]">
           {t(isEditing ? 'booking.form.editTitle' : 'booking.form.title')}
         </h1>
       </div>
 
       <form
-        className="apptForm-form"
+        className="flex flex-col gap-[13px] px-[15px] pt-1.5 pb-4"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
           void form.handleSubmit();
         }}
       >
-        <div className="apptForm-field">
-          <label htmlFor="apptForm-client">{t('booking.form.client')}</label>
-          <div className="apptForm-input">
-            <span className="apptForm-lead" aria-hidden="true">
+        <div className="relative">
+          <label
+            htmlFor="apptForm-client"
+            className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase"
+          >
+            {t('booking.form.client')}
+          </label>
+          <div className={FIELD_BOX}>
+            <span
+              className="text-faint flex-none text-[15px]"
+              aria-hidden="true"
+            >
               ☺
             </span>
             <input
@@ -441,11 +457,12 @@ export function AppointmentForm({
               placeholder={t('booking.form.client.placeholder')}
               onChange={(e) => handleClientQueryChange(e.target.value)}
               autoComplete="off"
+              className={FIELD_INPUT}
             />
           </div>
           {showClientSuggestions && (
             <div
-              className="apptForm-suggestions"
+              className="rounded-card border-line bg-surface shadow-card absolute top-[calc(100%+4px)] right-0 left-0 z-1 flex flex-col gap-0.5 border p-1.5"
               role="listbox"
               id={CLIENT_LISTBOX_ID}
             >
@@ -453,7 +470,7 @@ export function AppointmentForm({
                 <button
                   key={client.id}
                   type="button"
-                  className="apptForm-suggestion"
+                  className="rounded-sm2 text-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px]"
                   role="option"
                   aria-selected={client.id === clientId}
                   onClick={() => selectClient(client)}
@@ -464,7 +481,7 @@ export function AppointmentForm({
               {showCreateClient && (
                 <button
                   type="button"
-                  className="apptForm-suggestion apptForm-suggestion-create"
+                  className="rounded-sm2 text-accent-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px] font-semibold"
                   role="option"
                   aria-selected={false}
                   onClick={() => void handleCreateClient()}
@@ -480,11 +497,14 @@ export function AppointmentForm({
 
         <form.Field name="service">
           {(field) => (
-            <div className="apptForm-field">
-              <label htmlFor="apptForm-service">
+            <div className="relative">
+              <label
+                htmlFor="apptForm-service"
+                className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase"
+              >
                 {t('booking.form.service')}
               </label>
-              <div className="apptForm-input">
+              <div className={FIELD_BOX}>
                 <input
                   id="apptForm-service"
                   type="text"
@@ -497,11 +517,12 @@ export function AppointmentForm({
                     field.handleChange(e.target.value);
                     patchDraft({ service: e.target.value });
                   }}
+                  className={FIELD_INPUT}
                 />
               </div>
               {remembered.length > 0 && (
                 <div
-                  className="apptForm-recent"
+                  className="mt-[7px] flex flex-wrap gap-1.5"
                   role="listbox"
                   id={SERVICE_LISTBOX_ID}
                 >
@@ -509,7 +530,7 @@ export function AppointmentForm({
                     <button
                       key={preset.name}
                       type="button"
-                      className="apptForm-recentChip"
+                      className="border-line bg-surface text-muted cursor-pointer rounded-full border px-2.5 py-[5px] text-xs"
                       role="option"
                       aria-selected={preset.name === field.state.value}
                       onClick={() => applyPreset(preset)}
@@ -523,13 +544,17 @@ export function AppointmentForm({
           )}
         </form.Field>
 
-        <div className="apptForm-field">
-          <label>{t('booking.form.when')}</label>
-          <div className="apptForm-input apptForm-whenrow">
-            <span>{whenLabel}</span>
+        <div>
+          <label className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase">
+            {t('booking.form.when')}
+          </label>
+          <div
+            className={`${FIELD_BOX} bg-accent-soft border-accent-line text-accent-ink justify-between font-semibold tabular-nums`}
+          >
+            <span className="text-sm">{whenLabel}</span>
             <button
               type="button"
-              className="apptForm-edit"
+              className="text-accent cursor-pointer border-0 bg-transparent p-0 text-[11px] font-semibold tracking-[0.04em] uppercase"
               onClick={goChangeWhen}
             >
               {t('booking.form.change')}
@@ -537,14 +562,17 @@ export function AppointmentForm({
           </div>
         </div>
 
-        <div className="apptForm-row2">
+        <div className="grid grid-cols-2 gap-2.5">
           <form.Field name="durationMinutes">
             {(field) => (
-              <div className="apptForm-field">
-                <label htmlFor="apptForm-duration">
+              <div className="min-w-0">
+                <label
+                  htmlFor="apptForm-duration"
+                  className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase"
+                >
                   {t('booking.form.duration')}
                 </label>
-                <div className="apptForm-input">
+                <div className={`${FIELD_BOX} min-w-0`}>
                   <input
                     id="apptForm-duration"
                     type="number"
@@ -557,8 +585,9 @@ export function AppointmentForm({
                       field.handleChange(next);
                       patchDraft({ durationMinutes: next });
                     }}
+                    className={FIELD_INPUT}
                   />
-                  <span className="apptForm-suffix">
+                  <span className="text-faint flex-none text-[12.5px]">
                     {t('booking.form.duration.suffix')}
                   </span>
                 </div>
@@ -568,11 +597,14 @@ export function AppointmentForm({
 
           <form.Field name="price">
             {(field) => (
-              <div className="apptForm-field">
-                <label htmlFor="apptForm-price">
+              <div className="min-w-0">
+                <label
+                  htmlFor="apptForm-price"
+                  className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase"
+                >
                   {t('booking.form.price')}
                 </label>
-                <div className="apptForm-input">
+                <div className={`${FIELD_BOX} min-w-0`}>
                   <input
                     id="apptForm-price"
                     type="number"
@@ -586,6 +618,7 @@ export function AppointmentForm({
                       field.handleChange(next);
                       patchDraft({ price: next });
                     }}
+                    className={FIELD_INPUT}
                   />
                 </div>
               </div>
@@ -593,16 +626,22 @@ export function AppointmentForm({
           </form.Field>
         </div>
 
-        {saveError && <p className="apptForm-error">{saveError}</p>}
+        {saveError && (
+          <p className="text-danger m-0 text-[12.5px]">{saveError}</p>
+        )}
 
-        <button type="submit" className="apptForm-save" disabled={isSaving}>
+        <button
+          type="submit"
+          className="rounded-card bg-accent text-on-accent shadow-fab flex min-h-12 w-full cursor-pointer items-center justify-center border-0 text-center text-[15px] font-semibold disabled:cursor-default disabled:opacity-60"
+          disabled={isSaving}
+        >
           {isSaving ? t('booking.form.saving') : t('booking.form.save')}
         </button>
 
         {isEditing && (
           <button
             type="button"
-            className="apptForm-cancel"
+            className="rounded-card border-danger-line text-danger min-h-11 cursor-pointer border bg-transparent py-[11px] text-center text-sm font-semibold disabled:cursor-default disabled:opacity-60"
             onClick={() => void handleCancel()}
             disabled={cancelAppointmentMutation.isPending}
           >
