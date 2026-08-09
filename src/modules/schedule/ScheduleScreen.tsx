@@ -16,7 +16,6 @@ import {
 } from './queries';
 import { DAY_START, DAY_END } from './dayWindow';
 import { TimePicker } from './TimePicker';
-import './ScheduleScreen.css';
 
 // Fallback slot step when there is no remembered service duration yet.
 const DEFAULT_STEP_MINUTES = 30;
@@ -92,27 +91,37 @@ function AppointmentBlock({
 
   return (
     <div
-      className={`schedule-appt${cancelled ? ' schedule-appt-cancelled' : ''}`}
+      // `schedule-appt` / `schedule-appt-cancelled` carry no styling of their
+      // own (ScheduleScreen.css is gone) — they're kept as stable selector
+      // hooks for e2e/provider-booking.spec.ts, which locates this block and
+      // its cancelled state by class name.
+      className={`schedule-appt grid grid-cols-[44px_1fr] items-start gap-2.5 py-2.5 pr-[15px] pl-3 ${cancelled ? 'schedule-appt-cancelled' : ''}`}
     >
-      <div className="schedule-appt-t">
+      <div className="pt-px text-[13.5px] font-bold tabular-nums">
         {start}
-        <span className="schedule-appt-end">{end}</span>
+        <span className="text-faint mt-px block text-[10.5px] font-medium">
+          {end}
+        </span>
       </div>
       <button
         type="button"
-        className="schedule-appt-block"
+        className={`schedule-appt-block rounded-card border-line bg-surface shadow-card w-full cursor-pointer border px-[11px] py-2 text-left ${
+          cancelled ? 'text-muted' : 'border-l-gold border-l-[3px]'
+        }`}
         onClick={() => onTap(appt.appt.id)}
       >
-        <div className="schedule-appt-who">
+        <div
+          className={`text-[14px] font-semibold ${cancelled ? 'text-muted' : 'text-ink'}`}
+        >
           {clientName}
           {cancelled && (
-            <span className="schedule-appt-cancelledTag">
+            <span className="text-muted font-medium">
               {' '}
               · {t('schedule.cancelled')}
             </span>
           )}
         </div>
-        <div className="schedule-appt-svc">
+        <div className="text-muted mt-0.5 text-xs">
           {appt.appt.service} ·{' '}
           {t('schedule.minutesShort', { count: appt.appt.durationMinutes })}
         </div>
@@ -143,14 +152,18 @@ function GapRow({
   const mayHaveMore = slots.length >= 8;
 
   return (
-    <div className="schedule-gap">
-      <div className="schedule-gap-label">{t('schedule.free')}</div>
-      <div className="schedule-slots">
+    <div className="grid grid-cols-[44px_1fr] items-start gap-2.5 py-1.5 pr-[15px] pl-3">
+      <div className="text-faint pt-1.5 text-[10px] tracking-[0.06em] uppercase">
+        {t('schedule.free')}
+      </div>
+      <div className="flex flex-wrap gap-1.5 py-0.5">
         {slots.map((time) => (
           <button
             key={time}
             type="button"
-            className="schedule-slot"
+            // `schedule-slot` carries no styling of its own — kept as a
+            // stable e2e selector hook (see the block comment above).
+            className="schedule-slot rounded-chip border-line bg-surface-2 text-accent-ink before:text-accent inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums before:font-bold before:content-['+']"
             onClick={() => onSlotTap(time)}
           >
             {time}
@@ -159,7 +172,7 @@ function GapRow({
         {mayHaveMore && (
           <button
             type="button"
-            className="schedule-slot schedule-slot-more"
+            className="schedule-slot schedule-slot-more rounded-chip border-line bg-surface-2 text-accent-ink inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums"
             onClick={handleMoreTapStub}
           >
             {t('schedule.more')}
@@ -167,7 +180,7 @@ function GapRow({
         )}
         <button
           type="button"
-          className="schedule-slot schedule-slot-other"
+          className="schedule-slot schedule-slot-other rounded-chip border-line bg-surface-2 text-muted inline-flex min-h-11 cursor-pointer items-center gap-1.5 border border-dashed px-3 text-[12.5px] tabular-nums"
           onClick={() => onOtherTime(item.gap)}
         >
           <span aria-hidden="true">◷</span> {t('schedule.otherTime')}
@@ -281,11 +294,15 @@ export function ScheduleScreen({
   }
 
   return (
-    <div className="schedule">
-      <div className="schedule-appbar">
+    <div className="flex flex-col pb-2">
+      <div
+        // `schedule-appbar` carries no styling of its own — kept as a
+        // stable e2e selector hook (see the block comment in AppointmentBlock).
+        className="schedule-appbar flex items-center gap-2.5 px-[13px] py-2.5"
+      >
         <button
           type="button"
-          className="schedule-arrow"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
           aria-label={t('schedule.nav.prevDay')}
           onClick={() => goTo(addDays(dateKey, -1))}
         >
@@ -293,24 +310,27 @@ export function ScheduleScreen({
         </button>
         <button
           type="button"
-          className="schedule-date"
+          className="rounded-sm2 border-line bg-surface flex min-h-11 flex-1 cursor-pointer flex-col justify-center border px-3 py-1 text-center"
           aria-label={`${visibleDateText}. ${t('schedule.chooseMonth')}`}
           onClick={openMonthPicker}
         >
-          <div className="schedule-date-d">
+          <div className="font-serif text-[15px] font-semibold tracking-[-0.01em]">
             {weekdayIdx >= 0 ? t(WEEKDAY_LONG_KEYS[weekdayIdx]) : ''},{' '}
             {dateKey.slice(8, 10)} {monthShortLabel(dateKey)}
-            <span className="schedule-date-caret" aria-hidden="true">
+            <span
+              className="text-faint ml-[3px] inline-block text-[10px]"
+              aria-hidden="true"
+            >
               ▾
             </span>
           </div>
-          <div className="schedule-date-m">
+          <div className="text-faint text-[11px] tracking-[0.04em]">
             {relativeDayLabel(dateKey, todayDateKey)}
           </div>
         </button>
         <button
           type="button"
-          className="schedule-arrow"
+          className="rounded-sm2 border-line bg-surface text-muted inline-flex size-[30px] flex-none cursor-pointer items-center justify-center border text-sm"
           aria-label={t('schedule.nav.nextDay')}
           onClick={() => goTo(addDays(dateKey, 1))}
         >
@@ -318,28 +338,41 @@ export function ScheduleScreen({
         </button>
       </div>
 
-      <div className="schedule-week">
-        {week.map((key, i) => (
-          <button
-            key={key}
-            type="button"
-            className={`schedule-weekday${key === dateKey ? ' schedule-weekday-on' : ''}`}
-            onClick={() => goTo(key)}
-          >
-            <div className="schedule-weekday-wd">
-              {t(WEEKDAY_SHORT_KEYS[i])}
-            </div>
-            {key.slice(8, 10)}
-          </button>
-        ))}
+      <div className="grid grid-cols-7 gap-1 px-3 pb-2.5">
+        {week.map((key, i) => {
+          const active = key === dateKey;
+          return (
+            <button
+              key={key}
+              type="button"
+              className={`rounded-sm2 cursor-pointer py-1.5 text-center text-xs tabular-nums ${
+                active ? 'bg-accent text-on-accent' : 'text-muted'
+              }`}
+              onClick={() => goTo(key)}
+            >
+              <div
+                className={`text-[9px] tracking-[0.05em] uppercase ${
+                  active ? 'text-on-accent/70' : 'text-faint'
+                }`}
+              >
+                {t(WEEKDAY_SHORT_KEYS[i])}
+              </div>
+              {key.slice(8, 10)}
+            </button>
+          );
+        })}
       </div>
 
       {isPending ? (
-        <div className="schedule-pending">{t('schedule.loading')}</div>
+        <div className="text-muted px-[15px] py-6 text-center text-[13px]">
+          {t('schedule.loading')}
+        </div>
       ) : (
-        <div className="schedule-list">
+        <div className="border-line border-t pt-1.5 pb-3">
           {(appointments ?? []).length === 0 && (
-            <p className="schedule-emptyDay">{t('schedule.emptyDay')}</p>
+            <p className="text-muted px-[15px] py-6 text-center text-[13px]">
+              {t('schedule.emptyDay')}
+            </p>
           )}
           {layout.items.map((item, i) =>
             item.kind === 'appt' ? (
@@ -367,7 +400,7 @@ export function ScheduleScreen({
       {otherTimeGap && (
         <>
           <div
-            className="schedule-scrim"
+            className="fixed inset-0 z-[2] bg-[color-mix(in_srgb,var(--ink)_34%,transparent)]"
             onClick={() => setOtherTimeGap(null)}
           />
           <TimePicker
