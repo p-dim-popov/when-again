@@ -117,8 +117,43 @@ test("другчас: the day view's inline time sheet carries an off-grid time 
   await page.getByRole('button', { name: 'other time' }).click();
   await expect(page.getByTestId('time-sheet')).toBeVisible();
 
-  // The wheel opens on 08:00 (day start). Pick the :05 minute option to nudge
-  // one step off the 30-minute quick-slot grid, then confirm.
+  // The wheel opens on 08:00 (day start).
+  await expect(
+    page.getByRole('button', { name: 'Choose · 08:00' }),
+  ).toBeVisible();
+
+  // Push the minute to :55 (valid at 08:00), then switch the hour to the
+  // day's last hour (19:00) via the Hours listbox. The day window is
+  // 08:00–20:00 and the free-slot service is 30 minutes, so 19:00's latest
+  // valid start is 19:30 — the minute column must re-clamp :55 down to :30
+  // via `nearestMinute` rather than carry over an invalid 19:55.
+  await page
+    .getByRole('listbox', { name: 'Minutes' })
+    .getByRole('option', { name: '55', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Choose · 08:55' }),
+  ).toBeVisible();
+
+  await page
+    .getByRole('listbox', { name: 'Hours' })
+    .getByRole('option', { name: '19', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Choose · 19:30' }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('listbox', { name: 'Minutes' })
+      .getByRole('option', { name: '55', exact: true }),
+  ).toHaveCount(0);
+
+  // Switch back to hour 08 and pick the :05 minute option to nudge one step
+  // off the 30-minute quick-slot grid, then confirm.
+  await page
+    .getByRole('listbox', { name: 'Hours' })
+    .getByRole('option', { name: '08', exact: true })
+    .click();
   await page
     .getByRole('listbox', { name: 'Minutes' })
     .getByRole('option', { name: '05', exact: true })

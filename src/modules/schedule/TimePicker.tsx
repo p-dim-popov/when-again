@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { t } from '../i18n';
 import {
   clampToGap,
@@ -9,15 +9,36 @@ import {
 import { DAY_END } from './dayWindow';
 
 const STEP_MINUTES = 5;
+// Row height of an option button (`h-11` = 2.75rem = 44px at the default
+// 16px root). The column's `py-[44px]` padding is exactly one row, so an
+// option at `index` sits centered under the highlight band when
+// `scrollTop === index * ROW_HEIGHT`.
+const ROW_HEIGHT = 44;
 
 interface Gap {
   start: string;
   end: string | null;
 }
 
-// One scrollable column of the wheel. Focusable listbox; options are clickable
-// and arrow-key navigable. Selection is reported through `onChange`; the
-// centered/selected option scrolls into view via `scrollIntoView`.
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// One scrollable column of the wheel. Focusable listbox; options are
+// clickable, arrow-key navigable, AND scroll/fling driven — dragging the
+// column to settle a different option centered under the highlight band
+// reports that option through `onChange`, same as a click would.
+//
+// Two effects keep the DOM scroll position and the `value` prop converged
+// without fighting each other:
+//  - the sync effect scrolls the container to `index * ROW_HEIGHT` whenever
+//    the selected index changes (click, arrow key, or a hour-change
+//    re-clamp) — this is a no-op scroll when the container is already there
+//    (e.g. right after the settle handler below has just reported that same
+//    index), so it can never re-trigger the settle handler in a loop.
+//  - the settle effect listens for the scroll gesture to finish (native
+//    `scrollend`, with a debounced `scroll` fallback for browsers that don't
+//    support it) and reports the centered option via `onChange`.
 function WheelColumn({
   label,
   options,
@@ -30,6 +51,7 @@ function WheelColumn({
   onChange: (next: string) => void;
 }) {
   const baseId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
   const index = Math.max(0, options.indexOf(value));
   const optionId = (i: number) => `${baseId}-opt-${i}`;
 
@@ -48,8 +70,59 @@ function WheelColumn({
     }
   }
 
+  // Keep the DOM scrolled to the selected option. Runs on mount and whenever
+  // `index` changes for any reason (click, arrow key, hour-change re-clamp,
+  // or the settle handler below reporting a user's scroll gesture).
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const target = index * ROW_HEIGHT;
+    if (Math.abs(el.scrollTop - target) < 1) return;
+    el.scrollTo({
+      top: target,
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
+  }, [index, options]);
+
+  // Report the option that ends up centered once a scroll/fling settles.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const supportsScrollEnd = 'onscrollend' in window;
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function settle() {
+      const node = containerRef.current;
+      if (!node || options.length === 0) return;
+      const settledIndex = Math.min(
+        Math.max(Math.round(node.scrollTop / ROW_HEIGHT), 0),
+        options.length - 1,
+      );
+      const next = options[settledIndex];
+      if (next && next !== value) onChange(next);
+    }
+
+    function handleScroll() {
+      // `scrollend` covers settling natively where supported; the debounced
+      // fallback below only kicks in for browsers without it, so the two
+      // paths never double-report.
+      if (supportsScrollEnd) return;
+      clearTimeout(fallbackTimer);
+      fallbackTimer = setTimeout(settle, 100);
+    }
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    el.addEventListener('scrollend', settle);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      el.removeEventListener('scrollend', settle);
+      clearTimeout(fallbackTimer);
+    };
+  }, [options, value, onChange]);
+
   return (
     <div
+      ref={containerRef}
       role="listbox"
       aria-label={label}
       tabIndex={0}
@@ -66,16 +139,7 @@ function WheelColumn({
             type="button"
             role="option"
             aria-selected={selected}
-            ref={(el) => {
-              if (el && selected)
-                el.scrollIntoView({
-                  block: 'center',
-                  behavior: window.matchMedia('(prefers-reduced-motion: reduce)')
-                    .matches
-                    ? 'auto'
-                    : 'smooth',
-                });
-            }}
+            tabIndex={-1}
             onClick={() => onChange(opt)}
             className={`flex h-11 w-full cursor-pointer snap-center items-center justify-center border-0 bg-transparent tabular-nums ${
               selected
