@@ -454,3 +454,36 @@ with the repo owner.
 - **Downstream:** Task 7 (edit) preloads the draft incl. `appointmentId` and
   uses the same Промени → day view flow to reschedule. Task 9 e2e asserts the
   round trip (друг час over the day → form → Промени → day → re-pick → save).
+
+### Edit / cancel / reschedule (Task 7, under the design update)
+
+Editing reuses the same `AppointmentForm`; because a time is only ever chosen
+on the day view, rescheduling routes through the day view too. The identity of
+the appointment being edited travels in the URL so it survives the day-view
+detour and never leaks into a fresh booking.
+
+- **One form route.** `/appointment/new` handles both new and edit, with search
+  `{ date?: string; time?: string; appt?: string }`. `appt` = the id being
+  edited (absent ⇒ new booking). This supersedes the earlier `/appointment/$id`.
+- **Entering edit.** Tapping an appointment on the day view →
+  `navigate({ to: '/appointment/new', search: { appt: id } })` (a plain route
+  string — `schedule` still never imports `booking`).
+- **Reschedule detour.** The form's "Промени" →
+  `navigate({ to: '/', search: { date: dateKey, ...(editing ? { appt } : {}) } })`.
+  The day view reads `appt` from its own search and, when present, forwards it on
+  a slot/друг-час tap → `/appointment/new?date&time&appt`. So an edit stays an
+  edit across the round trip; a new booking (no `appt`) stays new.
+- **Form mount logic.** `editingId = search.appt ?? null`.
+  - `editingId` set and `draft.appointmentId !== editingId` → first entry: load
+    `getAppointment(editingId)` (+ the client's name), `patchDraft` its fields
+    and `appointmentId`; then apply `search.date`/`time` if present.
+  - `editingId` set and `draft.appointmentId === editingId` → round-trip return:
+    keep the draft's (possibly edited) fields, apply the re-picked
+    `search.date`/`time`.
+  - no `editingId` → `patchDraft({ appointmentId: null })`, apply
+    `search.date`/`time`, keep other fields (new-booking round-trip preservation).
+  - Edit mode (show Cancel; save via `updateAppointment`) ⇔ `appointmentId != null`.
+- **Save / cancel.** Save uses `updateAppointment` when editing else
+  `addAppointment`; reschedule is just an edit whose Кога changed. Cancel (edit
+  mode only) sets `status: 'cancelled'` via `updateAppointment`, keeping the
+  appointment as a de-emphasised record. All three end on `/appointment/saved`.
