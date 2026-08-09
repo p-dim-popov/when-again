@@ -5,7 +5,11 @@ import {
 } from '@tanstack/react-router';
 import { AppShell, Placeholder, SettingsScreen } from '../modules/shell';
 import { ScheduleScreen, todayKey } from '../modules/schedule';
-import { MonthPicker } from '../modules/booking';
+import {
+  AppointmentForm,
+  MonthPicker,
+  useBookingDraft,
+} from '../modules/booking';
 import { t } from '../modules/i18n';
 
 interface TodaySearch {
@@ -55,10 +59,12 @@ const bookRoute = createRoute({
   component: MonthPicker,
 });
 
-// Placeholder: the day view (schedule) navigates here on a quick-slot or
-// "друг час" pick, passing the choice as search params so `schedule` never
-// has to import `booking`. A later dispatch of this task replaces this
-// component with the real, draft-backed AppointmentForm.
+// The day view (schedule) navigates here on a quick-slot or "друг час" pick,
+// passing the choice as search params so `schedule` never has to import
+// `booking`. `AppointmentForm` is draft-backed (see
+// `modules/booking/draftStore.ts`); it seeds the draft with these search
+// params on mount and its "Промени" control navigates back to `/` so the
+// provider can re-pick a time, then returns here.
 const newAppointmentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/appointment/new',
@@ -66,11 +72,26 @@ const newAppointmentRoute = createRoute({
     date: typeof search.date === 'string' ? search.date : undefined,
     time: typeof search.time === 'string' ? search.time : undefined,
   }),
-  component: NewAppointmentPlaceholder,
+  component: NewAppointmentRoute,
 });
 
-function NewAppointmentPlaceholder() {
+function NewAppointmentRoute() {
   const { date, time } = newAppointmentRoute.useSearch();
+  return <AppointmentForm date={date} time={time} />;
+}
+
+// Placeholder: Task 8 replaces this with the real ShareLanding (a summary +
+// disabled "Сподели" + "Готово" back to the day). This only exists so the
+// form's `navigate({ to: '/appointment/saved' })` type-checks and the funnel
+// can be smoke-tested end to end now.
+const appointmentSavedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/appointment/saved',
+  component: AppointmentSavedPlaceholder,
+});
+
+function AppointmentSavedPlaceholder() {
+  const draft = useBookingDraft();
   return (
     <main
       style={{
@@ -82,11 +103,9 @@ function NewAppointmentPlaceholder() {
       }}
     >
       <div>
-        <h1>{t('booking.new.placeholder.title')}</h1>
+        <h1>{t('booking.saved.placeholder.title')}</h1>
         <p>{t('shell.soon')}</p>
-        {date && time && (
-          <p>{t('booking.new.placeholder.echo', { date, time })}</p>
-        )}
+        {draft.appointmentId && <p>{draft.appointmentId}</p>}
       </div>
     </main>
   );
@@ -98,6 +117,7 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
   bookRoute,
   newAppointmentRoute,
+  appointmentSavedRoute,
 ]);
 
 export const router = createRouter({

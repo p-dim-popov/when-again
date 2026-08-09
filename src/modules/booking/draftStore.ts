@@ -7,17 +7,32 @@ import { Store, useStore } from '@tanstack/react-store';
 
 // Carries the in-flight booking-funnel selection (month picker -> slot ->
 // form) across the funnel's separate route/screens, without prop-drilling.
-// Reset once the appointment is saved (or the funnel is abandoned).
+//
+// Also carries the in-progress appointment fields (client/service/duration/
+// price) so that a "Промени" round trip — form -> day view (to re-pick the
+// time) -> form — does not lose what the provider already typed. The day
+// view only ever touches `dateKey`/`time`; the form seeds those two from the
+// route's search params on mount and leaves the rest of the draft alone.
 export interface BookingDraft {
   dateKey: string | null;
   time: string | null;
   appointmentId: string | null;
+  clientId: string | null;
+  clientName: string | null;
+  service: string | null;
+  durationMinutes: number | null;
+  price: number | null;
 }
 
 const initialDraft: BookingDraft = {
   dateKey: null,
   time: null,
   appointmentId: null,
+  clientId: null,
+  clientName: null,
+  service: null,
+  durationMinutes: null,
+  price: null,
 };
 
 export const draftStore = new Store<BookingDraft>(initialDraft);
@@ -28,6 +43,11 @@ export function setDraftDate(dateKey: string): void {
 
 export function setDraftTime(time: string): void {
   draftStore.setState((state) => ({ ...state, time }));
+}
+
+/** Merges `partial` into the draft without touching any other field. */
+export function patchDraft(partial: Partial<BookingDraft>): void {
+  draftStore.setState((state) => ({ ...state, ...partial }));
 }
 
 export function resetDraft(): void {
