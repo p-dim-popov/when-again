@@ -16,7 +16,6 @@ const en = {
   'schedule.weekday.sat.long': 'Saturday',
   'schedule.weekday.sun.long': 'Sunday',
   'schedule.free': 'free',
-  'schedule.more': 'more…',
   'schedule.today': 'today',
   'schedule.otherTime': 'other time',
   'schedule.relative.tomorrow': 'tomorrow',
@@ -30,8 +29,8 @@ const en = {
   'schedule.cancelled': 'Cancelled',
   'schedule.loading': 'Loading…',
   'schedule.emptyDay': 'The whole day is free.',
-  'schedule.nav.prevDay': 'Previous day',
-  'schedule.nav.nextDay': 'Next day',
+  'schedule.nav.prevWeek': 'Previous week',
+  'schedule.nav.nextWeek': 'Next week',
   'schedule.chooseMonth': 'Choose month',
   'schedule.timePicker.title': 'Other time',
   'schedule.timePicker.window': 'free {start} – {end}',
@@ -60,7 +59,6 @@ const bg = {
   'schedule.weekday.sat.long': 'Събота',
   'schedule.weekday.sun.long': 'Неделя',
   'schedule.free': 'свободно',
-  'schedule.more': 'още…',
   'schedule.today': 'днес',
   'schedule.otherTime': 'друг час',
   'schedule.relative.tomorrow': 'утре',
@@ -77,8 +75,8 @@ const bg = {
   'schedule.cancelled': 'Отказан',
   'schedule.loading': 'Зареждане…',
   'schedule.emptyDay': 'Целият ден е свободен.',
-  'schedule.nav.prevDay': 'Предишен ден',
-  'schedule.nav.nextDay': 'Следващ ден',
+  'schedule.nav.prevWeek': 'Предишна седмица',
+  'schedule.nav.nextWeek': 'Следваща седмица',
   'schedule.chooseMonth': 'Изберете месец',
   'schedule.timePicker.title': 'Друг час',
   'schedule.timePicker.window': 'свободно {start} – {end}',
@@ -110,7 +108,6 @@ declare module '../i18n' {
     'schedule.weekday.sat.long': true;
     'schedule.weekday.sun.long': true;
     'schedule.free': true;
-    'schedule.more': true;
     'schedule.today': true;
     'schedule.otherTime': true;
     'schedule.relative.tomorrow': true;
@@ -121,8 +118,8 @@ declare module '../i18n' {
     'schedule.cancelled': true;
     'schedule.loading': true;
     'schedule.emptyDay': true;
-    'schedule.nav.prevDay': true;
-    'schedule.nav.nextDay': true;
+    'schedule.nav.prevWeek': true;
+    'schedule.nav.nextWeek': true;
     'schedule.chooseMonth': true;
     'schedule.timePicker.title': true;
     'schedule.timePicker.window': true;

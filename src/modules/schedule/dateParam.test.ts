@@ -110,3 +110,16 @@ describe('weekOf', () => {
     ]);
   });
 });
+
+describe('week jump (day-view arrows)', () => {
+  it('addDays(key, ±7) keeps the weekday and lands in the adjacent week', () => {
+    const key = '2026-08-12'; // a Wednesday
+    const next = addDays(key, 7);
+    const prev = addDays(key, -7);
+    expect(next).toBe('2026-08-19');
+    expect(prev).toBe('2026-08-05');
+    // same weekday index within its own week
+    expect(weekOf(next).indexOf(next)).toBe(weekOf(key).indexOf(key));
+    expect(weekOf(prev).indexOf(prev)).toBe(weekOf(key).indexOf(key));
+  });
+});

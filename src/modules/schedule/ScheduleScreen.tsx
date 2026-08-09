@@ -66,12 +66,6 @@ function monthShortLabel(dateKey: string): string {
   }).format(date);
 }
 
-// The "still more" affordance (beyond generateSlots' MAX_SLOTS cap) has no
-// defined behaviour yet — leave it a no-op stub for now.
-function handleMoreTapStub() {
-  // Unspecified; not part of this task.
-}
-
 function AppointmentBlock({
   appt,
   clientName,
@@ -144,11 +138,6 @@ function GapRow({
     serviceMinutes: stepMinutes,
     dayEnd: DAY_END,
   });
-  // generateSlots caps its result at 8 candidates; treat a full cap as a
-  // signal there may be more, and offer a "more…" affordance (a stub, same
-  // as the slot chips, until later booking-funnel wiring).
-  const mayHaveMore = slots.length >= 8;
-
   return (
     <div className="grid grid-cols-[44px_1fr] items-start gap-2.5 py-1.5 pr-[15px] pl-3">
       <div className="text-faint pt-1.5 text-[10px] tracking-[0.06em] uppercase">
@@ -166,15 +155,6 @@ function GapRow({
             {time}
           </button>
         ))}
-        {mayHaveMore && (
-          <button
-            type="button"
-            className="rounded-chip border-line bg-surface-2 text-accent-ink inline-flex min-h-11 cursor-pointer items-center gap-1.5 border px-3 text-[12.5px] tabular-nums"
-            onClick={handleMoreTapStub}
-          >
-            {t('schedule.more')}
-          </button>
-        )}
         <button
           type="button"
           className="rounded-chip border-line bg-surface-2 text-muted inline-flex min-h-11 cursor-pointer items-center gap-1.5 border border-dashed px-3 text-[12.5px] tabular-nums"
@@ -299,8 +279,8 @@ export function ScheduleScreen({
         <button
           type="button"
           className="rounded-sm2 border-line bg-surface text-muted inline-flex size-11 flex-none cursor-pointer items-center justify-center border text-lg"
-          aria-label={t('schedule.nav.prevDay')}
-          onClick={() => goTo(addDays(dateKey, -1))}
+          aria-label={t('schedule.nav.prevWeek')}
+          onClick={() => goTo(addDays(dateKey, -7))}
         >
           ‹
         </button>
@@ -327,8 +307,8 @@ export function ScheduleScreen({
         <button
           type="button"
           className="rounded-sm2 border-line bg-surface text-muted inline-flex size-11 flex-none cursor-pointer items-center justify-center border text-lg"
-          aria-label={t('schedule.nav.nextDay')}
-          onClick={() => goTo(addDays(dateKey, 1))}
+          aria-label={t('schedule.nav.nextWeek')}
+          onClick={() => goTo(addDays(dateKey, 7))}
         >
           ›
         </button>
