@@ -117,8 +117,12 @@ test("другчас: the day view's inline time sheet carries an off-grid time 
   await page.getByRole('button', { name: 'other time' }).click();
   await expect(page.getByTestId('time-sheet')).toBeVisible();
 
-  // Nudge one 5-minute step off the 30-minute quick-slot grid, then confirm.
-  await page.getByRole('button', { name: 'Later minute' }).click();
+  // The wheel opens on 08:00 (day start). Pick the :05 minute option to nudge
+  // one step off the 30-minute quick-slot grid, then confirm.
+  await page
+    .getByRole('listbox', { name: 'Minutes' })
+    .getByRole('option', { name: '05', exact: true })
+    .click();
   await expect(
     page.getByRole('button', { name: 'Choose · 08:05' }),
   ).toBeVisible();
