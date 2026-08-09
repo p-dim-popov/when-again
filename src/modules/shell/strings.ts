@@ -1,6 +1,7 @@
 import type { Strings } from '../i18n';
 
 const en = {
+  'shell.nav.label': 'Main navigation',
   'shell.tab.today': 'Today',
   'shell.tab.clients': 'Clients',
   'shell.tab.new': 'New',
@@ -14,6 +15,7 @@ const en = {
 } satisfies Strings;
 
 const bg = {
+  'shell.nav.label': 'Основна навигация',
   'shell.tab.today': 'Днес',
   'shell.tab.clients': 'Клиенти',
   'shell.tab.new': 'Нов час',
@@ -30,6 +32,7 @@ export const shellStrings = { en, bg };
 
 declare module '../i18n' {
   interface TranslationKeys {
+    'shell.nav.label': true;
     'shell.tab.today': true;
     'shell.tab.clients': true;
     'shell.tab.new': true;

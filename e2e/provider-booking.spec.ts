@@ -74,7 +74,11 @@ async function bookAppointment(
   await expect(page.getByText(time)).toBeVisible();
 
   await page.locator('#apptForm-client').fill(clientName);
-  await page.getByRole('button', { name: `Create "${clientName}"` }).click();
+  // The inline "Create '<name>'" suggestion carries `role="option"` (it's a
+  // member of the client-search listbox — see AppointmentForm.tsx) which
+  // overrides its host `<button>`'s implicit role, so it resolves by the
+  // "option" role rather than "button".
+  await page.getByRole('option', { name: `Create "${clientName}"` }).click();
 
   await page.locator('#apptForm-service').fill(service);
   await page.locator('#apptForm-duration').fill('30');

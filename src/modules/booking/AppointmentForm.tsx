@@ -28,6 +28,18 @@ const SETTINGS_QUERY_KEY = ['settings'];
 const MAX_CLIENT_SUGGESTIONS = 6;
 const MAX_SERVICE_SUGGESTIONS = 6;
 
+// A fresh new booking (no preset picked yet, nothing typed) starts Времетраене
+// at 30 minutes rather than empty, so manual service entry is one field
+// lighter. Only applies to a brand-new booking with no duration already in
+// the draft — see `initialDurationMinutes` below.
+const DEFAULT_NEW_BOOKING_DURATION_MINUTES = 30;
+
+// Stable ids for the combobox/listbox ARIA wiring below (item 4 of the
+// followup-B polish pass): each text input's `aria-controls` points at its
+// suggestion list's `id`.
+const CLIENT_LISTBOX_ID = 'apptForm-client-listbox';
+const SERVICE_LISTBOX_ID = 'apptForm-service-listbox';
+
 interface ServiceFormValues {
   service: string;
   durationMinutes: number | null;
@@ -96,6 +108,15 @@ export function AppointmentForm({
   // single mount once we've seeded the form fields. The hydrate effect itself
   // lives below the `form`/client-state declarations it writes to.
   const hydratedRef = useRef(false);
+
+  // Tracks the `editingId` the hydrate effect last saw. Today `editingId`
+  // can't actually change within a single mounted instance of this
+  // component — an identity change routes through an unmounting day-view
+  // detour — but the effect shouldn't rely on that from the outside. If
+  // `editingId` ever did change in place, this resets `hydratedRef` so the
+  // effect re-hydrates for the new identity instead of silently keeping the
+  // previous appointment's fields.
+  const prevEditingIdRef = useRef<string | null>(editingId);
 
   // Set right before save/cancel patches `appointmentId` and navigates away
   // (see `handleSave`/`handleCancel`). Guards the mount effect below: without
@@ -172,10 +193,20 @@ export function AppointmentForm({
     selectClient(created);
   }
 
+  // Default Времетраене to 30 minutes, but only for a brand-new booking that
+  // has no duration in the draft yet (`editingId == null` — an edit's real
+  // duration loads via the hydrate effect below and must win; a round trip
+  // that already patched a duration into the draft, explicitly chosen or via
+  // a preset, must also win).
+  const initialDurationMinutes =
+    editingId == null && initialDraft.durationMinutes == null
+      ? DEFAULT_NEW_BOOKING_DURATION_MINUTES
+      : initialDraft.durationMinutes;
+
   const form = useForm({
     defaultValues: {
       service: initialDraft.service ?? '',
-      durationMinutes: initialDraft.durationMinutes,
+      durationMinutes: initialDurationMinutes,
       price: initialDraft.price,
     } as ServiceFormValues,
     onSubmit: async ({ value }) => {
@@ -193,6 +224,17 @@ export function AppointmentForm({
   //    keep the draft; the date/time effect above re-applies the re-picked
   //    slot. So a reschedule is just an edit whose Кога changed.
   useEffect(() => {
+    // Defensive: if `editingId` ever changed in place (it can't today — see
+    // `prevEditingIdRef`'s comment), a stale `hydratedRef` would otherwise
+    // suppress hydration for the new identity. Reset it so the branches below
+    // treat this as a fresh first-entry hydrate. Fires (at most) once per
+    // identity change, and the `draft.appointmentId === editingId`
+    // round-trip check further down still governs whether an in-progress
+    // edit's fields get clobbered.
+    if (prevEditingIdRef.current !== editingId) {
+      hydratedRef.current = false;
+      prevEditingIdRef.current = editingId;
+    }
     if (leavingRef.current) return; // save/cancel already claimed this draft
     if (editingId == null) {
       // New booking: clear any stale `appointmentId` left over from a previous
@@ -392,6 +434,9 @@ export function AppointmentForm({
             <input
               id="apptForm-client"
               type="text"
+              role="combobox"
+              aria-expanded={showClientSuggestions}
+              aria-controls={CLIENT_LISTBOX_ID}
               value={clientQuery}
               placeholder={t('booking.form.client.placeholder')}
               onChange={(e) => handleClientQueryChange(e.target.value)}
@@ -399,12 +444,18 @@ export function AppointmentForm({
             />
           </div>
           {showClientSuggestions && (
-            <div className="apptForm-suggestions">
+            <div
+              className="apptForm-suggestions"
+              role="listbox"
+              id={CLIENT_LISTBOX_ID}
+            >
               {clientSuggestions.map((client) => (
                 <button
                   key={client.id}
                   type="button"
                   className="apptForm-suggestion"
+                  role="option"
+                  aria-selected={client.id === clientId}
                   onClick={() => selectClient(client)}
                 >
                   {client.name}
@@ -414,6 +465,8 @@ export function AppointmentForm({
                 <button
                   type="button"
                   className="apptForm-suggestion apptForm-suggestion-create"
+                  role="option"
+                  aria-selected={false}
                   onClick={() => void handleCreateClient()}
                 >
                   {t('booking.form.client.create', {
@@ -435,6 +488,9 @@ export function AppointmentForm({
                 <input
                   id="apptForm-service"
                   type="text"
+                  role="combobox"
+                  aria-expanded={remembered.length > 0}
+                  aria-controls={SERVICE_LISTBOX_ID}
                   value={field.state.value}
                   placeholder={t('booking.form.service.placeholder')}
                   onChange={(e) => {
@@ -444,12 +500,18 @@ export function AppointmentForm({
                 />
               </div>
               {remembered.length > 0 && (
-                <div className="apptForm-recent">
+                <div
+                  className="apptForm-recent"
+                  role="listbox"
+                  id={SERVICE_LISTBOX_ID}
+                >
                   {remembered.map((preset) => (
                     <button
                       key={preset.name}
                       type="button"
                       className="apptForm-recentChip"
+                      role="option"
+                      aria-selected={preset.name === field.state.value}
                       onClick={() => applyPreset(preset)}
                     >
                       {preset.name}

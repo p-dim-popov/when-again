@@ -6,6 +6,17 @@ import {
 } from '../appointments';
 import { addClient, type Client } from '../clients';
 
+// The exact shape cached under `['appointment', id]` — written by
+// `AppointmentForm`'s `editLoad` query and `ShareLanding`'s `record` query
+// (both in this module), which must stay byte-for-byte identical since
+// TanStack Query caches by key only, not by caller (see `ShareLanding.tsx`'s
+// comment on `record`). `useCancelAppointment` below writes this same shape
+// directly so `ShareLanding` sees the cancelled status immediately.
+type AppointmentCacheEntry = {
+  appointment: Appointment;
+  clientName: string;
+} | null;
+
 // `addAppointment`/`addClient` (confirmed against `src/modules/appointments`
 // and `src/modules/clients`) each take the entity minus its `id` and return
 // the full, persisted entity (including the generated `id`) — so
@@ -55,6 +66,15 @@ export function useCancelAppointment() {
     },
     onSuccess: (appointment) => {
       void queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      // Optimistically fold the now-cancelled status into the cached record
+      // BEFORE the invalidation-triggered refetch resolves, so a `ShareLanding`
+      // already mounted on `['appointment', id]` reads `status: 'cancelled'`
+      // on its very next render instead of flashing the pre-cancel ("saved")
+      // title for one frame while the invalidated query refetches.
+      queryClient.setQueryData<AppointmentCacheEntry>(
+        ['appointment', appointment.id],
+        (old) => (old ? { ...old, appointment } : old),
+      );
       void queryClient.invalidateQueries({
         queryKey: ['appointment', appointment.id],
       });

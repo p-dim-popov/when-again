@@ -218,6 +218,18 @@ export function ScheduleScreen({
   const week = weekOf(dateKey);
   const weekdayIdx = week.indexOf(dateKey);
 
+  // The same weekday/date/relative-day text the appbar button shows
+  // visually — folded into its accessible name below so screen-reader users
+  // hear the date, not just "Choose month" (which would otherwise shadow the
+  // visible text entirely).
+  const weekdayLabel = weekdayIdx >= 0 ? t(WEEKDAY_LONG_KEYS[weekdayIdx]) : '';
+  const visibleDateText = [
+    `${weekdayLabel}, ${dateKey.slice(8, 10)} ${monthShortLabel(dateKey)}`,
+    relativeDayLabel(dateKey, todayDateKey),
+  ]
+    .filter(Boolean)
+    .join('. ');
+
   const layout = useMemo(
     () =>
       computeDayLayout(appointments ?? [], {
@@ -282,7 +294,7 @@ export function ScheduleScreen({
         <button
           type="button"
           className="schedule-date"
-          aria-label={t('schedule.chooseMonth')}
+          aria-label={`${visibleDateText}. ${t('schedule.chooseMonth')}`}
           onClick={openMonthPicker}
         >
           <div className="schedule-date-d">

@@ -10,7 +10,7 @@ export function AppShell() {
       <div className="appShell-content">
         <Outlet />
       </div>
-      <nav className="tabs">
+      <nav className="tabs" aria-label={t('shell.nav.label')}>
         <Link to="/" className="tab" activeOptions={{ exact: true }}>
           <span className="ic" aria-hidden="true">
             ▤
