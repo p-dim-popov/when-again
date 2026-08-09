@@ -14,6 +14,16 @@ import {
 import { shellStrings } from '../modules/shell';
 import { scheduleStrings } from '../modules/schedule';
 import { bookingStrings } from '../modules/booking';
+import '@fontsource/lora/cyrillic-500.css';
+import '@fontsource/lora/cyrillic-600.css';
+import '@fontsource/lora/latin-500.css';
+import '@fontsource/lora/latin-600.css';
+import '@fontsource/ibm-plex-sans/cyrillic-400.css';
+import '@fontsource/ibm-plex-sans/cyrillic-500.css';
+import '@fontsource/ibm-plex-sans/cyrillic-600.css';
+import '@fontsource/ibm-plex-sans/latin-400.css';
+import '@fontsource/ibm-plex-sans/latin-500.css';
+import '@fontsource/ibm-plex-sans/latin-600.css';
 import './index.css';
 
 async function bootstrap() {
