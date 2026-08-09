@@ -161,6 +161,7 @@ export function AppointmentForm({
   const [clientId, setClientId] = useState<string | null>(
     initialDraft.clientId,
   );
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const trimmedClientQuery = clientQuery.trim();
@@ -176,8 +177,20 @@ export function AppointmentForm({
   );
   const showCreateClient =
     trimmedClientQuery.length > 0 && !hasExactClientMatch;
+  // A selected client whose name still matches the query verbatim (the
+  // normal post-pick state) must not reopen the list — it would only ever
+  // self-match. `suggestionsDismissed` additionally covers Escape/blur.
+  const selectedName =
+    clientId != null
+      ? ((clients ?? []).find((c) => c.id === clientId)?.name ?? '')
+      : '';
+  const querySelectsClient =
+    clientId != null &&
+    selectedName.toLowerCase() === trimmedClientQuery.toLowerCase();
   const showClientSuggestions =
     trimmedClientQuery.length > 0 &&
+    !suggestionsDismissed &&
+    !querySelectsClient &&
     (clientSuggestions.length > 0 || showCreateClient);
 
   function selectClient(client: Client) {
@@ -188,6 +201,7 @@ export function AppointmentForm({
 
   function handleClientQueryChange(value: string) {
     setClientQuery(value);
+    setSuggestionsDismissed(false);
     // The previous selection no longer necessarily matches what's typed;
     // require an explicit (re-)pick before saving.
     setClientId(null);
@@ -456,6 +470,10 @@ export function AppointmentForm({
               value={clientQuery}
               placeholder={t('booking.form.client.placeholder')}
               onChange={(e) => handleClientQueryChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setSuggestionsDismissed(true);
+              }}
+              onBlur={() => setSuggestionsDismissed(true)}
               autoComplete="off"
               className={FIELD_INPUT}
             />
@@ -473,6 +491,7 @@ export function AppointmentForm({
                   className="rounded-sm2 text-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px]"
                   role="option"
                   aria-selected={client.id === clientId}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => selectClient(client)}
                 >
                   {client.name}
@@ -484,6 +503,7 @@ export function AppointmentForm({
                   className="rounded-sm2 text-accent-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px] font-semibold"
                   role="option"
                   aria-selected={false}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => void handleCreateClient()}
                 >
                   {t('booking.form.client.create', {

@@ -245,3 +245,26 @@ test('edit, reschedule, and cancel an existing appointment', async ({
   await expect(cancelledAppt).toContainText(clientName);
   await expect(cancelledAppt).toContainText('Cancelled');
 });
+
+test('client suggestion list closes after picking an existing client', async ({
+  page,
+}) => {
+  const clientName = 'Maria Dimitrova';
+  await bookAppointment(page, { clientName, service: 'Color' });
+
+  // Start a second booking, type the same name → the existing client appears.
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+
+  const client = page.locator('#apptForm-client');
+  await client.fill(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('option', { name: clientName, exact: true }).click();
+
+  // Picked → field holds the name and the listbox is closed.
+  await expect(client).toHaveValue(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'false');
+});
