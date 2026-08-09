@@ -153,9 +153,10 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
               isSelected
                 ? 'bg-accent text-on-accent font-bold'
                 : isPast
-                  ? 'text-faint opacity-50'
+                  ? 'text-faint'
                   : 'text-ink',
-              isToday && 'ring-accent-line ring-1 ring-inset',
+              isPast && 'opacity-50',
+              isToday && 'ring-accent-line ring-[1.5px] ring-inset',
             ]
               .filter(Boolean)
               .join(' ');
