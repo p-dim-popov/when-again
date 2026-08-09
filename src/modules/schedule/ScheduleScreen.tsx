@@ -170,6 +170,7 @@ function GapRow({
 export function ScheduleScreen({
   dateKey: dateKeyProp,
   appt,
+  resume,
 }: {
   dateKey: string;
   // Present only during a reschedule detour: the id of the appointment being
@@ -177,6 +178,12 @@ export function ScheduleScreen({
   // re-emits this string on navigation — it never imports `booking`, so the
   // module graph stays acyclic.
   appt?: string;
+  // Present only during a NEW-booking "Промени" round trip (#16): tells the
+  // eventual form (via `booking`, never imported here) that this visit
+  // continues an in-progress booking rather than starting fresh. `schedule`
+  // only forwards this boolean on navigation — the reset decision itself
+  // lives in `booking`.
+  resume?: boolean;
 }) {
   const navigate = useNavigate();
   const dateKey = parseDateKey(dateKeyProp)
@@ -234,7 +241,11 @@ export function ScheduleScreen({
   function goTo(newDateKey: string) {
     void navigate({
       to: '/',
-      search: { date: newDateKey, ...(appt ? { appt } : {}) },
+      search: {
+        date: newDateKey,
+        ...(appt ? { appt } : {}),
+        ...(resume ? { resume: true } : {}),
+      },
     });
   }
 
@@ -248,7 +259,12 @@ export function ScheduleScreen({
     setOtherTimeGap(null);
     void navigate({
       to: '/appointment/new',
-      search: { date: dateKey, time, ...(appt ? { appt } : {}) },
+      search: {
+        date: dateKey,
+        time,
+        ...(appt ? { appt } : {}),
+        ...(resume ? { resume: true } : {}),
+      },
     });
   }
 
@@ -266,7 +282,11 @@ export function ScheduleScreen({
   function openMonthPicker() {
     void navigate({
       to: '/book',
-      search: { date: dateKey, ...(appt ? { appt } : {}) },
+      search: {
+        date: dateKey,
+        ...(appt ? { appt } : {}),
+        ...(resume ? { resume: true } : {}),
+      },
     });
   }
 

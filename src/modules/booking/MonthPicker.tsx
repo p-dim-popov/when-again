@@ -20,7 +20,17 @@ import {
 // search params — a brand-new booking; (2) the day view's tappable month
 // header (Task 7b), carrying the day it was opened from (`date`) and, during
 // a reschedule detour, the appointment being edited (`appt`).
-export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
+export function MonthPicker({
+  date,
+  appt,
+  resume,
+}: {
+  date?: string;
+  appt?: string;
+  // See `ScheduleScreen`'s prop comment (#16) — forwarded on day-select so a
+  // new-booking "Промени" round trip keeps the draft.
+  resume?: boolean;
+}) {
   const navigate = useNavigate();
   const draft = useBookingDraft();
   const language = getActiveLanguage();
@@ -94,7 +104,11 @@ export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
     setDraftDate(dateKey);
     void navigate({
       to: '/',
-      search: { date: dateKey, ...(appt ? { appt } : {}) },
+      search: {
+        date: dateKey,
+        ...(appt ? { appt } : {}),
+        ...(resume ? { resume: true } : {}),
+      },
     });
   }
 

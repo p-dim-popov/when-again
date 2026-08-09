@@ -268,6 +268,58 @@ test('client suggestion list closes after picking an existing client', async ({
   await expect(client).toHaveAttribute('aria-expanded', 'false');
 });
 
+test('#16: a fresh booking via the month header starts empty after an abandon', async ({
+  page,
+}) => {
+  // Abandon a booking mid-fill: reach the form, type a client, then leave via
+  // the bottom nav without saving — the draft now holds a stale name.
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-client').fill('Stale Person');
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
+
+  // Start a new booking through the day-view month header (not ＋).
+  await page.getByTestId('day-appbar').getByRole('button').nth(1).click(); // month header
+  await expect(
+    page.getByRole('heading', { name: 'Choose a day' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Next month' }).click();
+  await page.getByRole('button', { name: '20', exact: true }).click();
+  await firstFreeSlot(page).click();
+
+  // The form is fresh — no stale name.
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await expect(page.locator('#apptForm-client')).toHaveValue('');
+});
+
+test('#16: a new-booking Промени round-trip preserves typed fields', async ({
+  page,
+}) => {
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-client').fill('Petar Kolev');
+  await page.locator('#apptForm-service').fill('Shave');
+
+  // Change (Промени) → day view → pick another slot → back on the form.
+  await page.getByRole('button', { name: 'Change', exact: true }).click();
+  await expect(page.getByTestId('day-appbar')).toBeVisible();
+  await firstFreeSlot(page).click();
+
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await expect(page.locator('#apptForm-client')).toHaveValue('Petar Kolev');
+  await expect(page.locator('#apptForm-service')).toHaveValue('Shave');
+});
+
 test('client suggestion list closes after keyboard-selecting an existing client', async ({
   page,
 }) => {

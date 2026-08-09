@@ -8,7 +8,13 @@ import { getAppointment, type Appointment } from '../appointments';
 import { getSettings, updateSettings, type ServicePreset } from '../settings';
 import { wallClockNow, type WallClock } from '../time';
 import { formatDayLabel } from '../schedule';
-import { draftStore, patchDraft, useBookingDraft } from './draftStore';
+import {
+  draftStore,
+  patchDraft,
+  resetDraft,
+  useBookingDraft,
+} from './draftStore';
+import { shouldResetDraft } from './freshStart';
 import {
   useAddClient,
   useCancelAppointment,
@@ -70,16 +76,32 @@ export function AppointmentForm({
   date,
   time,
   appt,
+  resume,
 }: {
   date?: string;
   time?: string;
   appt?: string;
+  // Present only during a NEW-booking "Промени" round trip (#16): tells this
+  // component the current entry continues an in-progress booking rather than
+  // starting fresh. See `shouldResetDraft`.
+  resume?: boolean;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const draft = useBookingDraft();
 
   const editingId = appt ?? null;
+
+  // #16: a truly fresh entry (no appt, no resume) starts from a clean draft,
+  // so an abandoned booking's client/service/price cannot leak in. Runs
+  // once, synchronously, in a useState initializer — before the
+  // `initialDraft` snapshot below — so the cleared draft is what seeds the
+  // form. date/time are re-applied from the URL by the mount effect further
+  // down.
+  useState(() => {
+    if (shouldResetDraft({ appt, resume })) resetDraft();
+    return null;
+  });
 
   // Snapshot the draft once, synchronously, at first render — before the
   // mount effect below overwrites dateKey/time. This is what a "Промени"
@@ -202,9 +224,12 @@ export function AppointmentForm({
     setClientQuery(value);
     setSuggestionsDismissed(false);
     // The previous selection no longer necessarily matches what's typed;
-    // require an explicit (re-)pick before saving.
+    // require an explicit (re-)pick before saving. `clientName` still tracks
+    // the raw typed text (not just a picked client's name) so a "Промени"
+    // round trip (#16) restores an unpicked, freshly-typed name — matching
+    // how the service field's `onChange` patches its raw value.
     setClientId(null);
-    patchDraft({ clientId: null, clientName: null });
+    patchDraft({ clientId: null, clientName: value || null });
   }
 
   // Default Времетраене to 30 minutes, but only for a brand-new booking that
@@ -306,13 +331,17 @@ export function AppointmentForm({
 
   // "Промени" returns to the day view to re-pick a time. In edit mode it
   // forwards `appt` so the day view hands it back on the next slot tap and the
-  // round trip stays an edit (rather than starting a new booking).
+  // round trip stays an edit (rather than starting a new booking). In NEW
+  // booking mode it forwards `resume` (#16) instead, so the round trip is
+  // recognised as continuing THIS booking rather than a fresh entry — without
+  // it, the next slot tap would look identical to a fresh browse-in and wipe
+  // the draft out from under the provider.
   function goChangeWhen() {
     void navigate({
       to: '/',
       search: {
         date: draft.dateKey ?? undefined,
-        ...(editingId ? { appt: editingId } : {}),
+        ...(editingId ? { appt: editingId } : { resume: true }),
       },
     });
   }
