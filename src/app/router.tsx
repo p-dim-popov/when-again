@@ -62,11 +62,28 @@ const settingsRoute = createRoute({
   component: SettingsScreen,
 });
 
+interface BookSearch {
+  date?: string;
+  // Carried when the month picker was opened from the day view mid-flow
+  // (reschedule detour): forwarded back to `/` on day-select so the
+  // round trip stays an edit rather than becoming a new booking.
+  appt?: string;
+}
+
 const bookRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/book',
-  component: MonthPicker,
+  validateSearch: (search: Record<string, unknown>): BookSearch => ({
+    date: typeof search.date === 'string' ? search.date : undefined,
+    appt: typeof search.appt === 'string' ? search.appt : undefined,
+  }),
+  component: BookRoute,
 });
+
+function BookRoute() {
+  const { date, appt } = bookRoute.useSearch();
+  return <MonthPicker date={date} appt={appt} />;
+}
 
 // The day view (schedule) navigates here on a quick-slot or "друг час" pick,
 // passing the choice as search params so `schedule` never has to import

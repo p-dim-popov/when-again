@@ -1,10 +1,10 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getActiveLanguage, t } from '../i18n';
 import { listAllAppointments } from '../appointments';
 import { parseDateKey, todayKey } from '../schedule';
-import { setDraftDate, useBookingDraft } from './draftStore';
+import { resetDraft, setDraftDate, useBookingDraft } from './draftStore';
 import {
   buildMonthGrid,
   monthYearLabel,
@@ -16,15 +16,42 @@ import './MonthPicker.css';
 // docs/design/epic-4/schedule-and-booking-flow.html. Selecting a day hands
 // off to the ordinary schedule screen (step 2) via `/?date=<key>`, so the
 // funnel never introduces a second time-picking UI.
-export function MonthPicker() {
+//
+// Reached two ways: (1) the canonical ＋ Нов час entry (bottom bar), with no
+// search params — a brand-new booking; (2) the day view's tappable month
+// header (Task 7b), carrying the day it was opened from (`date`) and, during
+// a reschedule detour, the appointment being edited (`appt`).
+export function MonthPicker({ date, appt }: { date?: string; appt?: string }) {
   const navigate = useNavigate();
   const draft = useBookingDraft();
   const language = getActiveLanguage();
   const todayDateKey = todayKey(new Date());
   const todayParts = parseDateKey(todayDateKey)!;
+  // Opening from a day view's month header (`date` present) shows THAT
+  // month, not always the current one.
+  const initialParts = date ? parseDateKey(date) : null;
 
-  const [viewYear, setViewYear] = useState(todayParts.y);
-  const [viewMonth, setViewMonth] = useState(todayParts.m);
+  const [viewYear, setViewYear] = useState(
+    initialParts ? initialParts.y : todayParts.y,
+  );
+  const [viewMonth, setViewMonth] = useState(
+    initialParts ? initialParts.m : todayParts.m,
+  );
+
+  // Fresh-booking reset: the canonical ＋ Нов час entry has neither `date`
+  // nor `appt` — that's the signal a brand-new booking is starting, so the
+  // draft (which may still hold a prior edit's or booking's fields) is
+  // cleared. Coming from the day view mid-flow (`date` present) or a
+  // reschedule (`appt` present) preserves the draft instead. Guarded by a
+  // ref so it fires once per mount, not on every render.
+  const didResetOnMount = useRef(false);
+  useEffect(() => {
+    if (didResetOnMount.current) return;
+    didResetOnMount.current = true;
+    if (!date && !appt) {
+      resetDraft();
+    }
+  }, [date, appt]);
 
   const { data: appointments } = useQuery({
     queryKey: ['appointments', 'all'],
@@ -66,7 +93,10 @@ export function MonthPicker() {
 
   function handleSelectDay(dateKey: string) {
     setDraftDate(dateKey);
-    void navigate({ to: '/', search: { date: dateKey } });
+    void navigate({
+      to: '/',
+      search: { date: dateKey, ...(appt ? { appt } : {}) },
+    });
   }
 
   return (

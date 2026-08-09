@@ -32,6 +32,7 @@ const en = {
   'schedule.emptyDay': 'The whole day is free.',
   'schedule.nav.prevDay': 'Previous day',
   'schedule.nav.nextDay': 'Next day',
+  'schedule.chooseMonth': 'Choose month',
   'schedule.timePicker.title': 'Other time',
   'schedule.timePicker.window': 'free {start} – {end}',
   'schedule.timePicker.subnote': 'Choose an exact time within the free window.',
@@ -78,6 +79,7 @@ const bg = {
   'schedule.emptyDay': 'Целият ден е свободен.',
   'schedule.nav.prevDay': 'Предишен ден',
   'schedule.nav.nextDay': 'Следващ ден',
+  'schedule.chooseMonth': 'Изберете месец',
   'schedule.timePicker.title': 'Друг час',
   'schedule.timePicker.window': 'свободно {start} – {end}',
   'schedule.timePicker.subnote': 'Изберете точен час в свободния прозорец.',
@@ -121,6 +123,7 @@ declare module '../i18n' {
     'schedule.emptyDay': true;
     'schedule.nav.prevDay': true;
     'schedule.nav.nextDay': true;
+    'schedule.chooseMonth': true;
     'schedule.timePicker.title': true;
     'schedule.timePicker.window': true;
     'schedule.timePicker.subnote': true;

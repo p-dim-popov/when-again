@@ -256,6 +256,18 @@ export function ScheduleScreen({
     void navigate({ to: '/appointment/new', search: { appt: id } });
   }
 
+  // The appbar's date/month heading opens the month picker (Task 7b) so the
+  // provider can jump to a far month without abandoning the current flow.
+  // `date` seeds the picker's shown month; `appt`, when present (a
+  // reschedule detour), is forwarded so the round trip stays an edit. This
+  // is a plain route string — `schedule` never imports `booking`.
+  function openMonthPicker() {
+    void navigate({
+      to: '/book',
+      search: { date: dateKey, ...(appt ? { appt } : {}) },
+    });
+  }
+
   return (
     <div className="schedule">
       <div className="schedule-appbar">
@@ -267,15 +279,23 @@ export function ScheduleScreen({
         >
           ‹
         </button>
-        <div className="schedule-date">
+        <button
+          type="button"
+          className="schedule-date"
+          aria-label={t('schedule.chooseMonth')}
+          onClick={openMonthPicker}
+        >
           <div className="schedule-date-d">
             {weekdayIdx >= 0 ? t(WEEKDAY_LONG_KEYS[weekdayIdx]) : ''},{' '}
             {dateKey.slice(8, 10)} {monthShortLabel(dateKey)}
+            <span className="schedule-date-caret" aria-hidden="true">
+              ▾
+            </span>
           </div>
           <div className="schedule-date-m">
             {relativeDayLabel(dateKey, todayDateKey)}
           </div>
-        </div>
+        </button>
         <button
           type="button"
           className="schedule-arrow"

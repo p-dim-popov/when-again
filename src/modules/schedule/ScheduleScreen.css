@@ -35,12 +35,27 @@
 .schedule-date {
   text-align: center;
   flex: 1;
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 8px;
 }
 
 .schedule-date-d {
   font-size: 15px;
   font-weight: 680;
   letter-spacing: -0.01em;
+}
+
+.schedule-date-caret {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 10px;
+  color: var(--faint);
 }
 
 .schedule-date-m {
