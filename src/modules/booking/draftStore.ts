@@ -1,5 +1,9 @@
-import { Store } from '@tanstack/store';
-import { useStore } from '@tanstack/react-store';
+// `@tanstack/react-store` (the direct dependency declared in package.json)
+// re-exports the full `@tanstack/store` core (`export * from
+// "@tanstack/store"`), so `Store` comes from here too — this avoids an
+// import from `@tanstack/store` itself, which is only a transitive/hoisted
+// dependency, not one declared directly.
+import { Store, useStore } from '@tanstack/react-store';
 
 // Carries the in-flight booking-funnel selection (month picker -> slot ->
 // form) across the funnel's separate route/screens, without prop-drilling.
