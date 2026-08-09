@@ -5,6 +5,7 @@ import {
 } from '@tanstack/react-router';
 import { AppShell, Placeholder, SettingsScreen } from '../modules/shell';
 import { ScheduleScreen, todayKey } from '../modules/schedule';
+import { MonthPicker } from '../modules/booking';
 
 interface TodaySearch {
   date?: string;
@@ -45,8 +46,7 @@ const settingsRoute = createRoute({
 const bookRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/book',
-  // Temporary: the month-picker booking funnel ships in a later task.
-  component: () => <Placeholder titleKey="shell.tab.new" />,
+  component: MonthPicker,
 });
 
 const routeTree = rootRoute.addChildren([

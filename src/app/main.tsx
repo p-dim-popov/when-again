@@ -13,11 +13,20 @@ import {
 } from '../modules/i18n';
 import { shellStrings } from '../modules/shell';
 import { scheduleStrings } from '../modules/schedule';
+import { bookingStrings } from '../modules/booking';
 import './index.css';
 
 async function bootstrap() {
-  registerStrings('en', { ...shellStrings.en, ...scheduleStrings.en });
-  registerStrings('bg', { ...shellStrings.bg, ...scheduleStrings.bg });
+  registerStrings('en', {
+    ...shellStrings.en,
+    ...scheduleStrings.en,
+    ...bookingStrings.en,
+  });
+  registerStrings('bg', {
+    ...shellStrings.bg,
+    ...scheduleStrings.bg,
+    ...bookingStrings.bg,
+  });
   let language: Language;
   try {
     const settings = await getSettings();
