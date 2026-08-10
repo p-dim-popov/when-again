@@ -1,6 +1,7 @@
 dist
 dev-dist
 package-lock.json
+src/app/routeTree.gen.ts
 .superpowers
 docs/design/
 docs/plans/
