@@ -250,26 +250,33 @@ export function TimePicker({
         {t('schedule.timePicker.subnote')}
       </p>
 
-      <div className="relative flex items-center justify-center gap-1.5 py-2">
-        <div
-          className="bg-accent-soft border-accent-line rounded-card pointer-events-none absolute top-1/2 left-1/2 h-11 w-[150px] -translate-x-1/2 -translate-y-1/2 border"
-          aria-hidden="true"
-        />
-        <WheelColumn
-          label={t('schedule.timePicker.hours')}
-          options={hours}
-          value={selHour}
-          onChange={changeHour}
-        />
-        <div className="text-accent-ink relative pb-0.5 text-xl font-extrabold">
-          :
+      <div className="flex justify-center py-2">
+        {/* The wheel shrinks to fit its columns (inline-flex). The highlight
+            band is `inset-x-0` of that wrapper, so it always spans the two
+            columns whatever their width — the columns are rem-sized and widen
+            with the root font, and a fixed-px band width left the selected
+            numbers stranded outside it on large-font phones. */}
+        <div className="relative isolate inline-flex items-center gap-1.5">
+          <div
+            className="bg-accent-soft border-accent-line rounded-card pointer-events-none absolute inset-x-0 top-1/2 -z-10 h-11 -translate-y-1/2 border"
+            aria-hidden="true"
+          />
+          <WheelColumn
+            label={t('schedule.timePicker.hours')}
+            options={hours}
+            value={selHour}
+            onChange={changeHour}
+          />
+          <div className="text-accent-ink relative pb-0.5 text-xl font-extrabold">
+            :
+          </div>
+          <WheelColumn
+            label={t('schedule.timePicker.minutes')}
+            options={minutes}
+            value={effectiveMin}
+            onChange={setSelMin}
+          />
         </div>
-        <WheelColumn
-          label={t('schedule.timePicker.minutes')}
-          options={minutes}
-          value={effectiveMin}
-          onChange={setSelMin}
-        />
       </div>
 
       <button
