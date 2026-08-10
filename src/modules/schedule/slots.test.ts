@@ -1,6 +1,27 @@
 import { describe, expect, it } from 'vitest';
 import type { Appointment } from '../appointments';
-import { computeDayLayout, generateSlots, type DayLayoutItem } from './slots';
+import {
+  computeDayLayout,
+  generateSlots,
+  slotStepMinutes,
+  type DayLayoutItem,
+} from './slots';
+
+describe('slotStepMinutes', () => {
+  it('uses the SHORTEST service duration so a long outlier (e.g. a 300-min colour) does not hide every slot', () => {
+    expect(
+      slotStepMinutes([{ durationMinutes: 300 }, { durationMinutes: 35 }], 30),
+    ).toBe(35);
+  });
+
+  it('falls back to the default when no services are recorded yet', () => {
+    expect(slotStepMinutes([], 30)).toBe(30);
+  });
+
+  it('uses the only service when there is one', () => {
+    expect(slotStepMinutes([{ durationMinutes: 45 }], 30)).toBe(45);
+  });
+});
 
 const DAY = '2026-08-22';
 
