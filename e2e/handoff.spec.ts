@@ -124,16 +124,16 @@ test('round-trip: book → import → reschedule → cancel, no duplicates', asy
   await expect(page.getByRole('heading', { name: 'Cancelled' })).toBeVisible();
 
   // 6. No duplicates: exactly one received record, now cancelled.
-  const count = await page.evaluate(
+  const records = await page.evaluate(
     () =>
-      new Promise<number>((resolve, reject) => {
+      new Promise<{ status: string }[]>((resolve, reject) => {
         const req = indexedDB.open('when-again');
         req.onsuccess = () => {
           const db = req.result;
           const tx = db.transaction('received', 'readonly');
           const all = tx.objectStore('received').getAll();
           all.onsuccess = () => {
-            resolve(all.result.length);
+            resolve(all.result);
             db.close();
           };
           all.onerror = () => reject(all.error);
@@ -141,5 +141,6 @@ test('round-trip: book → import → reschedule → cancel, no duplicates', asy
         req.onerror = () => reject(req.error);
       }),
   );
-  expect(count).toBe(1);
+  expect(records.length).toBe(1);
+  expect(records[0]?.status).toBe('cancelled');
 });

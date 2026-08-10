@@ -1,4 +1,5 @@
 import 'fake-indexeddb/auto';
+import { openDB } from 'idb';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   DB_NAME,
@@ -18,7 +19,7 @@ afterEach(async () => {
 });
 
 describe('getDb', () => {
-  it('creates the three object stores', async () => {
+  it('creates all four object stores', async () => {
     const db = await getDb();
     expect(db.name).toBe(DB_NAME);
     expect([...db.objectStoreNames].sort()).toEqual(
@@ -37,6 +38,35 @@ describe('getDb', () => {
     const names = [...tx.store.indexNames];
     expect(names).toContain(INDEX_APPOINTMENTS_BY_CLIENT);
     expect(names).toContain(INDEX_APPOINTMENTS_BY_DATETIME);
+  });
+
+  it('migrates a v1 database to v2, creating `received` and keeping v1 data', async () => {
+    // Simulate a pre-existing v1 install: open at version 1 and create only
+    // the v1 stores, then write a known record.
+    const v1db = await openDB(DB_NAME, 1, {
+      upgrade(db) {
+        db.createObjectStore(STORE_CLIENTS, { keyPath: 'id' });
+        const appointments = db.createObjectStore(STORE_APPOINTMENTS, {
+          keyPath: 'id',
+        });
+        appointments.createIndex(INDEX_APPOINTMENTS_BY_CLIENT, 'clientId');
+        appointments.createIndex(
+          INDEX_APPOINTMENTS_BY_DATETIME,
+          'start.dateTime',
+        );
+        db.createObjectStore(STORE_SETTINGS, { keyPath: 'id' });
+      },
+    });
+    await v1db.put(STORE_CLIENTS, { id: 'c1', name: 'Maria' });
+    v1db.close();
+
+    // Now open through the real app path, which upgrades to v2.
+    const db = await getDb();
+    expect([...db.objectStoreNames]).toContain(STORE_RECEIVED);
+    expect(await db.get(STORE_CLIENTS, 'c1')).toEqual({
+      id: 'c1',
+      name: 'Maria',
+    });
   });
 
   it('memoizes the connection', async () => {

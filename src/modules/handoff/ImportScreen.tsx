@@ -104,7 +104,7 @@ export function ImportScreen() {
   const decoded = fragment ? decodeHandoff(fragment) : null;
   const incomingId = decoded?.ok ? decoded.appointment.id : undefined;
 
-  const { data: stored } = useQuery({
+  const { data: stored, isLoading: storedLoading } = useQuery({
     queryKey: ['received', incomingId],
     queryFn: () => getReceived(incomingId as string),
     enabled: incomingId != null,
@@ -158,7 +158,9 @@ export function ImportScreen() {
     );
   }
 
-  const outcome: ImportOutcome = classifyImport(incoming, stored ?? undefined);
+  if (storedLoading) return null;
+
+  const outcome: ImportOutcome = classifyImport(incoming, stored);
 
   async function write(next: 'added' | 'updated' | 'removed') {
     setWriteError(false);
