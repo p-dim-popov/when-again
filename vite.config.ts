@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { tanstackRouter } from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -10,6 +11,16 @@ const base = process.env.BASE_PATH ?? '/when-again/';
 export default defineConfig({
   base,
   plugins: [
+    // Must precede the React plugin. Routes live inside the composition root
+    // (`src/app/routes`) so nothing outside `src/app/` imports them, and the
+    // generated tree is committed (it sits beside `router.tsx`) so the
+    // standalone `tsc -b` typecheck has it without a Vite run.
+    tanstackRouter({
+      target: 'react',
+      routesDirectory: 'src/app/routes',
+      generatedRouteTree: 'src/app/routeTree.gen.ts',
+      autoCodeSplitting: true,
+    }),
     react(),
     tailwindcss(),
     VitePWA({
