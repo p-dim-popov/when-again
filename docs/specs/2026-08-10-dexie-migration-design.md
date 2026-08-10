@@ -43,37 +43,37 @@ app, reactive local queries are the more correct architecture.
 
 ## Architecture
 
-### The leaf-typing puzzle and its fix
+### `db` stays a leaf; entity modules type their own tables via augmentation
 
-The obvious Dexie pattern is a typed subclass with `Table<Appointment>`
-properties — but that would make `db` **import entity types** from
-`appointments`/`clients`/…, and those modules import `db`. That is a **cycle**
-and it breaks two CLAUDE.md invariants: "`db` holds store names/indexes only,
-no entity types — each entity module owns its own type," and "`db` is a leaf."
+Dexie's showcase idiom declares typed `Table` properties on the subclass
+(`appointments!: EntityTable<Appointment,'id'>`) — but that would make `db`
+**import every entity type**, a cycle that breaks two CLAUDE.md invariants:
+"`db` holds store names/indexes only, no entity types — each entity module owns
+its own type," and "`db` is a leaf."
 
-**Fix:** `db` declares the schema with **store-name strings only** (the
-existing `STORE_*` constants) and stays typeless. Each entity module obtains
-its typed handle *at its own call site* through Dexie's generic
-`.table<T, Key>()`:
+**Fix — module augmentation**, the same pattern the codebase already uses for
+i18n's `TranslationKeys` and the router's `Register`. `db` declares the schema
+with store-name **literals** and an empty, augmentable `WhenAgainDB` interface;
+each entity module contributes its own typed table through
+`declare module '../db'`. The type edge points **entity → `db`** (the direction
+that already exists) — `db` imports no entity type and stays a leaf — while
+consumers still get the fully-typed, autocompleting `getDb().appointments`.
 
 ```ts
-// db/db.ts — leaf, no entity types imported
+// db/db.ts — leaf: imports only `dexie`, knows zero entity types
 import Dexie from 'dexie';
 
-export const DB_NAME = 'when-again';
-export const STORE_CLIENTS = 'clients';
-export const STORE_APPOINTMENTS = 'appointments';
-export const STORE_SETTINGS = 'settings';
-export const STORE_RECEIVED = 'received';
-
-class WhenAgainDB extends Dexie {
+// Augmentation target — each entity module adds its table (see below).
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export interface WhenAgainDB {}
+export class WhenAgainDB extends Dexie {
   constructor() {
-    super(DB_NAME);
+    super('when-again');
     this.version(1).stores({
-      [STORE_CLIENTS]: 'id',
-      [STORE_APPOINTMENTS]: 'id, clientId, start.dateTime',
-      [STORE_SETTINGS]: 'id',
-      [STORE_RECEIVED]: 'id',
+      clients: 'id',
+      appointments: 'id, clientId, start.dateTime',
+      settings: 'id',
+      received: 'id',
     });
   }
 }
@@ -84,52 +84,72 @@ export function getDb(): WhenAgainDB {
 }
 ```
 
-- `id` is the **primary keyPath** for every store (not `++id` — ids are
-  provided by `crypto.randomUUID()` / the `'singleton'` settings id; Dexie
-  must not auto-generate).
-- `appointments` declares two secondary indexes: `clientId` and the compound
-  keyPath `start.dateTime` (Dexie names indexes after their keyPath).
-- `getDb()` returns a **plain singleton**. Dexie manages the connection
-  lifecycle (open-on-first-use, auto-reopen after close, `blocked`/`versionchange`
-  handling) internally, so the hand-rolled liveness/reconnect probe in the
-  current `getDb()` is **deleted**.
+- **No exported `STORE_*` / `INDEX_*` constants.** Under `idb` those deduped a
+  store/index name repeated across many call sites in each module; under Dexie
+  each name appears once (the schema literal) or is replaced by a keyPath in a
+  `.where()` clause, so the constants are pure ceremony. Store names are plain
+  literals in the schema; index names disappear entirely (queries reference the
+  keyPath, e.g. `.where('clientId')`).
+- `id` is the **primary keyPath** for every store (not `++id` — ids come from
+  `crypto.randomUUID()` / the `'singleton'` settings id; Dexie must not
+  auto-generate).
+- `appointments` declares two secondary indexes by keyPath: `clientId` and the
+  compound `start.dateTime`.
+- `getDb()` is a **plain lazy singleton** returned **synchronously** (Dexie
+  opens on first operation). The hand-rolled async liveness/reconnect probe is
+  **deleted** — Dexie owns connection lifecycle, auto-reopen, and
+  `blocked`/`versionchange` handling.
 
 ### Entity modules — typed tables, same public API
 
-Every entity module keeps its **exact public API** (function names,
-signatures, return types unchanged) — only internals swap. The `as` casts
-disappear because `.table<T>()` is typed:
+Every entity module keeps its **exact public API** (names, signatures, return
+types unchanged) — only internals swap. The module owns its type *and*
+contributes its table to `db` via augmentation; the `as` casts disappear:
 
 ```ts
 // appointments/appointments.ts
-import { getDb, STORE_APPOINTMENTS } from '../db';
-const table = () => getDb().table<Appointment, string>(STORE_APPOINTMENTS);
+import { type EntityTable } from 'dexie';
+import { getDb } from '../db';
+
+export interface Appointment { id: string; clientId: string; /* … */ }
+
+declare module '../db' {
+  interface WhenAgainDB {
+    appointments: EntityTable<Appointment, 'id'>;
+  }
+}
 
 export async function getAppointment(id: string) {
-  return table().get(id);                       // typed, no cast
+  return getDb().appointments.get(id);          // typed, no cast
 }
 export async function listAppointmentsOnDate(date: string) {
-  return table()
+  return getDb().appointments
     .where('start.dateTime')
     .between(`${date}T00:00`, `${date}T23:59`, true, true)
-    .sortBy('start.dateTime');                  // replaces IDBKeyRange + manual sort
+    .sortBy('start.dateTime');                  // replaces IDBKeyRange + manual JS sort
 }
 export async function listAppointmentsByClient(clientId: string) {
-  return table().where('clientId').equals(clientId).sortBy('start.dateTime');
+  return getDb().appointments.where('clientId').equals(clientId).sortBy('start.dateTime');
 }
 export async function addAppointment(data: Omit<Appointment, 'id'>) {
   const appointment = { id: crypto.randomUUID(), ...data };
-  await table().add(appointment);
+  await getDb().appointments.add(appointment);
   return appointment;
 }
 ```
 
-`replaceAll*` uses a Dexie transaction: `db.transaction('rw', table, async () => { await table.clear(); await table.bulkPut(items); })`.
+`replaceAll*` becomes `clear()` + `bulkPut()` inside a transaction (the manual
+`tx.store` loop is gone). Same treatment for `clients`, `settings` (the
+`'singleton'`-keyed record), and `received`. Public signatures are preserved so
+**no consumer of an entity module changes because of the table swap** — the
+only consumer churn is the reactive-read swap below.
 
-Same treatment for `clients`, `settings` (the `'singleton'` keyed record),
-and `received`. Public signatures are preserved so **no consumer of an entity
-module changes because of the table swap** — the only consumer churn is the
-reactive-read swap below.
+**Locale-sort trap (do NOT "clean up"):** `listClients` sorts with
+`name.localeCompare` — correct for Cyrillic/BG. Dexie's `.orderBy()` uses
+IndexedDB's **binary** collation, which is *not* locale-correct, so `listClients`
+**keeps its JS `localeCompare` sort** (fetch, then sort). Only `start.dateTime`
+sorting moves to `.sortBy()` — ISO strings sort identically under binary
+collation.
 
 ### Reactive reads — `useLiveQuery` replaces react-query
 
@@ -195,17 +215,49 @@ already lives in `parseBackup`; the write is now atomic). Backup JSON format
 (`{ app, version, exportedAt, settings, clients, appointments }`) and
 wall-clock semantics are unchanged.
 
+## Removed idb-era cruft
+
+Beyond the headline `as`-casts and react-query, the migration deletes
+machinery that only existed to work around `idb`:
+
+- **`STORE_*` name constants** and their exports — store name appears once, in
+  the schema literal.
+- **`INDEX_APPOINTMENTS_BY_CLIENT` / `INDEX_APPOINTMENTS_BY_DATETIME`** — idb
+  needed named indexes for `getAllFromIndex`; Dexie queries by keyPath, so the
+  index names vanish along with the constants.
+- **The `getDb()` liveness/reconnect probe** (~55 lines: transaction-probe,
+  `dbPromise` race guard, `terminated`/`close` listeners) — Dexie owns this.
+- **`getDb()`'s async-ness** — drop `await` at all 17 call sites; the handle is
+  acquired synchronously (DB *operations* stay async).
+- **`closeDb()`** — currently exported but called nowhere; deleted (not
+  re-exported).
+- **`destroyDb()` internals** — the manual `indexedDB.deleteDatabase` +
+  `onsuccess`/`onblocked` promise wrapper becomes `Dexie.delete('when-again')`.
+- **`replaceAll*` transaction loop** — `tx.store.clear(); for…put; tx.done`
+  becomes `clear()` + `bulkPut()`.
+- **The v1→v2 `upgrade(db, oldVersion)` callback** — no migration ceremony;
+  the schema declares the current shape directly.
+- **Most of `db.test.ts`** — the `memoizes the connection`, `persists across
+  close and reopen`, `concurrent getDb calls after close`, and v1→v2 migration
+  tests all exercised the hand-rolled probe / migration that no longer exist.
+  They test Dexie's job, not ours — deleted, not ported. What survives: a
+  schema/round-trip check and `requestPersistentStorage`.
+
 ## Affected files
 
 **Data layer (internals rewritten, public API preserved):**
 
-- `db/db.ts`, `db/index.ts` — Dexie subclass, store-name constants only,
-  singleton `getDb()`, drop liveness probe. Keep `destroyDb`
-  (`Dexie.delete(DB_NAME)`) and `requestPersistentStorage`.
+- `db/db.ts`, `db/index.ts` — Dexie subclass + augmentable `WhenAgainDB`
+  interface + synchronous singleton `getDb()`; drop the liveness probe,
+  `STORE_*`/`INDEX_*` constants, and `closeDb`. `destroyDb` →
+  `Dexie.delete('when-again')`; `requestPersistentStorage` unchanged.
 - `appointments/appointments.ts`, `clients/clients.ts`, `settings/settings.ts`,
-  `received/received.ts` — typed `.table<T>()`, drop `as` casts, Dexie query
-  operators for ranges/sorts, transactions for `replaceAll*`.
+  `received/received.ts` — `declare module '../db'` table augmentation, typed
+  reads (drop `as`), Dexie query operators, `bulkPut` transactions for
+  `replaceAll*`. `clients` keeps its JS `localeCompare` sort.
 - `backup/backup.ts` — atomic import transaction.
+- `db/db.test.ts` + entity-module tests — prune probe/migration tests; update
+  internal assertions to the Dexie surface.
 
 **Reactive-read swap (react-query → `useLiveQuery`):**
 
@@ -266,7 +318,8 @@ if ever needed: clear site data once.
 ## Acceptance criteria
 
 - All existing unit + e2e green; no user-facing behaviour change.
-- No `as` casts for entity reads (typed `.table<T>()`).
+- No `as` casts for entity reads (tables typed via `declare module '../db'`
+  augmentation).
 - Local reads are reactive via `useLiveQuery` with **no** manual invalidation;
   `@tanstack/react-query` removed from the repo and `package.json`.
 - `importBackup` is atomic; backup JSON format + wall-clock semantics
