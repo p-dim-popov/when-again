@@ -1,4 +1,5 @@
-import { getDb, STORE_RECEIVED } from '../db';
+import Dexie, { type EntityTable } from 'dexie';
+import { db } from '../db';
 import { type WallClock } from '../time';
 
 // An appointment the CLIENT received from a salon (via the handoff QR/link),
@@ -16,19 +17,26 @@ export interface ReceivedAppointment {
   status: 'booked' | 'cancelled';
 }
 
+declare module '../db' {
+  interface WhenAgainDB {
+    received: EntityTable<ReceivedAppointment, 'id'>;
+  }
+}
+
+export function defineReceivedStore(db: Dexie): void {
+  db.version(1).stores({ received: 'id' });
+}
+
 export async function getReceived(
   id: string,
 ): Promise<ReceivedAppointment | undefined> {
-  const db = await getDb();
-  return (await db.get(STORE_RECEIVED, id)) as ReceivedAppointment | undefined;
+  return db.received.get(id);
 }
 
 export async function upsertReceived(appt: ReceivedAppointment): Promise<void> {
-  const db = await getDb();
-  await db.put(STORE_RECEIVED, appt);
+  await db.received.put(appt);
 }
 
 export async function listReceived(): Promise<ReceivedAppointment[]> {
-  const db = await getDb();
-  return (await db.getAll(STORE_RECEIVED)) as ReceivedAppointment[];
+  return db.received.toArray();
 }

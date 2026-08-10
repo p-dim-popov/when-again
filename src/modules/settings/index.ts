@@ -1,5 +1,6 @@
 export {
   DEFAULT_SETTINGS,
+  defineSettingsStore,
   getSettings,
   replaceSettings,
   updateSettings,

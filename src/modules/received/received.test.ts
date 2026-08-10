@@ -1,6 +1,4 @@
-import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
-import { destroyDb } from '../db';
+import { describe, expect, it } from 'vitest';
 import {
   getReceived,
   listReceived,
@@ -17,10 +15,6 @@ const sample: ReceivedAppointment = {
   durationMinutes: 45,
   status: 'booked',
 };
-
-afterEach(async () => {
-  await destroyDb();
-});
 
 describe('received store', () => {
   it('returns undefined for an unknown id', async () => {

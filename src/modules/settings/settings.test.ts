@@ -1,16 +1,10 @@
-import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
-import { destroyDb } from '../db';
+import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_SETTINGS,
   getSettings,
   replaceSettings,
   updateSettings,
 } from './settings';
-
-afterEach(async () => {
-  await destroyDb();
-});
 
 describe('settings', () => {
   it('returns defaults when nothing is stored', async () => {

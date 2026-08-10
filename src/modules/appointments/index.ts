@@ -1,5 +1,6 @@
 export {
   addAppointment,
+  defineAppointmentsStore,
   getAppointment,
   listAllAppointments,
   listAppointmentsByClient,

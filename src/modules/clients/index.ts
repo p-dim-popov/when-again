@@ -1,5 +1,6 @@
 export {
   addClient,
+  defineClientsStore,
   getClient,
   getVisitHistory,
   listClients,

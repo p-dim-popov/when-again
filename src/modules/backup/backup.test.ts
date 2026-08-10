@@ -1,5 +1,4 @@
-import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { addAppointment, listAllAppointments } from '../appointments';
 import { addClient, listClients } from '../clients';
 import { destroyDb } from '../db';
@@ -10,10 +9,6 @@ import {
   isBackupStale,
   parseBackup,
 } from './backup';
-
-afterEach(async () => {
-  await destroyDb();
-});
 
 const at = (dateTime: string) => ({ dateTime, timeZone: 'Europe/Sofia' });
 
