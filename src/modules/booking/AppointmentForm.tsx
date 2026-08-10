@@ -8,7 +8,13 @@ import { getAppointment, type Appointment } from '../appointments';
 import { getSettings, updateSettings, type ServicePreset } from '../settings';
 import { wallClockNow, type WallClock } from '../time';
 import { formatDayLabel } from '../schedule';
-import { draftStore, patchDraft, useBookingDraft } from './draftStore';
+import {
+  draftStore,
+  patchDraft,
+  resetDraft,
+  useBookingDraft,
+} from './draftStore';
+import { shouldResetDraft } from './freshStart';
 import {
   useAddClient,
   useCancelAppointment,
@@ -16,6 +22,7 @@ import {
   useUpdateAppointment,
 } from './mutations';
 import { rememberService } from './remembered';
+import { resolveClientId } from './resolveClient';
 import { presetPatch } from './servicePreset';
 
 // Shared field-box treatment (Tailwind v4 "Elevated & warm" restyle): the
@@ -69,16 +76,33 @@ export function AppointmentForm({
   date,
   time,
   appt,
+  resume,
 }: {
   date?: string;
   time?: string;
   appt?: string;
+  // Present only during a NEW-booking "Промени" round trip (#16): tells this
+  // component the current entry continues an in-progress booking rather than
+  // starting fresh. See `shouldResetDraft`.
+  resume?: boolean;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const draft = useBookingDraft();
 
   const editingId = appt ?? null;
+
+  // #16: a truly fresh entry (no appt, no resume) starts from a clean draft,
+  // so an abandoned booking's client/service/price cannot leak in. Runs
+  // once, synchronously, in a useState initializer — before the
+  // `initialDraft` snapshot below — so the cleared draft is what seeds the
+  // form. date/time are re-applied from the URL by the mount effect further
+  // down. Relies on useSyncExternalStore's tearing-recovery so the pre-reset
+  // value captured earlier in the same render never reaches the committed DOM.
+  useState(() => {
+    if (shouldResetDraft({ appt, resume })) resetDraft();
+    return null;
+  });
 
   // Snapshot the draft once, synchronously, at first render — before the
   // mount effect below overwrites dateKey/time. This is what a "Промени"
@@ -161,6 +185,7 @@ export function AppointmentForm({
   const [clientId, setClientId] = useState<string | null>(
     initialDraft.clientId,
   );
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const trimmedClientQuery = clientQuery.trim();
@@ -174,11 +199,21 @@ export function AppointmentForm({
   const hasExactClientMatch = (clients ?? []).some(
     (c) => c.name.toLowerCase() === trimmedClientQuery.toLowerCase(),
   );
-  const showCreateClient =
-    trimmedClientQuery.length > 0 && !hasExactClientMatch;
+  // A selected client whose name still matches the query verbatim (the
+  // normal post-pick state) must not reopen the list — it would only ever
+  // self-match. `suggestionsDismissed` additionally covers Escape/blur.
+  const selectedName =
+    clientId != null
+      ? ((clients ?? []).find((c) => c.id === clientId)?.name ?? '')
+      : '';
+  const querySelectsClient =
+    clientId != null &&
+    selectedName.toLowerCase() === trimmedClientQuery.toLowerCase();
   const showClientSuggestions =
     trimmedClientQuery.length > 0 &&
-    (clientSuggestions.length > 0 || showCreateClient);
+    !suggestionsDismissed &&
+    !querySelectsClient &&
+    clientSuggestions.length > 0;
 
   function selectClient(client: Client) {
     setClientId(client.id);
@@ -188,17 +223,14 @@ export function AppointmentForm({
 
   function handleClientQueryChange(value: string) {
     setClientQuery(value);
+    setSuggestionsDismissed(false);
     // The previous selection no longer necessarily matches what's typed;
-    // require an explicit (re-)pick before saving.
+    // require an explicit (re-)pick before saving. `clientName` still tracks
+    // the raw typed text (not just a picked client's name) so a "Промени"
+    // round trip (#16) restores an unpicked, freshly-typed name — matching
+    // how the service field's `onChange` patches its raw value.
     setClientId(null);
-    patchDraft({ clientId: null, clientName: null });
-  }
-
-  async function handleCreateClient() {
-    const name = trimmedClientQuery;
-    if (!name) return;
-    const created = await addClientMutation.mutateAsync({ name });
-    selectClient(created);
+    patchDraft({ clientId: null, clientName: value || null });
   }
 
   // Default Времетраене to 30 minutes, but only for a brand-new booking that
@@ -300,13 +332,17 @@ export function AppointmentForm({
 
   // "Промени" returns to the day view to re-pick a time. In edit mode it
   // forwards `appt` so the day view hands it back on the next slot tap and the
-  // round trip stays an edit (rather than starting a new booking).
+  // round trip stays an edit (rather than starting a new booking). In NEW
+  // booking mode it forwards `resume` (#16) instead, so the round trip is
+  // recognised as continuing THIS booking rather than a fresh entry — without
+  // it, the next slot tap would look identical to a fresh browse-in and wipe
+  // the draft out from under the provider.
   function goChangeWhen() {
     void navigate({
       to: '/',
       search: {
         date: draft.dateKey ?? undefined,
-        ...(editingId ? { appt: editingId } : {}),
+        ...(editingId ? { appt: editingId } : { resume: true }),
       },
     });
   }
@@ -314,7 +350,7 @@ export function AppointmentForm({
   async function handleSave(value: ServiceFormValues) {
     const trimmedService = value.service.trim();
     if (
-      !clientId ||
+      !trimmedClientQuery ||
       !trimmedService ||
       !draft.dateKey ||
       !draft.time ||
@@ -324,6 +360,17 @@ export function AppointmentForm({
       return;
     }
     setSaveError(null);
+
+    const resolvedClientId = await resolveClientId({
+      clientId,
+      name: trimmedClientQuery,
+      clients: clients ?? [],
+      createClient: (name) => addClientMutation.mutateAsync({ name }),
+    });
+    if (!resolvedClientId) {
+      setSaveError(t('booking.form.error.required'));
+      return;
+    }
 
     const timeZone = wallClockNow().timeZone;
     const start: WallClock = {
@@ -342,7 +389,7 @@ export function AppointmentForm({
       const status = editLoad?.appointment?.status ?? 'booked';
       const updated: Appointment = {
         id: draft.appointmentId,
-        clientId,
+        clientId: resolvedClientId,
         service: trimmedService,
         start,
         durationMinutes: value.durationMinutes,
@@ -353,7 +400,7 @@ export function AppointmentForm({
       savedId = updated.id;
     } else {
       const appointment = await saveAppointment.mutateAsync({
-        clientId,
+        clientId: resolvedClientId,
         service: trimmedService,
         start,
         durationMinutes: value.durationMinutes,
@@ -433,7 +480,19 @@ export function AppointmentForm({
           void form.handleSubmit();
         }}
       >
-        <div className="relative">
+        <div
+          className="relative"
+          onBlur={(e) => {
+            // Dismiss only when focus leaves the whole combobox widget
+            // (input + listbox), not when it moves onto a suggestion option
+            // (keyboard Tab) — the options have no arrow-key navigation, so
+            // Tab is the only keyboard path onto them, and it must not be
+            // eaten by the blur that fires as focus leaves the input.
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setSuggestionsDismissed(true);
+            }
+          }}
+        >
           <label
             htmlFor="apptForm-client"
             className="text-faint mb-[5px] block text-[10.5px] tracking-[0.05em] uppercase"
@@ -456,6 +515,9 @@ export function AppointmentForm({
               value={clientQuery}
               placeholder={t('booking.form.client.placeholder')}
               onChange={(e) => handleClientQueryChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setSuggestionsDismissed(true);
+              }}
               autoComplete="off"
               className={FIELD_INPUT}
             />
@@ -473,26 +535,21 @@ export function AppointmentForm({
                   className="rounded-sm2 text-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px]"
                   role="option"
                   aria-selected={client.id === clientId}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => selectClient(client)}
                 >
                   {client.name}
                 </button>
               ))}
-              {showCreateClient && (
-                <button
-                  type="button"
-                  className="rounded-sm2 text-accent-ink hover:bg-surface-2 cursor-pointer border-0 bg-transparent px-[9px] py-2 text-left text-[13.5px] font-semibold"
-                  role="option"
-                  aria-selected={false}
-                  onClick={() => void handleCreateClient()}
-                >
-                  {t('booking.form.client.create', {
-                    name: trimmedClientQuery,
-                  })}
-                </button>
-              )}
             </div>
           )}
+          {trimmedClientQuery.length > 0 &&
+            !hasExactClientMatch &&
+            clientId == null && (
+              <p className="text-faint mt-[5px] text-[11.5px]">
+                {t('booking.form.client.willCreate')}
+              </p>
+            )}
         </div>
 
         <form.Field name="service">

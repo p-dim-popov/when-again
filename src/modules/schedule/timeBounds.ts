@@ -77,3 +77,64 @@ export function clampToGap(
   const clamped = Math.min(Math.max(snapped, startMin), latestMin);
   return toHHMM(clamped);
 }
+
+/**
+ * All valid appointment start times inside a gap, on the step grid, uncapped
+ * (the wheel scrolls the full set; `slots.generateSlots` keeps the capped chip
+ * row). A start is included iff it is a multiple of `stepMinutes` from
+ * midnight, at or after `gap.start`, and leaves room for `serviceMinutes`
+ * before the boundary (`gap.end`, or `dayEnd` when open-ended). Grid-aligned
+ * from midnight (unlike `generateSlots`, which steps from `gap.start`) so the
+ * wheel's minute column reads cleanly (:00/:05/…); gaps start grid-aligned in
+ * practice (day start plus durations that are multiples of the step). Returns
+ * `[]` when nothing fits.
+ */
+export function validStartTimes(
+  gap: Gap,
+  opts: { stepMinutes: number; serviceMinutes: number; dayEnd: string },
+): string[] {
+  const { stepMinutes, serviceMinutes, dayEnd } = opts;
+  const startMin = toMinutes(gap.start);
+  const boundaryMin = gap.end === null ? toMinutes(dayEnd) : toMinutes(gap.end);
+  const latestMin = boundaryMin - serviceMinutes;
+  const firstMin = Math.ceil(startMin / stepMinutes) * stepMinutes;
+  const out: string[] = [];
+  for (let t = firstMin; t <= latestMin; t += stepMinutes) out.push(toHHMM(t));
+  return out;
+}
+
+/**
+ * Splits valid start times into the wheel's two columns: distinct hours (in
+ * ascending order) and, per hour, its valid minutes (ascending).
+ */
+export function wheelColumns(times: string[]): {
+  hours: string[];
+  minutesByHour: Map<string, string[]>;
+} {
+  const hours: string[] = [];
+  const minutesByHour = new Map<string, string[]>();
+  for (const time of times) {
+    const hh = time.slice(0, 2);
+    const mm = time.slice(3, 5);
+    let mins = minutesByHour.get(hh);
+    if (!mins) {
+      mins = [];
+      minutesByHour.set(hh, mins);
+      hours.push(hh);
+    }
+    mins.push(mm);
+  }
+  return { hours, minutesByHour };
+}
+
+/**
+ * The valid minute in `minutes` closest to `target` ('mm'); on a tie the lower
+ * minute wins. `minutes` must be non-empty (a valid hour always has ≥1 minute)
+ * and in ascending order (ties resolve to the lower minute).
+ */
+export function nearestMinute(minutes: string[], target: string): string {
+  const t = Number(target);
+  return minutes.reduce((best, m) =>
+    Math.abs(Number(m) - t) < Math.abs(Number(best) - t) ? m : best,
+  );
+}

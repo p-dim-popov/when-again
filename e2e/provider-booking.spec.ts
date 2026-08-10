@@ -50,9 +50,9 @@ function firstFreeSlot(page: Page) {
   return page.getByTestId('free-slot').first();
 }
 
-/** Books ahead: month picker → future day → free quick-slot → form (inline
- * client create + service + duration) → Save → landing → Готово. Returns
- * what was booked so callers can assert on it. */
+/** Books ahead: month picker → future day → free quick-slot → form (client
+ * name auto-creates on save + service + duration) → Save → landing → Готово.
+ * Returns what was booked so callers can assert on it. */
 async function bookAppointment(
   page: Page,
   { clientName, service }: { clientName: string; service: string },
@@ -69,12 +69,11 @@ async function bookAppointment(
   ).toBeVisible();
   await expect(page.getByText(time)).toBeVisible();
 
+  // New name → inline hint; the client is auto-created on save (no tap needed).
   await page.locator('#apptForm-client').fill(clientName);
-  // The inline "Create '<name>'" suggestion carries `role="option"` (it's a
-  // member of the client-search listbox — see AppointmentForm.tsx) which
-  // overrides its host `<button>`'s implicit role, so it resolves by the
-  // "option" role rather than "button".
-  await page.getByRole('option', { name: `Create "${clientName}"` }).click();
+  await expect(
+    page.getByText('New client — will be added when you save.'),
+  ).toBeVisible();
 
   await page.locator('#apptForm-service').fill(service);
   await page.locator('#apptForm-duration').fill('30');
@@ -117,8 +116,47 @@ test("другчас: the day view's inline time sheet carries an off-grid time 
   await page.getByRole('button', { name: 'other time' }).click();
   await expect(page.getByTestId('time-sheet')).toBeVisible();
 
-  // Nudge one 5-minute step off the 30-minute quick-slot grid, then confirm.
-  await page.getByRole('button', { name: 'Later minute' }).click();
+  // The wheel opens on 08:00 (day start).
+  await expect(
+    page.getByRole('button', { name: 'Choose · 08:00' }),
+  ).toBeVisible();
+
+  // Push the minute to :55 (valid at 08:00), then switch the hour to the
+  // day's last hour (19:00) via the Hours listbox. The day window is
+  // 08:00–20:00 and the free-slot service is 30 minutes, so 19:00's latest
+  // valid start is 19:30 — the minute column must re-clamp :55 down to :30
+  // via `nearestMinute` rather than carry over an invalid 19:55.
+  await page
+    .getByRole('listbox', { name: 'Minutes' })
+    .getByRole('option', { name: '55', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Choose · 08:55' }),
+  ).toBeVisible();
+
+  await page
+    .getByRole('listbox', { name: 'Hours' })
+    .getByRole('option', { name: '19', exact: true })
+    .click();
+  await expect(
+    page.getByRole('button', { name: 'Choose · 19:30' }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('listbox', { name: 'Minutes' })
+      .getByRole('option', { name: '55', exact: true }),
+  ).toHaveCount(0);
+
+  // Switch back to hour 08 and pick the :05 minute option to nudge one step
+  // off the 30-minute quick-slot grid, then confirm.
+  await page
+    .getByRole('listbox', { name: 'Hours' })
+    .getByRole('option', { name: '08', exact: true })
+    .click();
+  await page
+    .getByRole('listbox', { name: 'Minutes' })
+    .getByRole('option', { name: '05', exact: true })
+    .click();
   await expect(
     page.getByRole('button', { name: 'Choose · 08:05' }),
   ).toBeVisible();
@@ -205,4 +243,109 @@ test('edit, reschedule, and cancel an existing appointment', async ({
   await expect(cancelledAppt).toBeVisible();
   await expect(cancelledAppt).toContainText(clientName);
   await expect(cancelledAppt).toContainText('Cancelled');
+});
+
+test('client suggestion list closes after picking an existing client', async ({
+  page,
+}) => {
+  const clientName = 'Maria Dimitrova';
+  await bookAppointment(page, { clientName, service: 'Color' });
+
+  // Start a second booking, type the same name → the existing client appears.
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+
+  const client = page.locator('#apptForm-client');
+  await client.fill(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('option', { name: clientName, exact: true }).click();
+
+  // Picked → field holds the name and the listbox is closed.
+  await expect(client).toHaveValue(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('#16: a fresh booking via the month header starts empty after an abandon', async ({
+  page,
+}) => {
+  // Abandon a booking mid-fill: reach the form, type a client, then leave via
+  // the bottom nav without saving — the draft now holds a stale name.
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-client').fill('Stale Person');
+  await page.getByRole('link', { name: 'Today', exact: true }).click();
+
+  // Start a new booking through the day-view month header (not ＋).
+  await page.getByTestId('day-appbar').getByRole('button').nth(1).click(); // month header
+  await expect(
+    page.getByRole('heading', { name: 'Choose a day' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Next month' }).click();
+  await page.getByRole('button', { name: '20', exact: true }).click();
+  await firstFreeSlot(page).click();
+
+  // The form is fresh — no stale name.
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await expect(page.locator('#apptForm-client')).toHaveValue('');
+});
+
+test('#16: a new-booking Промени round-trip preserves typed fields', async ({
+  page,
+}) => {
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-client').fill('Petar Kolev');
+  await page.locator('#apptForm-service').fill('Shave');
+
+  // Change (Промени) → day view → pick another slot → back on the form.
+  await page.getByRole('button', { name: 'Change', exact: true }).click();
+  await expect(page.getByTestId('day-appbar')).toBeVisible();
+  await firstFreeSlot(page).click();
+
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await expect(page.locator('#apptForm-client')).toHaveValue('Petar Kolev');
+  await expect(page.locator('#apptForm-service')).toHaveValue('Shave');
+});
+
+test('client suggestion list closes after keyboard-selecting an existing client', async ({
+  page,
+}) => {
+  // This combobox has no arrow-key/aria-activedescendant navigation, so Tab
+  // is the only keyboard path onto a suggestion option. Guards against a
+  // regression where an unconditional blur-dismiss on the input would close
+  // the listbox before Tab ever lands on the option.
+  const clientName = 'Petya Nikolova';
+  await bookAppointment(page, { clientName, service: 'Manicure' });
+
+  await pickFutureDay(page);
+  await firstFreeSlot(page).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+
+  const client = page.locator('#apptForm-client');
+  await client.fill(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'true');
+
+  await page.keyboard.press('Tab');
+  const option = page.getByRole('option', { name: clientName, exact: true });
+  await expect(option).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  // Selected via keyboard → field holds the name and the listbox is closed.
+  await expect(client).toHaveValue(clientName);
+  await expect(client).toHaveAttribute('aria-expanded', 'false');
 });

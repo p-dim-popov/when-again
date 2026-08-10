@@ -16,7 +16,6 @@ const en = {
   'schedule.weekday.sat.long': 'Saturday',
   'schedule.weekday.sun.long': 'Sunday',
   'schedule.free': 'free',
-  'schedule.more': 'more…',
   'schedule.today': 'today',
   'schedule.otherTime': 'other time',
   'schedule.relative.tomorrow': 'tomorrow',
@@ -30,18 +29,15 @@ const en = {
   'schedule.cancelled': 'Cancelled',
   'schedule.loading': 'Loading…',
   'schedule.emptyDay': 'The whole day is free.',
-  'schedule.nav.prevDay': 'Previous day',
-  'schedule.nav.nextDay': 'Next day',
+  'schedule.nav.prevWeek': 'Previous week',
+  'schedule.nav.nextWeek': 'Next week',
   'schedule.chooseMonth': 'Choose month',
   'schedule.timePicker.title': 'Other time',
   'schedule.timePicker.window': 'free {start} – {end}',
   'schedule.timePicker.subnote': 'Choose an exact time within the free window.',
-  'schedule.timePicker.stepCaption': 'step {step} min',
   'schedule.timePicker.confirm': 'Choose · {time}',
-  'schedule.timePicker.hourDown': 'Earlier hour',
-  'schedule.timePicker.hourUp': 'Later hour',
-  'schedule.timePicker.minuteDown': 'Earlier minute',
-  'schedule.timePicker.minuteUp': 'Later minute',
+  'schedule.timePicker.hours': 'Hours',
+  'schedule.timePicker.minutes': 'Minutes',
 } satisfies Strings;
 
 const bg = {
@@ -60,7 +56,6 @@ const bg = {
   'schedule.weekday.sat.long': 'Събота',
   'schedule.weekday.sun.long': 'Неделя',
   'schedule.free': 'свободно',
-  'schedule.more': 'още…',
   'schedule.today': 'днес',
   'schedule.otherTime': 'друг час',
   'schedule.relative.tomorrow': 'утре',
@@ -77,18 +72,15 @@ const bg = {
   'schedule.cancelled': 'Отказан',
   'schedule.loading': 'Зареждане…',
   'schedule.emptyDay': 'Целият ден е свободен.',
-  'schedule.nav.prevDay': 'Предишен ден',
-  'schedule.nav.nextDay': 'Следващ ден',
+  'schedule.nav.prevWeek': 'Предишна седмица',
+  'schedule.nav.nextWeek': 'Следваща седмица',
   'schedule.chooseMonth': 'Изберете месец',
   'schedule.timePicker.title': 'Друг час',
   'schedule.timePicker.window': 'свободно {start} – {end}',
   'schedule.timePicker.subnote': 'Изберете точен час в свободния прозорец.',
-  'schedule.timePicker.stepCaption': 'стъпка {step} мин',
   'schedule.timePicker.confirm': 'Избери · {time}',
-  'schedule.timePicker.hourDown': 'По-ранен час',
-  'schedule.timePicker.hourUp': 'По-късен час',
-  'schedule.timePicker.minuteDown': 'По-ранна минута',
-  'schedule.timePicker.minuteUp': 'По-късна минута',
+  'schedule.timePicker.hours': 'Часове',
+  'schedule.timePicker.minutes': 'Минути',
 } satisfies Strings;
 
 export const scheduleStrings = { en, bg };
@@ -110,7 +102,6 @@ declare module '../i18n' {
     'schedule.weekday.sat.long': true;
     'schedule.weekday.sun.long': true;
     'schedule.free': true;
-    'schedule.more': true;
     'schedule.today': true;
     'schedule.otherTime': true;
     'schedule.relative.tomorrow': true;
@@ -121,17 +112,14 @@ declare module '../i18n' {
     'schedule.cancelled': true;
     'schedule.loading': true;
     'schedule.emptyDay': true;
-    'schedule.nav.prevDay': true;
-    'schedule.nav.nextDay': true;
+    'schedule.nav.prevWeek': true;
+    'schedule.nav.nextWeek': true;
     'schedule.chooseMonth': true;
     'schedule.timePicker.title': true;
     'schedule.timePicker.window': true;
     'schedule.timePicker.subnote': true;
-    'schedule.timePicker.stepCaption': true;
     'schedule.timePicker.confirm': true;
-    'schedule.timePicker.hourDown': true;
-    'schedule.timePicker.hourUp': true;
-    'schedule.timePicker.minuteDown': true;
-    'schedule.timePicker.minuteUp': true;
+    'schedule.timePicker.hours': true;
+    'schedule.timePicker.minutes': true;
   }
 }

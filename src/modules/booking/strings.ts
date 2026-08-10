@@ -27,8 +27,9 @@ const en = {
   'booking.form.editTitle': 'Edit appointment',
   'booking.form.cancel': 'Cancel appointment',
   'booking.form.client': 'Client',
-  'booking.form.client.placeholder': 'Search or create…',
-  'booking.form.client.create': 'Create "{name}"',
+  'booking.form.client.placeholder': 'Search or add a name…',
+  'booking.form.client.willCreate':
+    'New client — will be added when you save.',
   'booking.form.service': 'Service',
   'booking.form.service.placeholder': 'Service name',
   'booking.form.when': 'When',
@@ -63,8 +64,8 @@ const bg = {
   'booking.form.editTitle': 'Промяна на час',
   'booking.form.cancel': 'Откажи часа',
   'booking.form.client': 'Клиент',
-  'booking.form.client.placeholder': 'Търси или създай…',
-  'booking.form.client.create': 'Създай „{name}“',
+  'booking.form.client.placeholder': 'Търси или добави име…',
+  'booking.form.client.willCreate': 'Нов клиент — ще бъде добавен при запис.',
   'booking.form.service': 'Услуга',
   'booking.form.service.placeholder': 'Име на услугата',
   'booking.form.when': 'Кога',
@@ -103,7 +104,7 @@ declare module '../i18n' {
     'booking.form.cancel': true;
     'booking.form.client': true;
     'booking.form.client.placeholder': true;
-    'booking.form.client.create': true;
+    'booking.form.client.willCreate': true;
     'booking.form.service': true;
     'booking.form.service.placeholder': true;
     'booking.form.when': true;

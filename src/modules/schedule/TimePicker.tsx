@@ -1,16 +1,158 @@
-import { useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { t } from '../i18n';
-import { clampToGap, toHHMM, toMinutes } from './timeBounds';
+import {
+  clampToGap,
+  nearestMinute,
+  validStartTimes,
+  wheelColumns,
+} from './timeBounds';
 import { DAY_END } from './dayWindow';
 
-// Default step for the wheel, per the design brief (fine enough for a salon;
-// not exposed as a prop — all of this picker's callers want the same
-// granularity).
 const STEP_MINUTES = 5;
+// Row height of an option button (`h-11` = 2.75rem = 44px at the default
+// 16px root). The column's `py-[44px]` padding is exactly one row, so an
+// option at `index` sits centered under the highlight band when
+// `scrollTop === index * ROW_HEIGHT`.
+const ROW_HEIGHT = 44;
 
 interface Gap {
   start: string;
   end: string | null;
+}
+
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// One scrollable column of the wheel. Focusable listbox; options are
+// clickable, arrow-key navigable, AND scroll/fling driven — dragging the
+// column to settle a different option centered under the highlight band
+// reports that option through `onChange`, same as a click would.
+//
+// Two effects keep the DOM scroll position and the `value` prop converged
+// without fighting each other:
+//  - the sync effect scrolls the container to `index * ROW_HEIGHT` whenever
+//    the selected index changes (click, arrow key, or a hour-change
+//    re-clamp) — this is a no-op scroll when the container is already there
+//    (e.g. right after the settle handler below has just reported that same
+//    index), so it can never re-trigger the settle handler in a loop.
+//  - the settle effect listens for the scroll gesture to finish (native
+//    `scrollend`, with a debounced `scroll` fallback for browsers that don't
+//    support it) and reports the centered option via `onChange`.
+function WheelColumn({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const baseId = useId();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const index = Math.max(0, options.indexOf(value));
+  const optionId = (i: number) => `${baseId}-opt-${i}`;
+
+  function move(delta: number) {
+    const next = options[Math.min(Math.max(index + delta, 0), options.length - 1)];
+    if (next && next !== value) onChange(next);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      move(1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      move(-1);
+    }
+  }
+
+  // Keep the DOM scrolled to the selected option. Runs on mount and whenever
+  // `index` changes for any reason (click, arrow key, hour-change re-clamp,
+  // or the settle handler below reporting a user's scroll gesture).
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const target = index * ROW_HEIGHT;
+    if (Math.abs(el.scrollTop - target) < 1) return;
+    el.scrollTo({
+      top: target,
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
+  }, [index, options]);
+
+  // Report the option that ends up centered once a scroll/fling settles.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const supportsScrollEnd = 'onscrollend' in window;
+    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function settle() {
+      const node = containerRef.current;
+      if (!node || options.length === 0) return;
+      const settledIndex = Math.min(
+        Math.max(Math.round(node.scrollTop / ROW_HEIGHT), 0),
+        options.length - 1,
+      );
+      const next = options[settledIndex];
+      if (next && next !== value) onChange(next);
+    }
+
+    function handleScroll() {
+      // `scrollend` covers settling natively where supported; the debounced
+      // fallback below only kicks in for browsers without it, so the two
+      // paths never double-report.
+      if (supportsScrollEnd) return;
+      clearTimeout(fallbackTimer);
+      fallbackTimer = setTimeout(settle, 100);
+    }
+
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    el.addEventListener('scrollend', settle);
+    return () => {
+      el.removeEventListener('scroll', handleScroll);
+      el.removeEventListener('scrollend', settle);
+      clearTimeout(fallbackTimer);
+    };
+  }, [options, value, onChange]);
+
+  return (
+    <div
+      ref={containerRef}
+      role="listbox"
+      aria-label={label}
+      tabIndex={0}
+      aria-activedescendant={optionId(index)}
+      onKeyDown={handleKeyDown}
+      className="h-[132px] w-16 snap-y snap-mandatory overflow-y-auto py-[44px] outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
+      {options.map((opt, i) => {
+        const selected = opt === value;
+        return (
+          <button
+            key={opt}
+            id={optionId(i)}
+            type="button"
+            role="option"
+            aria-selected={selected}
+            tabIndex={-1}
+            onClick={() => onChange(opt)}
+            className={`flex h-11 w-full cursor-pointer snap-center items-center justify-center border-0 bg-transparent tabular-nums ${
+              selected
+                ? 'text-accent-ink text-[22px] font-extrabold'
+                : 'text-faint text-[15px]'
+            }`}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function TimePicker({
@@ -18,9 +160,6 @@ export function TimePicker({
   serviceMinutes,
   value,
   onPick,
-  // `DAY_END` (schedule/dayWindow.ts) is the single source of truth for the
-  // day window; this fallback only matters for an open-ended gap when a
-  // caller doesn't have a better value to pass (ScheduleScreen always does).
   dayEnd = DAY_END,
 }: {
   gap: Gap;
@@ -30,44 +169,50 @@ export function TimePicker({
   dayEnd?: string;
 }) {
   const opts = { stepMinutes: STEP_MINUTES, serviceMinutes, dayEnd };
+  const windowEnd = gap.end ?? dayEnd;
 
-  // Re-derive whenever the caller hands us a different gap/service/value
-  // (e.g. ScheduleScreen reopening the sheet for a different gap) so the
-  // picker never keeps a stale selection that no longer fits. This adjusts state
-  // during render (the React-recommended alternative to a setState-in-effect
-  // for "reset derived state when inputs change") rather than an effect, to
-  // avoid the extra render pass an effect would cause.
+  // Every rendered option is a valid start; fall back to a single clamped
+  // option so a too-small gap is still confirmable (mirrors the old picker,
+  // which always had a value).
+  const times = useMemo(() => {
+    const all = validStartTimes(gap, opts);
+    return all.length > 0 ? all : [clampToGap(value ?? gap.start, gap, opts)];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gap.start, gap.end, serviceMinutes, dayEnd, value]);
+
+  const { hours, minutesByHour } = useMemo(() => wheelColumns(times), [times]);
+
+  const initial = times.includes(clampToGap(value ?? gap.start, gap, opts))
+    ? clampToGap(value ?? gap.start, gap, opts)
+    : times[0];
+
+  const [selHour, setSelHour] = useState(initial.slice(0, 2));
+  const [selMin, setSelMin] = useState(initial.slice(3, 5));
+
+  // Re-derive selection when the caller hands a different gap/service/value
+  // (reopening the sheet for another gap) — the render-time reset pattern the
+  // old picker used.
   const resetKey = `${gap.start}|${gap.end}|${serviceMinutes}|${value}|${dayEnd}`;
-  const [selected, setSelected] = useState(() =>
-    clampToGap(value ?? gap.start, gap, opts),
-  );
   const [prevResetKey, setPrevResetKey] = useState(resetKey);
   if (resetKey !== prevResetKey) {
     setPrevResetKey(resetKey);
-    setSelected(clampToGap(value ?? gap.start, gap, opts));
+    setSelHour(initial.slice(0, 2));
+    setSelMin(initial.slice(3, 5));
   }
 
-  const windowEnd = gap.end ?? dayEnd;
+  const minutes = minutesByHour.get(selHour) ?? [times[0].slice(3, 5)];
+  const effectiveMin = minutes.includes(selMin)
+    ? selMin
+    : nearestMinute(minutes, selMin);
+  const selected = `${selHour}:${effectiveMin}`;
 
-  function candidateFor(deltaMinutes: number): string {
-    const raw = toHHMM(toMinutes(selected) + deltaMinutes);
-    return clampToGap(raw, gap, opts);
+  function changeHour(hh: string) {
+    setSelHour(hh);
+    const mins = minutesByHour.get(hh) ?? [];
+    if (mins.length > 0 && !mins.includes(selMin)) {
+      setSelMin(nearestMinute(mins, selMin));
+    }
   }
-
-  const hourPrev = candidateFor(-60);
-  const hourNext = candidateFor(60);
-  const minutePrev = candidateFor(-STEP_MINUTES);
-  const minuteNext = candidateFor(STEP_MINUTES);
-
-  const [selHH, selMM] = selected.split(':');
-
-  // Unselected stepper value: a plain, borderless tap target that steps the
-  // hour/minute up or down.
-  const valClass =
-    'text-faint m-0 cursor-pointer border-0 bg-transparent p-1 text-[15px] leading-none tabular-nums disabled:cursor-default disabled:opacity-[0.35]';
-  // The center (selected) value in each column: larger, bold, non-interactive.
-  const selClass =
-    'text-accent-ink cursor-default text-[22px] leading-none font-extrabold tabular-nums';
 
   return (
     <div
@@ -80,86 +225,38 @@ export function TimePicker({
           {t('schedule.timePicker.title')}
         </span>
         <span className="text-faint text-xs whitespace-nowrap tabular-nums">
-          {t('schedule.timePicker.window', {
-            start: gap.start,
-            end: windowEnd,
-          })}
+          {t('schedule.timePicker.window', { start: gap.start, end: windowEnd })}
         </span>
       </div>
       <p className="text-muted mt-1 mb-1.5 text-[11.5px]">
         {t('schedule.timePicker.subnote')}
       </p>
 
-      <div className="relative flex items-center justify-center gap-1.5 pt-2 pb-1">
+      <div className="relative flex items-center justify-center gap-1.5 py-2">
         <div
-          className="bg-accent-soft border-accent-line rounded-card absolute top-1/2 left-1/2 h-[42px] w-[150px] -translate-x-1/2 -translate-y-1/2 border"
+          className="bg-accent-soft border-accent-line rounded-card pointer-events-none absolute top-1/2 left-1/2 h-11 w-[150px] -translate-x-1/2 -translate-y-1/2 border"
           aria-hidden="true"
         />
-
-        <div className="relative flex w-14 flex-col items-center gap-2">
-          <button
-            type="button"
-            className={valClass}
-            disabled={hourPrev === selected}
-            aria-label={t('schedule.timePicker.hourDown')}
-            onClick={() => setSelected(hourPrev)}
-          >
-            {hourPrev.split(':')[0]}
-          </button>
-          <div className={selClass} aria-live="polite">
-            {selHH}
-          </div>
-          <button
-            type="button"
-            className={valClass}
-            disabled={hourNext === selected}
-            aria-label={t('schedule.timePicker.hourUp')}
-            onClick={() => setSelected(hourNext)}
-          >
-            {hourNext.split(':')[0]}
-          </button>
-        </div>
-
+        <WheelColumn
+          label={t('schedule.timePicker.hours')}
+          options={hours}
+          value={selHour}
+          onChange={changeHour}
+        />
         <div className="text-accent-ink relative pb-0.5 text-xl font-extrabold">
           :
         </div>
-
-        <div className="relative flex w-14 flex-col items-center gap-2">
-          <button
-            type="button"
-            className={valClass}
-            disabled={minutePrev === selected}
-            aria-label={t('schedule.timePicker.minuteDown')}
-            onClick={() => setSelected(minutePrev)}
-          >
-            {minutePrev.split(':')[1]}
-          </button>
-          <div className={selClass} aria-live="polite">
-            {selMM}
-          </div>
-          <button
-            type="button"
-            className={valClass}
-            disabled={minuteNext === selected}
-            aria-label={t('schedule.timePicker.minuteUp')}
-            onClick={() => setSelected(minuteNext)}
-          >
-            {minuteNext.split(':')[1]}
-          </button>
-        </div>
+        <WheelColumn
+          label={t('schedule.timePicker.minutes')}
+          options={minutes}
+          value={effectiveMin}
+          onChange={setSelMin}
+        />
       </div>
-
-      <p className="text-faint mt-1.5 text-center text-[11px]">
-        {t('schedule.timePicker.stepCaption', { step: STEP_MINUTES })}
-      </p>
 
       <button
         type="button"
         className="bg-accent text-on-accent rounded-card mt-3 w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650] tabular-nums"
-        // `selected` is always the output of clampToGap (set at init, on
-        // every re-derive, and on every stepper click), so this can never
-        // emit a time outside [gap.start, latestStart] — a clash with the
-        // next appointment is impossible by construction.
         onClick={() => onPick(clampToGap(selected, gap, opts))}
       >
         {t('schedule.timePicker.confirm', { time: selected })}
