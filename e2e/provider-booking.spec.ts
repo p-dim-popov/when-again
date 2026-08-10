@@ -350,33 +350,40 @@ test('client suggestion list closes after keyboard-selecting an existing client'
   await expect(client).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('time wheel keeps the selected option centred under the band at a large system font', async ({
+test('time wheel keeps the selected option inside the highlight band at a large system font', async ({
   page,
 }) => {
   await pickFutureDay(page);
 
-  // Simulate a phone with large system text: the rem-based rows grow. A prior
-  // hardcoded 44px row height mis-centred the wheel here, stranding the
-  // selected number outside the highlight band (only the ":" showed).
-  await page.addStyleTag({ content: 'html { font-size: 28px; }' });
+  // Simulate a phone with large system text: the rem-based rows and columns
+  // grow. 40px is large enough that the earlier bugs strand the selected
+  // number outside the band — a fixed 44px row height mis-centred it
+  // vertically, and a fixed-px band width let the widened columns push it
+  // past the band horizontally (leaving only the ":" visible).
+  await page.addStyleTag({ content: 'html { font-size: 40px; }' });
 
   await page.getByRole('button', { name: 'other time' }).click();
   await expect(page.getByTestId('time-sheet')).toBeVisible();
 
   const sheet = page.getByTestId('time-sheet');
   const band = sheet.locator('.bg-accent-soft').first();
-  const selected = page
-    .getByRole('listbox', { name: 'Hours' })
-    .getByRole('option', { selected: true });
-
   const bandBox = await band.boundingBox();
-  const selBox = await selected.boundingBox();
-  if (!bandBox || !selBox)
-    throw new Error('expected band and selected option to be laid out');
+  if (!bandBox) throw new Error('expected the highlight band to be laid out');
 
-  const bandCentre = bandBox.y + bandBox.height / 2;
-  const selCentre = selBox.y + selBox.height / 2;
-  // The selected option's centre must sit on the band's centre (a few px of
-  // sub-pixel tolerance), i.e. it is visible in the band, not stranded.
-  expect(Math.abs(selCentre - bandCentre)).toBeLessThan(6);
+  // Both columns' selected numbers must sit inside the band on BOTH axes —
+  // horizontal containment is the axis the first regression test missed.
+  for (const columnName of ['Hours', 'Minutes'] as const) {
+    const selected = page
+      .getByRole('listbox', { name: columnName })
+      .getByRole('option', { selected: true });
+    const selBox = await selected.boundingBox();
+    if (!selBox)
+      throw new Error(`expected ${columnName} selected option to be laid out`);
+
+    const selCx = selBox.x + selBox.width / 2;
+    const selCy = selBox.y + selBox.height / 2;
+    expect(selCx).toBeGreaterThanOrEqual(bandBox.x);
+    expect(selCx).toBeLessThanOrEqual(bandBox.x + bandBox.width);
+    expect(Math.abs(selCy - (bandBox.y + bandBox.height / 2))).toBeLessThan(6);
+  }
 });
