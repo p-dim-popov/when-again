@@ -13,6 +13,7 @@ import {
 import { shellStrings } from '../modules/shell';
 import { scheduleStrings } from '../modules/schedule';
 import { bookingStrings } from '../modules/booking';
+import { handoffStrings } from '../modules/handoff';
 import '@fontsource/lora/cyrillic-500.css';
 import '@fontsource/lora/cyrillic-600.css';
 import '@fontsource/lora/latin-500.css';
@@ -30,11 +31,13 @@ async function bootstrap() {
     ...shellStrings.en,
     ...scheduleStrings.en,
     ...bookingStrings.en,
+    ...handoffStrings.en,
   });
   registerStrings('bg', {
     ...shellStrings.bg,
     ...scheduleStrings.bg,
     ...bookingStrings.bg,
+    ...handoffStrings.bg,
   });
   let language: Language;
   try {

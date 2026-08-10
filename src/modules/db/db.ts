@@ -4,6 +4,7 @@ export const DB_NAME = 'when-again';
 export const STORE_CLIENTS = 'clients';
 export const STORE_APPOINTMENTS = 'appointments';
 export const STORE_SETTINGS = 'settings';
+export const STORE_RECEIVED = 'received';
 export const INDEX_APPOINTMENTS_BY_CLIENT = 'byClientId';
 export const INDEX_APPOINTMENTS_BY_DATETIME = 'byDateTime';
 
@@ -40,18 +41,23 @@ export function getDb(): Promise<IDBPDatabase> {
     });
   }
 
-  dbPromise = openDB(DB_NAME, 1, {
-    upgrade(db) {
-      db.createObjectStore(STORE_CLIENTS, { keyPath: 'id' });
-      const appointments = db.createObjectStore(STORE_APPOINTMENTS, {
-        keyPath: 'id',
-      });
-      appointments.createIndex(INDEX_APPOINTMENTS_BY_CLIENT, 'clientId');
-      appointments.createIndex(
-        INDEX_APPOINTMENTS_BY_DATETIME,
-        'start.dateTime',
-      );
-      db.createObjectStore(STORE_SETTINGS, { keyPath: 'id' });
+  dbPromise = openDB(DB_NAME, 2, {
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        db.createObjectStore(STORE_CLIENTS, { keyPath: 'id' });
+        const appointments = db.createObjectStore(STORE_APPOINTMENTS, {
+          keyPath: 'id',
+        });
+        appointments.createIndex(INDEX_APPOINTMENTS_BY_CLIENT, 'clientId');
+        appointments.createIndex(
+          INDEX_APPOINTMENTS_BY_DATETIME,
+          'start.dateTime',
+        );
+        db.createObjectStore(STORE_SETTINGS, { keyPath: 'id' });
+      }
+      if (oldVersion < 2) {
+        db.createObjectStore(STORE_RECEIVED, { keyPath: 'id' });
+      }
     },
     terminated() {
       dbPromise = null;

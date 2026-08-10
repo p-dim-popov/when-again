@@ -8,5 +8,6 @@ export {
   requestPersistentStorage,
   STORE_APPOINTMENTS,
   STORE_CLIENTS,
+  STORE_RECEIVED,
   STORE_SETTINGS,
 } from './db';
