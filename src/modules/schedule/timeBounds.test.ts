@@ -80,7 +80,13 @@ describe('validStartTimes', () => {
   it('lists grid-aligned starts that fit before a closed boundary', () => {
     // gap 09:00–10:00, 30-min service → last fit 09:30
     expect(validStartTimes({ start: '09:00', end: '10:00' }, opts)).toEqual([
-      '09:00', '09:05', '09:10', '09:15', '09:20', '09:25', '09:30',
+      '09:00',
+      '09:05',
+      '09:10',
+      '09:15',
+      '09:20',
+      '09:25',
+      '09:30',
     ]);
   });
 
@@ -106,7 +112,10 @@ describe('validStartTimes', () => {
 describe('wheelColumns', () => {
   it('splits into distinct hours and per-hour minutes', () => {
     const { hours, minutesByHour } = wheelColumns([
-      '09:40', '09:45', '10:00', '10:05',
+      '09:40',
+      '09:45',
+      '10:00',
+      '10:05',
     ]);
     expect(hours).toEqual(['09', '10']);
     expect(minutesByHour.get('09')).toEqual(['40', '45']);

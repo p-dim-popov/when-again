@@ -28,8 +28,7 @@ const en = {
   'booking.form.cancel': 'Cancel appointment',
   'booking.form.client': 'Client',
   'booking.form.client.placeholder': 'Search or add a name…',
-  'booking.form.client.willCreate':
-    'New client — will be added when you save.',
+  'booking.form.client.willCreate': 'New client — will be added when you save.',
   'booking.form.service': 'Service',
   'booking.form.service.placeholder': 'Service name',
   'booking.form.when': 'When',

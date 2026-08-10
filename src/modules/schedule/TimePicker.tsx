@@ -56,7 +56,8 @@ function WheelColumn({
   const optionId = (i: number) => `${baseId}-opt-${i}`;
 
   function move(delta: number) {
-    const next = options[Math.min(Math.max(index + delta, 0), options.length - 1)];
+    const next =
+      options[Math.min(Math.max(index + delta, 0), options.length - 1)];
     if (next && next !== value) onChange(next);
   }
 
@@ -128,7 +129,7 @@ function WheelColumn({
       tabIndex={0}
       aria-activedescendant={optionId(index)}
       onKeyDown={handleKeyDown}
-      className="h-[132px] w-16 snap-y snap-mandatory overflow-y-auto py-[44px] outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="h-[132px] w-16 snap-y snap-mandatory [scrollbar-width:none] overflow-y-auto py-[44px] outline-none [&::-webkit-scrollbar]:hidden"
     >
       {options.map((opt, i) => {
         const selected = opt === value;
@@ -225,7 +226,10 @@ export function TimePicker({
           {t('schedule.timePicker.title')}
         </span>
         <span className="text-faint text-xs whitespace-nowrap tabular-nums">
-          {t('schedule.timePicker.window', { start: gap.start, end: windowEnd })}
+          {t('schedule.timePicker.window', {
+            start: gap.start,
+            end: windowEnd,
+          })}
         </span>
       </div>
       <p className="text-muted mt-1 mb-1.5 text-[11.5px]">

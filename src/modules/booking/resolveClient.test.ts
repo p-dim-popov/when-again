@@ -10,7 +10,12 @@ describe('resolveClientId', () => {
   it('uses an explicitly selected clientId as-is', async () => {
     const createClient = vi.fn();
     expect(
-      await resolveClientId({ clientId: 'c2', name: 'whatever', clients, createClient }),
+      await resolveClientId({
+        clientId: 'c2',
+        name: 'whatever',
+        clients,
+        createClient,
+      }),
     ).toBe('c2');
     expect(createClient).not.toHaveBeenCalled();
   });
@@ -18,7 +23,12 @@ describe('resolveClientId', () => {
   it('matches an existing name case-insensitively without creating a duplicate', async () => {
     const createClient = vi.fn();
     expect(
-      await resolveClientId({ clientId: null, name: 'ivan petrov', clients, createClient }),
+      await resolveClientId({
+        clientId: null,
+        name: 'ivan petrov',
+        clients,
+        createClient,
+      }),
     ).toBe('c1');
     expect(createClient).not.toHaveBeenCalled();
   });
@@ -26,7 +36,12 @@ describe('resolveClientId', () => {
   it('creates a new client when the name is unknown', async () => {
     const createClient = vi.fn(async (name: string) => ({ id: 'new', name }));
     expect(
-      await resolveClientId({ clientId: null, name: 'New Person', clients, createClient }),
+      await resolveClientId({
+        clientId: null,
+        name: 'New Person',
+        clients,
+        createClient,
+      }),
     ).toBe('new');
     expect(createClient).toHaveBeenCalledWith('New Person');
   });
@@ -34,7 +49,12 @@ describe('resolveClientId', () => {
   it('returns null for an empty name', async () => {
     const createClient = vi.fn();
     expect(
-      await resolveClientId({ clientId: null, name: '', clients, createClient }),
+      await resolveClientId({
+        clientId: null,
+        name: '',
+        clients,
+        createClient,
+      }),
     ).toBeNull();
     expect(createClient).not.toHaveBeenCalled();
   });
