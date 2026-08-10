@@ -1,8 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
-import { createQueryClient } from './queryClient';
 import { defineAppointmentsStore } from '../modules/appointments';
 import { defineClientsStore } from '../modules/clients';
 import { db } from '../modules/db';
@@ -57,13 +55,9 @@ async function bootstrap() {
   }
   initI18n(language);
 
-  const queryClient = createQueryClient();
-
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <App />
     </StrictMode>,
   );
 }
