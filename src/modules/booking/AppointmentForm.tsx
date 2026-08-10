@@ -113,11 +113,9 @@ export function AppointmentForm({
 
   // First-entry load for edit mode: the appointment plus its client's name
   // (the form's client field shows the name, but the appointment only carries
-  // `clientId`). Cached under `['appointment', id]` — the same key
-  // `useUpdateAppointment`/`useCancelAppointment` invalidate. Also the source
-  // of truth for the ORIGINAL `status`, which must be preserved on save (a
-  // reschedule must not silently flip a 'done'/'cancelled' record to
-  // 'booked').
+  // `clientId`). Also the source of truth for the ORIGINAL `status`, which
+  // must be preserved on save (a reschedule must not silently flip a
+  // 'done'/'cancelled' record to 'booked').
   const editLoad = useLiveQuery(
     () =>
       editingId != null

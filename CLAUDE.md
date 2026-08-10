@@ -19,8 +19,9 @@ ever reaches a server.
   holding only the Dexie instance; each entity module contributes its store
   **schema** via an exported `defineXStore(db)` visitor (assembled in
   `src/app/main.tsx`) and its **type** via a `declare module '../db'`
-  augmentation. `dexie` is imported only in data-layer modules (`db` + entity
-  modules + `backup`); `dexie-react-hooks` (`useLiveQuery`) is the reactive
+  augmentation. `dexie` is imported only in `db` and entity modules; `backup`
+  imports the `db` object (not `dexie`) for cross-table transactions.
+  `dexie-react-hooks` (`useLiveQuery`) is the reactive
   read primitive for UI modules. Local reads are reactive — no manual cache
   invalidation.
 - There is no `shared/` or `utils/` folder. A widget lives in the module that
