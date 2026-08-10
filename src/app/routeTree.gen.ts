@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookRouteImport } from './routes/book'
 import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as AppointmentNewRouteImport } from './routes/appointment.new'
 import { Route as AppointmentSavedRouteImport } from './routes/appointment.saved'
@@ -29,6 +30,11 @@ const BookRoute = BookRouteImport.update({
 const ClientsRoute = ClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SettingsRoute = SettingsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/book': typeof BookRoute
   '/clients': typeof ClientsRoute
+  '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
   '/appointment/new': typeof AppointmentNewRoute
   '/appointment/saved': typeof AppointmentSavedRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/book': typeof BookRoute
   '/clients': typeof ClientsRoute
+  '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
   '/appointment/new': typeof AppointmentNewRoute
   '/appointment/saved': typeof AppointmentSavedRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/book': typeof BookRoute
   '/clients': typeof ClientsRoute
+  '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
   '/appointment/new': typeof AppointmentNewRoute
   '/appointment/saved': typeof AppointmentSavedRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
     | '/'
     | '/book'
     | '/clients'
+    | '/import'
     | '/settings'
     | '/appointment/new'
     | '/appointment/saved'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/book'
     | '/clients'
+    | '/import'
     | '/settings'
     | '/appointment/new'
     | '/appointment/saved'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '/'
     | '/book'
     | '/clients'
+    | '/import'
     | '/settings'
     | '/appointment/new'
     | '/appointment/saved'
@@ -103,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BookRoute: typeof BookRoute
   ClientsRoute: typeof ClientsRoute
+  ImportRoute: typeof ImportRoute
   SettingsRoute: typeof SettingsRoute
   AppointmentNewRoute: typeof AppointmentNewRoute
   AppointmentSavedRoute: typeof AppointmentSavedRoute
@@ -129,6 +142,13 @@ declare module '@tanstack/react-router' {
       path: '/clients'
       fullPath: '/clients'
       preLoaderRoute: typeof ClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/settings': {
@@ -159,6 +179,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BookRoute: BookRoute,
   ClientsRoute: ClientsRoute,
+  ImportRoute: ImportRoute,
   SettingsRoute: SettingsRoute,
   AppointmentNewRoute: AppointmentNewRoute,
   AppointmentSavedRoute: AppointmentSavedRoute,

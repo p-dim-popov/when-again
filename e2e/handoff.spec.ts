@@ -28,3 +28,31 @@ test('the share screen renders a QR and a decodable handoff link', async ({
   await expect(page.locator('svg').first()).toBeVisible();
   expect(link).toMatch(/\/when-again\/import#.+/);
 });
+
+test('import: empty and invalid links show calm states', async ({ page }) => {
+  await page.goto(`${BASE}import`);
+  await expect(page.getByText('Nothing to import.')).toBeVisible();
+
+  await page.goto(`${BASE}import#not-valid-base64!!`);
+  await expect(page.getByText("This link isn't valid.")).toBeVisible();
+});
+
+test('import: new → add → re-open shows up to date (idempotent)', async ({
+  page,
+}) => {
+  const link = await bookAndReachShare(page);
+
+  await page.goto(link);
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await expect(page.getByText('Haircut')).toBeVisible();
+  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await expect(page.getByRole('heading', { name: 'Added' })).toBeVisible();
+
+  // Re-opening the same link is idempotent.
+  await page.goto(link);
+  await expect(
+    page.getByRole('heading', { name: 'Already added' }),
+  ).toBeVisible();
+});
