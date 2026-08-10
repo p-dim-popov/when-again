@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { formatCurrency, getActiveLanguage, t } from '../i18n';
-import { getAppointment, type Appointment } from '../appointments';
+import { getAppointment } from '../appointments';
 import { getClient } from '../clients';
 import { formatDayLabel } from '../schedule';
 import { getSettings } from '../settings';
@@ -22,47 +22,24 @@ export function ShareLanding() {
   const draft = useBookingDraft();
   const appointmentId = draft.appointmentId;
 
-  // The authoritative record: reuses the `['appointment', id]` cache that
-  // `useUpdateAppointment`/`useCancelAppointment` (mutations.ts) invalidate,
-  // so it reflects the just-written status without a second fetch on top of
-  // what those mutations already triggered. Needed for the status-aware
-  // title (a fresh save is never 'cancelled', but a fresh cancel is).
-  //
-  // The query SHAPE here must exactly match `AppointmentForm`'s edit-load
-  // query (same file, `editLoad`) — both hang off the identical
-  // `['appointment', id]` key, and TanStack Query caches by key only, not by
-  // caller. A mismatched shape (e.g. this originally returning the raw
-  // `Appointment` while the form's query returns `{ appointment, clientName
-  // }`) serves the WRONG shape to whichever query mounts second, which
-  // crashes it (found by scratch-testing: save → landing → tap the
-  // appointment to edit threw `Cannot read properties of undefined (reading
-  // 'start')`). Fetching the client name here too — even though it is
-  // usually unused below, since `draft.clientName` is preferred — is what
-  // keeps the shape identical.
-  const { data: record } = useQuery({
-    queryKey: ['appointment', appointmentId],
-    queryFn: async (): Promise<{
-      appointment: Appointment;
-      clientName: string;
-    } | null> => {
-      const appointment = await getAppointment(appointmentId as string);
-      if (!appointment) return null;
-      const client = await getClient(appointment.clientId);
-      return { appointment, clientName: client?.name ?? '' };
-    },
-    enabled: appointmentId != null,
-  });
+  const record = useLiveQuery(
+    () =>
+      appointmentId != null
+        ? (async () => {
+            const appointment = await getAppointment(appointmentId);
+            if (!appointment) return null;
+            const client = await getClient(appointment.clientId);
+            return { appointment, clientName: client?.name ?? '' };
+          })()
+        : undefined,
+    [appointmentId],
+  );
   const appointment = record?.appointment;
-  const { data: settings } = useQuery({
-    queryKey: ['settings'],
-    queryFn: getSettings,
-  });
+  const settings = useLiveQuery(() => getSettings(), []);
   // Prefer the draft's client name (already populated in-flow, Task 6b);
-  // `record.clientName` — fetched as part of the query above regardless, to
-  // keep its shape aligned with the edit-load query — is the fallback for
-  // the edge case where the draft lacks one (e.g. a reload lost the
-  // in-memory draft store but `appointmentId` alone survived some other
-  // way).
+  // `record.clientName` is the fallback for the edge case where the draft
+  // lacks one (e.g. a reload lost the in-memory draft store but
+  // `appointmentId` alone survived some other way).
   const clientName = draft.clientName ?? record?.clientName ?? '';
 
   // Edge: arriving here without a `draft.appointmentId` (direct navigation,
