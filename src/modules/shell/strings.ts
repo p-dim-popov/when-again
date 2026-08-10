@@ -12,6 +12,8 @@ const en = {
   'shell.settings.tagline':
     'Appointment reminders. No server. No accounts. No fees.',
   'shell.settings.lang.auto': 'Auto',
+  'shell.update.message': 'A new version is ready.',
+  'shell.update.action': 'Refresh',
 } satisfies Strings;
 
 const bg = {
@@ -26,6 +28,8 @@ const bg = {
   'shell.settings.tagline':
     'Напомняния за часове. Без сървър. Без акаунти. Без такси.',
   'shell.settings.lang.auto': 'Автоматично',
+  'shell.update.message': 'Готова е нова версия.',
+  'shell.update.action': 'Обнови',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -42,5 +46,7 @@ declare module '../i18n' {
     'shell.placeholder.settings': true;
     'shell.settings.tagline': true;
     'shell.settings.lang.auto': true;
+    'shell.update.message': true;
+    'shell.update.action': true;
   }
 }

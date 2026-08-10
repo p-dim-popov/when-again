@@ -1,8 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider } from '@tanstack/react-router';
-import { router } from './router';
+import { App } from './App';
 import { createQueryClient } from './queryClient';
 import { getSettings } from '../modules/settings';
 import {
@@ -51,7 +50,7 @@ async function bootstrap() {
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <App />
       </QueryClientProvider>
     </StrictMode>,
   );
