@@ -9,11 +9,6 @@ import {
 import { DAY_END } from './dayWindow';
 
 const STEP_MINUTES = 5;
-// Row height of an option button (`h-11` = 2.75rem = 44px at the default
-// 16px root). The column's `py-[44px]` padding is exactly one row, so an
-// option at `index` sits centered under the highlight band when
-// `scrollTop === index * ROW_HEIGHT`.
-const ROW_HEIGHT = 44;
 
 interface Gap {
   start: string;
@@ -30,15 +25,20 @@ function prefersReducedMotion(): boolean {
 // reports that option through `onChange`, same as a click would.
 //
 // Two effects keep the DOM scroll position and the `value` prop converged
-// without fighting each other:
-//  - the sync effect scrolls the container to `index * ROW_HEIGHT` whenever
-//    the selected index changes (click, arrow key, or a hour-change
-//    re-clamp) — this is a no-op scroll when the container is already there
-//    (e.g. right after the settle handler below has just reported that same
-//    index), so it can never re-trigger the settle handler in a loop.
+// without fighting each other. Both work from MEASURED geometry
+// (getBoundingClientRect), never a hardcoded row height, so they stay correct
+// when the root font-size scales the rem-based rows (e.g. a phone with large
+// system text — a fixed 44px assumption left the selected number stranded
+// outside the highlight band):
+//  - the sync effect scrolls the selected option's measured centre to the
+//    container's measured centre whenever the selected index changes (click,
+//    arrow key, or a hour-change re-clamp) — a no-op when it is already
+//    centred (e.g. right after the settle handler reported that same index),
+//    so it can never re-trigger the settle handler in a loop.
 //  - the settle effect listens for the scroll gesture to finish (native
 //    `scrollend`, with a debounced `scroll` fallback for browsers that don't
-//    support it) and reports the centered option via `onChange`.
+//    support it) and reports whichever option is nearest the container centre
+//    via `onChange`.
 function WheelColumn({
   label,
   options,
@@ -77,10 +77,15 @@ function WheelColumn({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const target = index * ROW_HEIGHT;
-    if (Math.abs(el.scrollTop - target) < 1) return;
+    const opt = el.querySelectorAll('[role="option"]')[index] as
+      HTMLElement | undefined;
+    if (!opt) return;
+    const cRect = el.getBoundingClientRect();
+    const oRect = opt.getBoundingClientRect();
+    const delta = oRect.top + oRect.height / 2 - (cRect.top + cRect.height / 2);
+    if (Math.abs(delta) < 1) return;
     el.scrollTo({
-      top: target,
+      top: el.scrollTop + delta,
       behavior: prefersReducedMotion() ? 'auto' : 'smooth',
     });
   }, [index, options]);
@@ -95,10 +100,19 @@ function WheelColumn({
     function settle() {
       const node = containerRef.current;
       if (!node || options.length === 0) return;
-      const settledIndex = Math.min(
-        Math.max(Math.round(node.scrollTop / ROW_HEIGHT), 0),
-        options.length - 1,
-      );
+      const rect = node.getBoundingClientRect();
+      const center = rect.top + rect.height / 2;
+      const optEls = node.querySelectorAll('[role="option"]');
+      let settledIndex = 0;
+      let bestDist = Infinity;
+      optEls.forEach((optEl, i) => {
+        const r = optEl.getBoundingClientRect();
+        const dist = Math.abs(r.top + r.height / 2 - center);
+        if (dist < bestDist) {
+          bestDist = dist;
+          settledIndex = i;
+        }
+      });
       const next = options[settledIndex];
       if (next && next !== value) onChange(next);
     }
@@ -129,7 +143,7 @@ function WheelColumn({
       tabIndex={0}
       aria-activedescendant={optionId(index)}
       onKeyDown={handleKeyDown}
-      className="h-[132px] w-16 snap-y snap-mandatory [scrollbar-width:none] overflow-y-auto py-[44px] outline-none [&::-webkit-scrollbar]:hidden"
+      className="h-[8.25rem] w-16 snap-y snap-mandatory [scrollbar-width:none] overflow-y-auto py-11 outline-none [&::-webkit-scrollbar]:hidden"
     >
       {options.map((opt, i) => {
         const selected = opt === value;
