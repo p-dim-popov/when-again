@@ -9,6 +9,7 @@ import {
   requestPersistentStorage,
   STORE_APPOINTMENTS,
   STORE_CLIENTS,
+  STORE_RECEIVED,
   STORE_SETTINGS,
 } from './db';
 
@@ -21,7 +22,12 @@ describe('getDb', () => {
     const db = await getDb();
     expect(db.name).toBe(DB_NAME);
     expect([...db.objectStoreNames].sort()).toEqual(
-      [STORE_APPOINTMENTS, STORE_CLIENTS, STORE_SETTINGS].sort(),
+      [
+        STORE_APPOINTMENTS,
+        STORE_CLIENTS,
+        STORE_RECEIVED,
+        STORE_SETTINGS,
+      ].sort(),
     );
   });
 
