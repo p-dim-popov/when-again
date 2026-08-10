@@ -4,6 +4,8 @@ import { formatCurrency, getActiveLanguage, t } from '../i18n';
 import { getAppointment, type Appointment } from '../appointments';
 import { getClient } from '../clients';
 import { formatDayLabel } from '../schedule';
+import { getSettings } from '../settings';
+import { HandoffShare } from '../handoff';
 import { resetDraft, useBookingDraft } from './draftStore';
 
 // The booking funnel's terminal screen. Save, cancel, and reschedule (Tasks
@@ -13,8 +15,8 @@ import { resetDraft, useBookingDraft } from './draftStore';
 // visit to any funnel screen starts clean (see the plan's "Design update",
 // the Готово/Task 8 note).
 //
-// Epic 6 owns the real QR/payload/share; the Сподели button here is
-// deliberately disabled — it only announces that the feature is coming.
+// The share row below (Epic 6) renders the real QR + share/copy link once an
+// appointment is loaded.
 export function ShareLanding() {
   const navigate = useNavigate();
   const draft = useBookingDraft();
@@ -51,6 +53,10 @@ export function ShareLanding() {
     enabled: appointmentId != null,
   });
   const appointment = record?.appointment;
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings,
+  });
   // Prefer the draft's client name (already populated in-flow, Task 6b);
   // `record.clientName` — fetched as part of the query above regardless, to
   // keep its shape aligned with the edit-load query — is the fallback for
@@ -153,14 +159,13 @@ export function ShareLanding() {
           )}
         </dl>
 
-        <button
-          type="button"
-          className="bg-surface-2 text-faint border-line rounded-card w-full cursor-not-allowed border p-3 text-center text-sm font-semibold"
-          disabled
-          aria-disabled="true"
-        >
-          {t('booking.landing.shareSoon')}
-        </button>
+        {appointment && (
+          <HandoffShare
+            appointment={appointment}
+            providerName={settings?.providerName ?? ''}
+            address={settings?.address}
+          />
+        )}
 
         <button
           type="button"

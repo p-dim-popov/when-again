@@ -17,7 +17,6 @@ const en = {
   'booking.landing.when': 'When',
   'booking.landing.duration': 'Duration',
   'booking.landing.price': 'Price',
-  'booking.landing.shareSoon': 'Sharing (QR / link) coming soon',
   'booking.landing.done': 'Done',
   'booking.landing.empty': 'Nothing to show',
 
@@ -57,7 +56,6 @@ const bg = {
   'booking.landing.when': 'Кога',
   'booking.landing.duration': 'Времетраене',
   'booking.landing.price': 'Цена',
-  'booking.landing.shareSoon': 'Споделяне (QR/връзка) идва скоро',
   'booking.landing.done': 'Готово',
   'booking.landing.empty': 'Няма какво да се покаже',
 
@@ -98,7 +96,6 @@ declare module '../i18n' {
     'booking.landing.when': true;
     'booking.landing.duration': true;
     'booking.landing.price': true;
-    'booking.landing.shareSoon': true;
     'booking.landing.done': true;
     'booking.landing.empty': true;
 
