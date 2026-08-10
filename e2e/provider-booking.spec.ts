@@ -387,3 +387,111 @@ test('time wheel keeps the selected option inside the highlight band at a large 
     expect(Math.abs(selCy - (bandBox.y + bandBox.height / 2))).toBeLessThan(6);
   }
 });
+
+test('#21: save-time clash check blocks a new appointment whose duration overruns the next', async ({
+  page,
+}) => {
+  // Book A at 09:00 (30 min) via the "other time" sheet, leaving 08:00 free
+  // in front of it. (bookAppointment always takes 08:00, so A is placed by
+  // hand here.)
+  const dateKey = await pickFutureDay(page);
+  await page.getByRole('button', { name: 'other time' }).click();
+  await expect(page.getByTestId('time-sheet')).toBeVisible();
+  await page
+    .getByRole('listbox', { name: 'Hours' })
+    .getByRole('option', { name: '09', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Choose · 09:00' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-client').fill('Anna');
+  await page.locator('#apptForm-service').fill('Color');
+  await page.locator('#apptForm-duration').fill('30');
+  await page.getByRole('button', { name: 'Save · share' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Appointment saved' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page).toHaveURL(new RegExp(`date=${dateKey}`));
+
+  // Start B at the first free slot (08:00) but type 90 min → 08:00–09:30,
+  // which overruns into A (09:00–09:30). The pick-time bound sized 08:00 for a
+  // 30-min service, so only the save-time check can catch this.
+  const slot = firstFreeSlot(page);
+  await expect(slot).toHaveText('08:00');
+  await slot.click();
+  await expect(
+    page.getByRole('heading', { name: 'New appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-client').fill('Boris');
+  await page.locator('#apptForm-service').fill('Cut');
+  await page.locator('#apptForm-duration').fill('90');
+  await page.getByRole('button', { name: 'Save · share' }).click();
+
+  // Blocked: still on the form, the inline error names A, and no save landing.
+  await expect(
+    page.getByText('This overlaps the 09:00 appointment (Color).', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Appointment saved' }),
+  ).toHaveCount(0);
+
+  // Shorten to 30 min (08:00–08:30, fits) → the same Save now succeeds.
+  await page.locator('#apptForm-duration').fill('30');
+  await page.getByRole('button', { name: 'Save · share' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Appointment saved' }),
+  ).toBeVisible();
+});
+
+test('#21: save-time clash check blocks an edit whose new duration overruns the next', async ({
+  page,
+}) => {
+  // A at 08:00 (30 min) via the shared helper, then B at 08:30 (30 min) — the
+  // next free slot — so the two are back-to-back (08:00–08:30, 08:30–09:00).
+  const { dateKey } = await bookAppointment(page, {
+    clientName: 'Cveti',
+    service: 'Wash',
+  });
+  await pickFutureDay(page); // same deterministic day (the 15th)
+  const bSlot = firstFreeSlot(page);
+  await expect(bSlot).toHaveText('08:30');
+  await bSlot.click();
+  await page.locator('#apptForm-client').fill('Diana');
+  await page.locator('#apptForm-service').fill('Trim');
+  await page.locator('#apptForm-duration').fill('30');
+  await page.getByRole('button', { name: 'Save · share' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Appointment saved' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page).toHaveURL(new RegExp(`date=${dateKey}`));
+
+  // Edit A (first block) and stretch it to 60 min → 08:00–09:00 overruns into
+  // B (08:30–09:00). Save must be blocked, naming B; A must NOT self-clash.
+  await page.getByTestId('appt-block').first().click();
+  await expect(
+    page.getByRole('heading', { name: 'Edit appointment' }),
+  ).toBeVisible();
+  await page.locator('#apptForm-duration').fill('60');
+  await page.getByRole('button', { name: 'Save · share' }).click();
+
+  await expect(
+    page.getByText('This overlaps the 08:30 appointment (Trim).', {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Appointment saved' }),
+  ).toHaveCount(0);
+
+  // Back to a fitting 30 min → the edit saves.
+  await page.locator('#apptForm-duration').fill('30');
+  await page.getByRole('button', { name: 'Save · share' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Appointment saved' }),
+  ).toBeVisible();
+});

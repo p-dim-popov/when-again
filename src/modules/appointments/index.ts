@@ -8,3 +8,5 @@ export {
   updateAppointment,
 } from './appointments';
 export type { Appointment, AppointmentStatus } from './appointments';
+export { findClashingAppointment } from './overlap';
+export type { ClashCandidate } from './overlap';

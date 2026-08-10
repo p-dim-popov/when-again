@@ -4,7 +4,12 @@ import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import { getActiveLanguage, t } from '../i18n';
 import { getClient, listClients, type Client } from '../clients';
-import { getAppointment, type Appointment } from '../appointments';
+import {
+  findClashingAppointment,
+  getAppointment,
+  listAppointmentsOnDate,
+  type Appointment,
+} from '../appointments';
 import { getSettings, updateSettings, type ServicePreset } from '../settings';
 import { wallClockNow, type WallClock } from '../time';
 import { formatDayLabel } from '../schedule';
@@ -377,6 +382,30 @@ export function AppointmentForm({
       dateTime: `${draft.dateKey}T${draft.time}`,
       timeZone,
     };
+
+    // Save-time fit guarantee (#21): the day-view pickers bound the START time
+    // against an ASSUMED duration, but Времетраене is freely editable here, so
+    // the real check has to happen now that the actual duration is known.
+    // Reject an overlap with any non-cancelled appointment on the same day
+    // (excluding this one when editing) instead of silently double-booking.
+    const sameDay = await listAppointmentsOnDate(draft.dateKey);
+    const clash = findClashingAppointment(
+      {
+        id: draft.appointmentId ?? undefined,
+        start,
+        durationMinutes: value.durationMinutes,
+      },
+      sameDay,
+    );
+    if (clash) {
+      setSaveError(
+        t('booking.form.error.clash', {
+          time: clash.start.dateTime.slice(11, 16),
+          service: clash.service,
+        }),
+      );
+      return;
+    }
 
     let savedId: string;
     if (draft.appointmentId) {

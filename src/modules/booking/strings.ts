@@ -41,6 +41,8 @@ const en = {
   'booking.form.saving': 'Saving…',
   'booking.form.error.required':
     'Fill in the client, service, and time before you save.',
+  'booking.form.error.clash':
+    'This overlaps the {time} appointment ({service}). Choose a different time or shorten it.',
 } satisfies Strings;
 
 const bg = {
@@ -77,6 +79,8 @@ const bg = {
   'booking.form.saving': 'Запазване…',
   'booking.form.error.required':
     'Попълнете клиент, услуга и час, преди да запазите.',
+  'booking.form.error.clash':
+    'Застъпва се с часа в {time} ({service}). Изберете друг час или намалете времетраенето.',
 } satisfies Strings;
 
 export const bookingStrings = { en, bg };
@@ -115,5 +119,6 @@ declare module '../i18n' {
     'booking.form.save': true;
     'booking.form.saving': true;
     'booking.form.error.required': true;
+    'booking.form.error.clash': true;
   }
 }

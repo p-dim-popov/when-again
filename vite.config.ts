@@ -24,7 +24,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' (not 'autoUpdate'): a new deploy must never reload the page
+      // out from under an in-progress booking (the draft lives in memory).
+      // src/app registers the SW explicitly, re-checks on foreground, and
+      // surfaces a non-blocking "refresh" banner the provider taps when ready
+      // (see src/app/App.tsx and modules/shell/UpdateBanner). See issue #24.
+      registerType: 'prompt',
       manifest: {
         name: 'when-again',
         short_name: 'when-again',
