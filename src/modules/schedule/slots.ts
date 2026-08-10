@@ -16,6 +16,24 @@ export interface DayLayout {
 
 const MAX_SLOTS = 8;
 
+/**
+ * The slot-sizing minutes for a day: the grid step for quick-slot chips and
+ * the minimum duration that must fit for a start to be offered (quick slots
+ * and the "other time" picker alike).
+ *
+ * Uses the **shortest** recorded service duration, not the most-recent one:
+ * a single long outlier (e.g. a 300-minute colour) must not hide every slot
+ * in gaps shorter than it. Falls back to `fallback` when no services are
+ * remembered yet.
+ */
+export function slotStepMinutes(
+  services: { durationMinutes: number }[],
+  fallback: number,
+): number {
+  if (services.length === 0) return fallback;
+  return Math.min(...services.map((service) => service.durationMinutes));
+}
+
 function toMinutes(hhmm: string): number {
   const [hours, minutes] = hhmm.split(':').map(Number);
   return hours * 60 + minutes;

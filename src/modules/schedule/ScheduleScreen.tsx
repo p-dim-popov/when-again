@@ -5,6 +5,7 @@ import { wallClockNow } from '../time';
 import {
   computeDayLayout,
   generateSlots,
+  slotStepMinutes,
   type DayLayoutItem,
   type FreeGap,
 } from './slots';
@@ -206,11 +207,15 @@ export function ScheduleScreen({
     return map;
   }, [clients]);
 
-  // The most recently used service is the first entry (Task 5's
-  // `rememberService` moves the used entry to the front); fall back to 30
-  // minutes when nothing has been used yet.
-  const stepMinutes =
-    settings?.services[0]?.durationMinutes ?? DEFAULT_STEP_MINUTES;
+  // Quick-slot grid step and the minimum duration that must fit for a start
+  // to be offered (chips and the "other time" picker). Sized to the SHORTEST
+  // recorded service, not the most-recent one, so a single long service
+  // (e.g. a 300-min colour) can't hide every slot in shorter gaps. Falls
+  // back to 30 minutes when nothing has been booked yet.
+  const stepMinutes = slotStepMinutes(
+    settings?.services ?? [],
+    DEFAULT_STEP_MINUTES,
+  );
 
   const week = weekOf(dateKey);
   const weekdayIdx = week.indexOf(dateKey);
