@@ -43,98 +43,120 @@ app, reactive local queries are the more correct architecture.
 
 ## Architecture
 
-### `db` is a plain exported instance; each module types its own table handle
+### `db` knows nothing; each module contributes its store (visitor) and its type (augmentation)
 
 Dexie's showcase idiom declares typed `Table` properties on a `Dexie`
 **subclass** — but that would make `db` **import every entity type**, a cycle
-that breaks two CLAUDE.md invariants: "`db` holds store names/indexes only, no
-entity types — each entity module owns its own type," and "`db` is a leaf."
+that breaks two CLAUDE.md invariants: "`db` is a leaf" and "each entity module
+owns its own type." We push the ownership split all the way: `db` becomes a
+**zero-knowledge leaf** that holds only the Dexie instance, and each entity
+module contributes *both* halves of its store — the **schema** (a visitor
+function the composition root calls) and the **type** (a `declare module`
+augmentation).
 
-**The router analogy only goes halfway.** `createRouter(routeTree)` can register
-`typeof router` because its full type is *inferred* from the typed `routeTree`.
-Dexie's `.stores({...})` is a **stringly-typed** schema with no row-type
-information to infer, and `declare module` augmentation needs a *named* type to
-target — the only per-database one is a subclass (augmenting base `Dexie` would
-wrongly type every Dexie instance everywhere). So neither router-style
-registration nor a subclass-free augmentation is available.
+This mirrors the codebase's existing i18n push-registration (modules register
+into a leaf at the composition root; the leaf imports no module). It relies on
+one documented Dexie fact: **multiple `.version(n).stores()` calls on the same
+version merge** — the same mechanism Dexie addons use to inject their own object
+stores — so each module can declare its own store and they accumulate.
 
-**Chosen shape — plain instance + generic `db.table<T>()`.** `db` is a
-module-level `const` (mirrors `export const router`), leaf, importing only
-`dexie`. Each entity module creates one **typed handle** via the generic
-`db.table<Row, Key>(name)` — no subclass, no augmentation, and **no `as` cast**
-(the generic supplies the row type). The type annotation lives at the single
-`table` definition in the module that owns the entity — the most literal reading
-of "each entity module owns its own type."
+**`db` — the whole module, leaf, imports only `dexie`, knows no store or type:**
 
 ```ts
-// db/db.ts — the whole module: leaf, imports only `dexie`, knows zero entity types
+// db/db.ts
 import Dexie from 'dexie';
 
-export const db = new Dexie('when-again');
-db.version(1).stores({
-  clients: 'id',
-  appointments: 'id, clientId, start.dateTime',
-  settings: 'id',
-  received: 'id',
-});
+// Augmentation target: each entity module adds its typed table (see below).
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface WhenAgainDB extends Dexie {}
+export const db = new Dexie('when-again') as WhenAgainDB;
 ```
 
-- **No subclass, no `getDb()` accessor.** `db` opens lazily on first operation,
-  so a plain exported singleton is enough. The ~55-line async
-  liveness/reconnect probe is **deleted** — Dexie owns connection lifecycle,
-  auto-reopen, and `blocked`/`versionchange` handling.
-- **No exported `STORE_*` / `INDEX_*` constants.** Under `idb` those deduped a
-  store/index name repeated across many call sites in each module; under Dexie
-  each store name appears once (the schema literal + one `db.table()` per
-  module) and index names are replaced by keyPaths in `.where()` clauses. Store
-  names are plain literals; the only stringly-typed bit left is the
-  `db.table('name')` argument, caught at first use / first test.
-- `id` is the **primary keyPath** for every store (not `++id` — ids come from
-  `crypto.randomUUID()` / the `'singleton'` settings id; Dexie must not
-  auto-generate).
-- `appointments` declares two secondary indexes by keyPath: `clientId` and the
-  compound `start.dateTime`.
+The one `as WhenAgainDB` is a single structural assertion on the instance
+(Dexie creates the `db.appointments`-style accessors at runtime when `.stores()`
+runs); it is not a per-read cast.
 
-### Entity modules — typed handle, same public API
-
-Every entity module keeps its **exact public API** (names, signatures, return
-types unchanged) — only internals swap. The module owns its type and its one
-typed table handle; the `as` casts disappear:
+**Entity module — owns schema + type + queries, co-located:**
 
 ```ts
 // appointments/appointments.ts
+import Dexie, { type EntityTable } from 'dexie';
 import { db } from '../db';
 
 export interface Appointment { id: string; clientId: string; /* … */ }
 
-// One typed handle per module — the row type lives here. No cast: db.table<T,Key>
-// is generic. (db.table() returns the same underlying Table on every call.)
-const appointments = db.table<Appointment, string>('appointments');
+// (1) contribute the TYPE — augments the leaf's WhenAgainDB
+declare module '../db' {
+  interface WhenAgainDB {
+    appointments: EntityTable<Appointment, 'id'>;
+  }
+}
 
+// (2) contribute the SCHEMA — the composition root calls this before first use
+export function defineAppointmentsStore(db: Dexie) {
+  db.version(1).stores({ appointments: 'id, clientId, start.dateTime' });
+}
+
+// (3) queries read the augmented, typed accessor — no cast
 export async function getAppointment(id: string) {
-  return appointments.get(id);                  // typed, no cast
+  return db.appointments.get(id);
 }
 export async function listAppointmentsOnDate(date: string) {
-  return appointments
+  return db.appointments
     .where('start.dateTime')
     .between(`${date}T00:00`, `${date}T23:59`, true, true)
     .sortBy('start.dateTime');                  // replaces IDBKeyRange + manual JS sort
 }
 export async function listAppointmentsByClient(clientId: string) {
-  return appointments.where('clientId').equals(clientId).sortBy('start.dateTime');
+  return db.appointments.where('clientId').equals(clientId).sortBy('start.dateTime');
 }
 export async function addAppointment(data: Omit<Appointment, 'id'>) {
   const appointment = { id: crypto.randomUUID(), ...data };
-  await appointments.add(appointment);
+  await db.appointments.add(appointment);
   return appointment;
 }
 ```
 
 `replaceAll*` becomes `clear()` + `bulkPut()` inside a transaction (the manual
 `tx.store` loop is gone). Same treatment for `clients`, `settings` (the
-`'singleton'`-keyed record), and `received`. Public signatures are preserved so
-**no consumer of an entity module changes because of the table swap** — the
-only consumer churn is the reactive-read swap below.
+`'singleton'`-keyed record), and `received` — each exports its own
+`defineXStore(db)` + augmentation. Public signatures are preserved so **no
+consumer of an entity module changes because of the table swap** — the only
+consumer churn is the reactive-read swap below.
+
+**Composition root assembles the schema, then the db opens lazily:**
+
+```ts
+// src/app/main.tsx — the ONLY place that knows all four stores exist
+import { db } from '../modules/db';
+import { defineAppointmentsStore } from '../modules/appointments';
+import { defineClientsStore } from '../modules/clients';
+import { defineSettingsStore } from '../modules/settings';
+import { defineReceivedStore } from '../modules/received';
+
+[defineAppointmentsStore, defineClientsStore, defineSettingsStore, defineReceivedStore]
+  .forEach((define) => define(db));
+// db opens on first query (or call db.open() to open eagerly)
+```
+
+Notes:
+
+- **No subclass, no `getDb()` accessor, no `STORE_*` / `INDEX_*` constants.**
+  Each store name lives once, in its module's `defineXStore`; index names are
+  gone (queries use keyPaths). The ~55-line async liveness/reconnect probe is
+  deleted — Dexie owns connection lifecycle.
+- `id` is the **primary keyPath** for every store (not `++id` — ids come from
+  `crypto.randomUUID()` / the `'singleton'` settings id).
+- **Ordering is a real constraint.** `defineXStore` must run before the first DB
+  operation (IndexedDB creates stores only in a `versionchange` transaction).
+  In the app, `main.tsx` registers before any component renders, so it is safe.
+  In **tests** this must be handled explicitly — see Testing.
+- **Future schema changes** are owned by the changing module: it adds a
+  `db.version(2).stores({ itsStore: … })` inside its `defineXStore`; Dexie
+  carries unchanged stores forward across versions automatically.
+- **CLAUDE.md rule change:** the old "`db` holds store names/indexes only" is
+  superseded — `db` now holds *only the instance*; each entity module owns its
+  store schema (visitor) and type (augmentation). Update CLAUDE.md.
 
 **Locale-sort trap (do NOT "clean up"):** `listClients` sorts with
 `name.localeCompare` — correct for Cyrillic/BG. Dexie's `.orderBy()` uses
@@ -215,8 +237,8 @@ wall-clock semantics are unchanged.
 Beyond the headline `as`-casts and react-query, the migration deletes
 machinery that only existed to work around `idb`:
 
-- **`STORE_*` name constants** and their exports — store name appears once, in
-  the schema literal.
+- **`STORE_*` name constants** and their exports — each store name now lives
+  once, inside its module's `defineXStore`.
 - **`INDEX_APPOINTMENTS_BY_CLIENT` / `INDEX_APPOINTMENTS_BY_DATETIME`** — idb
   needed named indexes for `getAllFromIndex`; Dexie queries by keyPath, so the
   index names vanish along with the constants.
@@ -231,7 +253,7 @@ machinery that only existed to work around `idb`:
 - **`replaceAll*` transaction loop** — `tx.store.clear(); for…put; tx.done`
   becomes `clear()` + `bulkPut()`.
 - **The v1→v2 `upgrade(db, oldVersion)` callback** — no migration ceremony;
-  the schema declares the current shape directly.
+  each `defineXStore` declares the current shape directly.
 - **Most of `db.test.ts`** — the `memoizes the connection`, `persists across
   close and reopen`, `concurrent getDb calls after close`, and v1→v2 migration
   tests all exercised the hand-rolled probe / migration that no longer exist.
@@ -242,18 +264,21 @@ machinery that only existed to work around `idb`:
 
 **Data layer (internals rewritten, public API preserved):**
 
-- `db/db.ts`, `db/index.ts` — `export const db = new Dexie('when-again')` +
-  schema; drop the subclass, `getDb()`, the liveness probe, `STORE_*`/`INDEX_*`
-  constants, and `closeDb`. `destroyDb` → `Dexie.delete('when-again')`;
-  `requestPersistentStorage` unchanged. `index.ts` re-exports `db`, `destroyDb`,
-  `requestPersistentStorage`.
+- `db/db.ts`, `db/index.ts` — `export const db` + augmentable `WhenAgainDB`
+  interface; drop the subclass, `getDb()`, the liveness probe, `STORE_*`/`INDEX_*`
+  constants, and `closeDb`. `destroyDb` → `Dexie.delete('when-again')` (or
+  `db.delete()`); `requestPersistentStorage` unchanged. `index.ts` re-exports
+  `db`, `WhenAgainDB` (the type), `destroyDb`, `requestPersistentStorage`.
 - `appointments/appointments.ts`, `clients/clients.ts`, `settings/settings.ts`,
-  `received/received.ts` — one typed `db.table<T, string>('name')` handle per
-  module, typed reads (drop `as`), Dexie query operators, `bulkPut` transactions
-  for `replaceAll*`. `clients` keeps its JS `localeCompare` sort.
+  `received/received.ts` — each adds a `declare module '../db'` table
+  augmentation + an exported `defineXStore(db)` visitor; typed reads via
+  `db.<store>` (drop `as`), Dexie query operators, `bulkPut` transactions for
+  `replaceAll*`. `clients` keeps its JS `localeCompare` sort. Export each
+  `defineXStore` from the module's `index.ts`.
 - `backup/backup.ts` — atomic import transaction.
-- `db/db.test.ts` + entity-module tests — prune probe/migration tests; update
-  internal assertions to the Dexie surface.
+- `db/db.test.ts` + entity-module tests — prune probe/migration tests; register
+  stores via the shared test setup (below); update internal assertions to the
+  Dexie surface.
 
 **Reactive-read swap (react-query → `useLiveQuery`):**
 
@@ -268,20 +293,33 @@ machinery that only existed to work around `idb`:
 
 **Composition root:**
 
-- `app/main.tsx` — remove `<QueryClientProvider>`.
+- `app/main.tsx` — register the four stores (`defineXStore(db)`) before render;
+  remove `<QueryClientProvider>`.
 - `app/queryClient.ts` — **deleted**.
+
+**Test infrastructure:**
+
+- `src/test/setup-db.ts` (new) — installs `fake-indexeddb/auto` and calls all
+  four `defineXStore(db)` so every unit test gets the full schema; wired via
+  Vitest `setupFiles` in `vite.config.ts` / `vitest` config. Replaces the
+  per-file `import 'fake-indexeddb/auto'`.
 
 **Deps:** add `dexie`, `dexie-react-hooks`; remove `idb`,
 `@tanstack/react-query`.
 
 ## Testing
 
-- Unit tests stay on `fake-indexeddb`. Entity-module tests need minimal change
-  since public APIs are stable; internal assertions that reached through
-  `getDb()`/`idb` primitives are updated to the Dexie surface (the imported
-  `db` / `Dexie.delete`).
-- e2e (`Playwright`) unchanged — no behaviour change. The full booking →
-  share → import round-trip remains the integration guard.
+- Unit tests stay on `fake-indexeddb`. Because the schema now lives in the
+  `defineXStore` visitors, a shared Vitest `setupFiles` module
+  (`src/test/setup-db.ts`) registers all four stores once before any test runs —
+  a missing store is a hard throw, and cross-store readers (e.g.
+  `clients.getVisitHistory` → `appointments`) need the full schema anyway.
+  Entity-module public APIs are stable, so their tests change little beyond this
+  setup; internal assertions that reached through `getDb()`/`idb` primitives
+  move to the Dexie surface (imported `db` / `Dexie.delete`).
+- e2e (`Playwright`) unchanged — no behaviour change; the app registers stores
+  in `main.tsx`. The full booking → share → import round-trip remains the
+  integration guard.
 - No seeded-v2 migration test (per scope).
 - Reactive behaviour gets at least one focused unit/e2e assertion: a write to
   a table updates a mounted `useLiveQuery` reader without any explicit
@@ -296,7 +334,7 @@ bundle once.
 
 ## Existing on-device DB (informational, not a requirement)
 
-Dexie multiplies its declared version by 10, so `this.version(1)` opens
+Dexie multiplies its declared version by 10, so the declared `version(1)` opens
 IndexedDB at integer version **10**; the installed `idb`-built DB is at integer
 **2**. On first open after deploy Dexie runs one `versionchange` upgrade that
 preserves every record (object stores keep primary keyPath `id`) and rebuilds
@@ -308,15 +346,20 @@ if ever needed: clear site data once.
 ## Modulith constraints
 
 - No `dexie` import outside the data-layer modules (`db` + 5 entity modules).
-- `dexie-react-hooks` permitted in UI modules only.
-- `db` stays a leaf (no entity-type imports); dependency graph stays acyclic.
-- Entity-module public APIs unchanged.
+  `dexie-react-hooks` permitted in UI modules only.
+- `db` stays a **zero-knowledge leaf** — it imports no entity module and knows
+  no store name or type; entity modules contribute schema (visitor) and type
+  (augmentation), so the type/registration edges point **entity → `db`**.
+- `src/app/main.tsx` is the **only** place that references all four
+  `defineXStore` functions (the schema-assembly composition root); the Vitest
+  setup is its test-side counterpart.
+- Dependency graph stays acyclic. Entity-module public APIs unchanged.
 
 ## Acceptance criteria
 
 - All existing unit + e2e green; no user-facing behaviour change.
-- No `as` casts for entity reads (tables typed via generic
-  `db.table<T, string>('name')` handles).
+- No `as` casts for entity reads (tables typed via `declare module '../db'`
+  augmentation; the one `db as WhenAgainDB` instance assertion aside).
 - Local reads are reactive via `useLiveQuery` with **no** manual invalidation;
   `@tanstack/react-query` removed from the repo and `package.json`.
 - `importBackup` is atomic; backup JSON format + wall-clock semantics
