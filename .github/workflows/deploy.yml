@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -33,3 +33,19 @@ jobs:
           path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
+      # Tag every deploy (#33) so any device's version stamp maps 1:1 to a
+      # tag → exact commit. Idempotent (re-runs skip), and never fails the
+      # deploy — the site is already live by this point.
+      - name: Tag deploy
+        continue-on-error: true
+        run: |
+          VERSION=$(node -p "require('./dist/version.json').version")
+          COMMIT=$(node -p "require('./dist/version.json').commit")
+          TAG="v${VERSION}-${COMMIT}"
+          if git ls-remote --exit-code origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists — skipping." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          echo "Tagged deploy as ${TAG}." >> "$GITHUB_STEP_SUMMARY"
