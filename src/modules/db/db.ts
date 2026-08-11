@@ -17,6 +17,14 @@ export async function destroyDb(): Promise<void> {
   await db.delete({ disableAutoOpen: false });
 }
 
+// Native IndexedDB version of the local database — what indexedDB.databases()
+// and chrome://inspect report on a device (declared Dexie version × 10).
+// Surfaced as a diagnostic so a data migration can be verified in-app (#33).
+export async function getDataVersion(): Promise<number> {
+  await db.open();
+  return db.backendDB().version;
+}
+
 export async function requestPersistentStorage(): Promise<boolean> {
   if (typeof navigator === 'undefined' || !navigator.storage?.persist)
     return false;

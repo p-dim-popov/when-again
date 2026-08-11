@@ -12,3 +12,10 @@ test('the page declares the web app manifest', async ({ page }) => {
     /manifest\.webmanifest/,
   );
 });
+
+test('settings shows the build stamp', async ({ page }) => {
+  await page.goto('/when-again/settings');
+  await expect(
+    page.getByText(/\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC · [0-9a-f]{7,}/),
+  ).toBeVisible();
+});
