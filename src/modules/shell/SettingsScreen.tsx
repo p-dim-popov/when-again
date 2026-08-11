@@ -1,5 +1,6 @@
 import { t, type Language } from '../i18n';
 import { applyLanguageChoice } from './switchLanguage';
+import { VersionFooter } from './VersionFooter';
 
 // TEMPORARY language toggle — removed when Epic 7 ships the real Settings
 // screen (and the provider/client mode switch). Both call the same
@@ -43,6 +44,7 @@ export function SettingsScreen() {
         <p>{t('shell.soon')}</p>
         <p>{t('shell.settings.tagline')}</p>
         <LanguageToggle />
+        <VersionFooter />
       </div>
     </main>
   );
