@@ -15,8 +15,15 @@ ever reaches a server.
   only — never reach into another module's internals.**
 - The dependency graph stays **acyclic**. `db`, `time`, and `i18n` are leaves.
   Entity modules (`appointments`, `clients`, `settings`) sit low; UI modules
-  (`booking`, `share`, `visits`) sit high. `db` holds store names/indexes only,
-  no entity types — each entity module owns its own type.
+  (`booking`, `share`, `visits`) sit high. `db` is a zero-knowledge leaf
+  holding only the Dexie instance; each entity module contributes its store
+  **schema** via an exported `defineXStore(db)` visitor (assembled in
+  `src/app/main.tsx`) and its **type** via a `declare module '../db'`
+  augmentation. `dexie` is imported only in `db` and entity modules; `backup`
+  imports the `db` object (not `dexie`) for cross-table transactions.
+  `dexie-react-hooks` (`useLiveQuery`) is the reactive
+  read primitive for UI modules. Local reads are reactive — no manual cache
+  invalidation.
 - There is no `shared/` or `utils/` folder. A widget lives in the module that
   needs it first; promote it to its own module only when a second consumer
   appears.
@@ -27,7 +34,8 @@ ever reaches a server.
 - Package manager: **npm** (`npm ci` in CI). Commit `package-lock.json`.
 - TypeScript is pinned `~6.0.3` — typescript-eslint's peer ceiling is `<6.1.0`
   and TS 7 is unsupported by it. Do not loosen the pin.
-- Storage: IndexedDB via `idb`; unit tests use `fake-indexeddb`.
+- Storage: IndexedDB via **Dexie.js** (`dexie` + `dexie-react-hooks`); unit
+  tests use `fake-indexeddb`.
 - Styling: **Tailwind CSS v4** via `@tailwindcss/vite` — utilities in JSX, no
   per-module CSS files. Design tokens live in `src/app/index.css` behind
   `@theme inline`; that file (plus self-hosted fonts, imported in

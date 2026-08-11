@@ -1,6 +1,4 @@
-import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
-import { destroyDb } from '../db';
+import { describe, expect, it } from 'vitest';
 import {
   addAppointment,
   getAppointment,
@@ -11,10 +9,6 @@ import {
   updateAppointment,
   type Appointment,
 } from './appointments';
-
-afterEach(async () => {
-  await destroyDb();
-});
 
 const base = {
   clientId: 'c1',

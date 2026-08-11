@@ -1,9 +1,5 @@
-import {
-  getDb,
-  INDEX_APPOINTMENTS_BY_CLIENT,
-  INDEX_APPOINTMENTS_BY_DATETIME,
-  STORE_APPOINTMENTS,
-} from '../db';
+import Dexie, { type EntityTable } from 'dexie';
+import { db } from '../db';
 import { type WallClock } from '../time';
 
 export type AppointmentStatus = 'booked' | 'done' | 'cancelled';
@@ -18,72 +14,63 @@ export interface Appointment {
   status: AppointmentStatus;
 }
 
+declare module '../db' {
+  interface WhenAgainDB {
+    appointments: EntityTable<Appointment, 'id'>;
+  }
+}
+
+export function defineAppointmentsStore(db: Dexie): void {
+  db.version(1).stores({ appointments: 'id, clientId, start.dateTime' });
+}
+
 export async function addAppointment(
   data: Omit<Appointment, 'id'>,
 ): Promise<Appointment> {
   const appointment: Appointment = { id: crypto.randomUUID(), ...data };
-  const db = await getDb();
-  await db.add(STORE_APPOINTMENTS, appointment);
+  await db.appointments.add(appointment);
   return appointment;
 }
 
 export async function updateAppointment(
   appointment: Appointment,
 ): Promise<void> {
-  const db = await getDb();
-  await db.put(STORE_APPOINTMENTS, appointment);
+  await db.appointments.put(appointment);
 }
 
 export async function getAppointment(
   id: string,
 ): Promise<Appointment | undefined> {
-  const db = await getDb();
-  return (await db.get(STORE_APPOINTMENTS, id)) as Appointment | undefined;
+  return db.appointments.get(id);
 }
-
-const byStart = (a: Appointment, b: Appointment) =>
-  a.start.dateTime < b.start.dateTime
-    ? -1
-    : a.start.dateTime > b.start.dateTime
-      ? 1
-      : 0;
 
 export async function listAppointmentsOnDate(
   date: string,
 ): Promise<Appointment[]> {
-  const db = await getDb();
-  const range = IDBKeyRange.bound(`${date}T00:00`, `${date}T23:59`);
-  const items = (await db.getAllFromIndex(
-    STORE_APPOINTMENTS,
-    INDEX_APPOINTMENTS_BY_DATETIME,
-    range,
-  )) as Appointment[];
-  return items.sort(byStart);
+  return db.appointments
+    .where('start.dateTime')
+    .between(`${date}T00:00`, `${date}T23:59`, true, true)
+    .sortBy('start.dateTime');
 }
 
 export async function listAppointmentsByClient(
   clientId: string,
 ): Promise<Appointment[]> {
-  const db = await getDb();
-  const items = (await db.getAllFromIndex(
-    STORE_APPOINTMENTS,
-    INDEX_APPOINTMENTS_BY_CLIENT,
-    clientId,
-  )) as Appointment[];
-  return items.sort(byStart);
+  return db.appointments
+    .where('clientId')
+    .equals(clientId)
+    .sortBy('start.dateTime');
 }
 
 export async function listAllAppointments(): Promise<Appointment[]> {
-  const db = await getDb();
-  return (await db.getAll(STORE_APPOINTMENTS)) as Appointment[];
+  return db.appointments.toArray();
 }
 
 export async function replaceAllAppointments(
   items: Appointment[],
 ): Promise<void> {
-  const db = await getDb();
-  const tx = db.transaction(STORE_APPOINTMENTS, 'readwrite');
-  await tx.store.clear();
-  for (const item of items) await tx.store.put(item);
-  await tx.done;
+  await db.transaction('rw', db.appointments, async () => {
+    await db.appointments.clear();
+    await db.appointments.bulkPut(items);
+  });
 }

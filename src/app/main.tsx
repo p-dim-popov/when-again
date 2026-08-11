@@ -1,9 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
-import { createQueryClient } from './queryClient';
-import { getSettings } from '../modules/settings';
+import { defineAppointmentsStore } from '../modules/appointments';
+import { defineClientsStore } from '../modules/clients';
+import { db } from '../modules/db';
+import { defineReceivedStore } from '../modules/received';
+import { defineSettingsStore, getSettings } from '../modules/settings';
 import {
   detectLanguage,
   initI18n,
@@ -27,6 +29,11 @@ import '@fontsource/ibm-plex-sans/latin-600.css';
 import './index.css';
 
 async function bootstrap() {
+  defineAppointmentsStore(db);
+  defineClientsStore(db);
+  defineSettingsStore(db);
+  defineReceivedStore(db);
+
   registerStrings('en', {
     ...shellStrings.en,
     ...scheduleStrings.en,
@@ -48,13 +55,9 @@ async function bootstrap() {
   }
   initI18n(language);
 
-  const queryClient = createQueryClient();
-
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <App />
-      </QueryClientProvider>
+      <App />
     </StrictMode>,
   );
 }

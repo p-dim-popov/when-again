@@ -1,6 +1,6 @@
 import { useForm } from '@tanstack/react-form';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState } from 'react';
 import { getActiveLanguage, t } from '../i18n';
 import { getClient, listClients, type Client } from '../clients';
@@ -38,12 +38,6 @@ const FIELD_BOX =
   'flex items-center gap-2 min-h-11 rounded-card border border-line bg-surface px-3 focus-within:border-accent';
 const FIELD_INPUT =
   'flex-1 min-w-0 bg-transparent outline-none text-sm text-ink placeholder:text-faint';
-
-// Same cache entries the schedule screen reads/writes (see
-// `schedule/queries.ts`) so a save here is immediately visible there without
-// a second round trip through IndexedDB.
-const CLIENTS_QUERY_KEY = ['clients', 'all'];
-const SETTINGS_QUERY_KEY = ['settings'];
 
 const MAX_CLIENT_SUGGESTIONS = 6;
 const MAX_SERVICE_SUGGESTIONS = 6;
@@ -92,7 +86,6 @@ export function AppointmentForm({
   resume?: boolean;
 }) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const draft = useBookingDraft();
 
   const editingId = appt ?? null;
@@ -120,24 +113,21 @@ export function AppointmentForm({
 
   // First-entry load for edit mode: the appointment plus its client's name
   // (the form's client field shows the name, but the appointment only carries
-  // `clientId`). Cached under `['appointment', id]` — the same key
-  // `useUpdateAppointment`/`useCancelAppointment` invalidate. Also the source
-  // of truth for the ORIGINAL `status`, which must be preserved on save (a
-  // reschedule must not silently flip a 'done'/'cancelled' record to
-  // 'booked').
-  const { data: editLoad } = useQuery({
-    queryKey: ['appointment', editingId],
-    queryFn: async (): Promise<{
-      appointment: Appointment;
-      clientName: string;
-    } | null> => {
-      const appointment = await getAppointment(editingId as string);
-      if (!appointment) return null;
-      const client = await getClient(appointment.clientId);
-      return { appointment, clientName: client?.name ?? '' };
-    },
-    enabled: editingId != null,
-  });
+  // `clientId`). Also the source of truth for the ORIGINAL `status`, which
+  // must be preserved on save (a reschedule must not silently flip a
+  // 'done'/'cancelled' record to 'booked').
+  const editLoad = useLiveQuery(
+    () =>
+      editingId != null
+        ? (async () => {
+            const appointment = await getAppointment(editingId);
+            if (!appointment) return null;
+            const client = await getClient(appointment.clientId);
+            return { appointment, clientName: client?.name ?? '' };
+          })()
+        : undefined,
+    [editingId],
+  );
 
   // Distinguishes first-entry (draft.appointmentId !== editingId, hydrate from
   // the loaded appointment) from a round-trip return (draft.appointmentId ===
@@ -172,14 +162,8 @@ export function AppointmentForm({
     if (Object.keys(patch).length > 0) patchDraft(patch);
   }, [date, time]);
 
-  const { data: clients } = useQuery({
-    queryKey: CLIENTS_QUERY_KEY,
-    queryFn: listClients,
-  });
-  const { data: settings } = useQuery({
-    queryKey: SETTINGS_QUERY_KEY,
-    queryFn: getSettings,
-  });
+  const clients = useLiveQuery(() => listClients(), []);
+  const settings = useLiveQuery(() => getSettings(), []);
 
   const saveAppointment = useSaveAppointment();
   const updateAppointmentMutation = useUpdateAppointment();
@@ -451,7 +435,6 @@ export function AppointmentForm({
         ...(value.price !== null ? { price: value.price } : {}),
       });
       await updateSettings({ services: nextServices });
-      void queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
     } catch {
       // best-effort: a failed remember-service write must not block
       // navigation to the saved landing — the appointment itself is safe.

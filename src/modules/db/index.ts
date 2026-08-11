@@ -1,13 +1,6 @@
 export {
-  closeDb,
-  DB_NAME,
+  db,
   destroyDb,
-  getDb,
-  INDEX_APPOINTMENTS_BY_CLIENT,
-  INDEX_APPOINTMENTS_BY_DATETIME,
   requestPersistentStorage,
-  STORE_APPOINTMENTS,
-  STORE_CLIENTS,
-  STORE_RECEIVED,
-  STORE_SETTINGS,
+  type WhenAgainDB,
 } from './db';

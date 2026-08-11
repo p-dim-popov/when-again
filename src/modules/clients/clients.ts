@@ -1,5 +1,6 @@
+import Dexie, { type EntityTable } from 'dexie';
 import { listAppointmentsByClient, type Appointment } from '../appointments';
-import { getDb, STORE_CLIENTS } from '../db';
+import { db } from '../db';
 import {
   compareWallClock,
   isBefore,
@@ -14,35 +15,40 @@ export interface Client {
   notes?: string;
 }
 
+declare module '../db' {
+  interface WhenAgainDB {
+    clients: EntityTable<Client, 'id'>;
+  }
+}
+
+export function defineClientsStore(db: Dexie): void {
+  db.version(1).stores({ clients: 'id' });
+}
+
 export async function addClient(data: Omit<Client, 'id'>): Promise<Client> {
   const client: Client = { id: crypto.randomUUID(), ...data };
-  const db = await getDb();
-  await db.add(STORE_CLIENTS, client);
+  await db.clients.add(client);
   return client;
 }
 
 export async function updateClient(client: Client): Promise<void> {
-  const db = await getDb();
-  await db.put(STORE_CLIENTS, client);
+  await db.clients.put(client);
 }
 
 export async function getClient(id: string): Promise<Client | undefined> {
-  const db = await getDb();
-  return (await db.get(STORE_CLIENTS, id)) as Client | undefined;
+  return db.clients.get(id);
 }
 
 export async function listClients(): Promise<Client[]> {
-  const db = await getDb();
-  const clients = (await db.getAll(STORE_CLIENTS)) as Client[];
+  const clients = await db.clients.toArray();
   return clients.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function replaceAllClients(clients: Client[]): Promise<void> {
-  const db = await getDb();
-  const tx = db.transaction(STORE_CLIENTS, 'readwrite');
-  await tx.store.clear();
-  for (const client of clients) await tx.store.put(client);
-  await tx.done;
+  await db.transaction('rw', db.clients, async () => {
+    await db.clients.clear();
+    await db.clients.bulkPut(clients);
+  });
 }
 
 export async function getVisitHistory(

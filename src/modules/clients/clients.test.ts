@@ -1,7 +1,5 @@
-import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { addAppointment, replaceAllAppointments } from '../appointments';
-import { destroyDb } from '../db';
 import {
   addClient,
   getClient,
@@ -10,10 +8,6 @@ import {
   replaceAllClients,
   updateClient,
 } from './clients';
-
-afterEach(async () => {
-  await destroyDb();
-});
 
 describe('clients', () => {
   it('adds with a generated id and reads back', async () => {

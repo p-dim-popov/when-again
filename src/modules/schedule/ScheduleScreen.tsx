@@ -197,9 +197,10 @@ export function ScheduleScreen({
   // time, so a single piece of state is enough.
   const [otherTimeGap, setOtherTimeGap] = useState<FreeGap | null>(null);
 
-  const { data: appointments, isPending } = useDayAppointments(dateKey);
-  const { data: clients } = useAllClients();
-  const { data: settings } = useProviderSettings();
+  const appointments = useDayAppointments(dateKey);
+  const isPending = appointments === undefined;
+  const clients = useAllClients();
+  const settings = useProviderSettings();
 
   const clientNameById = useMemo(() => {
     const map = new Map<string, string>();

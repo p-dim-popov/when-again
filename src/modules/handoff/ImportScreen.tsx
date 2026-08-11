@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { getActiveLanguage, t } from '../i18n';
 import { formatDayLabel } from '../schedule';
 import {
@@ -75,7 +75,6 @@ function Card({ appt }: { appt: ReceivedAppointment }) {
 
 export function ImportScreen() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [saved, setSaved] = useState<null | 'added' | 'updated' | 'removed'>(
     null,
   );
@@ -104,11 +103,13 @@ export function ImportScreen() {
   const decoded = fragment ? decodeHandoff(fragment) : null;
   const incomingId = decoded?.ok ? decoded.appointment.id : undefined;
 
-  const { data: stored, isLoading: storedLoading } = useQuery({
-    queryKey: ['received', incomingId],
-    queryFn: () => getReceived(incomingId as string),
-    enabled: incomingId != null,
-  });
+  const storedResult = useLiveQuery(
+    () =>
+      incomingId != null
+        ? getReceived(incomingId).then((value) => ({ value }))
+        : undefined,
+    [incomingId],
+  );
 
   const goHome = () => void navigate({ to: '/' });
 
@@ -158,7 +159,8 @@ export function ImportScreen() {
     );
   }
 
-  if (storedLoading) return null;
+  if (incomingId != null && storedResult === undefined) return null;
+  const stored = storedResult?.value;
 
   const outcome: ImportOutcome = classifyImport(incoming, stored);
 
@@ -166,7 +168,6 @@ export function ImportScreen() {
     setWriteError(false);
     try {
       await upsertReceived(incoming);
-      await queryClient.invalidateQueries({ queryKey: ['received'] });
       setSaved(next);
     } catch {
       setWriteError(true);

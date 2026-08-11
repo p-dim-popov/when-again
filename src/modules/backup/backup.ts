@@ -4,6 +4,7 @@ import {
   type Appointment,
 } from '../appointments';
 import { listClients, replaceAllClients, type Client } from '../clients';
+import { db } from '../db';
 import { replaceSettings, updateSettings, type Settings } from '../settings';
 
 export const BACKUP_VERSION = 1;
@@ -55,9 +56,17 @@ export function parseBackup(data: unknown): BackupFile {
 
 export async function importBackup(data: unknown): Promise<void> {
   const backup = parseBackup(data);
-  await replaceSettings(backup.settings);
-  await replaceAllClients(backup.clients);
-  await replaceAllAppointments(backup.appointments);
+  await db.transaction(
+    'rw',
+    db.clients,
+    db.appointments,
+    db.settings,
+    async () => {
+      await replaceSettings(backup.settings);
+      await replaceAllClients(backup.clients);
+      await replaceAllAppointments(backup.appointments);
+    },
+  );
 }
 
 export function isBackupStale(

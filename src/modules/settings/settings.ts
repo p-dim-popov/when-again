@@ -1,4 +1,5 @@
-import { getDb, STORE_SETTINGS } from '../db';
+import Dexie, { type EntityTable } from 'dexie';
+import { db } from '../db';
 
 export interface ServicePreset {
   name: string;
@@ -28,13 +29,20 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 const SINGLETON_ID = 'singleton';
-
 type StoredSettings = Settings & { id: typeof SINGLETON_ID };
 
+declare module '../db' {
+  interface WhenAgainDB {
+    settings: EntityTable<StoredSettings, 'id'>;
+  }
+}
+
+export function defineSettingsStore(db: Dexie): void {
+  db.version(1).stores({ settings: 'id' });
+}
+
 export async function getSettings(): Promise<Settings> {
-  const db = await getDb();
-  const stored = (await db.get(STORE_SETTINGS, SINGLETON_ID)) as
-    StoredSettings | undefined;
+  const stored = await db.settings.get(SINGLETON_ID);
   // Fresh services array each call: DEFAULT_SETTINGS.services must never be
   // shared/mutated across callers.
   const defaults: Settings = { ...DEFAULT_SETTINGS, services: [] };
@@ -54,8 +62,7 @@ export async function updateSettings(
 }
 
 export async function replaceSettings(settings: Settings): Promise<void> {
-  const db = await getDb();
-  await db.put(STORE_SETTINGS, {
+  await db.settings.put({
     id: SINGLETON_ID,
     ...settings,
   } satisfies StoredSettings);

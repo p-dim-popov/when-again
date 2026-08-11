@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { getActiveLanguage, t } from '../i18n';
 import { listAllAppointments } from '../appointments';
@@ -62,10 +62,7 @@ export function MonthPicker({
     }
   }, [date, appt]);
 
-  const { data: appointments } = useQuery({
-    queryKey: ['appointments', 'all'],
-    queryFn: listAllAppointments,
-  });
+  const appointments = useLiveQuery(() => listAllAppointments(), []);
 
   const dottedDays = useMemo(() => {
     const days = new Set<string>();
