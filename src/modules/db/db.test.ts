@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { db, requestPersistentStorage } from './db';
+import { db, getDataVersion, requestPersistentStorage } from './db';
 
 describe('db', () => {
   it('exposes the four registered stores', () => {
@@ -24,7 +24,6 @@ describe('getDataVersion', () => {
   it('reports the native IndexedDB version (declared Dexie version × 10)', async () => {
     // src/test/setup-db.ts declares every store at Dexie version(1),
     // which Dexie opens as native IndexedDB version 10.
-    const { getDataVersion } = await import('./db');
     expect(await getDataVersion()).toBe(10);
   });
 });

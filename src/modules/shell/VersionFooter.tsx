@@ -34,8 +34,16 @@ export function VersionFooter() {
   const [check, setCheck] = useState<'idle' | 'checking' | UpdateCheckResult>(
     'idle',
   );
-  const [copied, setCopied] = useState(false);
-  const dataVersion = useLiveQuery(() => getDataVersion(), []);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>(
+    'idle',
+  );
+  // useLiveQuery re-throws querier errors during render, so a device where
+  // IndexedDB cannot open would otherwise take down the whole footer;
+  // swallow it here and let only the Data version line degrade.
+  const dataVersion = useLiveQuery(
+    () => getDataVersion().catch(() => undefined),
+    [],
+  );
 
   const runCheck = () => {
     setCheck('checking');
@@ -46,17 +54,20 @@ export function VersionFooter() {
     }).then(setCheck);
   };
 
-  const copyDiagnostics = () => {
+  const copyDiagnostics = async () => {
     const block = [
       `version: ${buildInfo.version}`,
       `commit: ${buildInfo.commit}`,
       `builtAt: ${buildInfo.builtAt}`,
       `dataVersion: ${dataVersion ?? 'unknown'}`,
     ].join('\n');
-    void navigator.clipboard.writeText(block).then(() => {
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    });
+    try {
+      await navigator.clipboard.writeText(block);
+      setCopyState('copied');
+    } catch {
+      setCopyState('failed');
+    }
+    window.setTimeout(() => setCopyState('idle'), 2000);
   };
 
   return (
@@ -77,10 +88,12 @@ export function VersionFooter() {
           <div className="flex gap-4">
             <button
               type="button"
-              onClick={copyDiagnostics}
+              onClick={() => void copyDiagnostics()}
               className="cursor-pointer underline"
             >
-              {copied ? t('shell.version.copied') : t('shell.version.copy')}
+              {copyState === 'copied' && t('shell.version.copied')}
+              {copyState === 'failed' && t('shell.version.copyFailed')}
+              {copyState === 'idle' && t('shell.version.copy')}
             </button>
             <button
               type="button"

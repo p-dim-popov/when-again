@@ -13,9 +13,17 @@ const base = process.env.BASE_PATH ?? '/when-again/';
 // bundle via `define`, published as dist/version.json, and turned into a git
 // tag by the deploy workflow. Minute precision, UTC.
 const builtAt = `${new Date().toISOString().slice(0, 16)}:00Z`;
+// Building from a source tarball (no .git) must still succeed, so a missing
+// git binary/repo falls back to 'unknown' instead of failing the build.
+let commit: string;
+try {
+  commit = execSync('git rev-parse --short HEAD').toString().trim();
+} catch {
+  commit = 'unknown';
+}
 const buildInfo = {
   version: `${builtAt.slice(0, 10)}-${builtAt.slice(11, 13)}${builtAt.slice(14, 16)}`,
-  commit: execSync('git rev-parse --short HEAD').toString().trim(),
+  commit,
   builtAt,
 };
 

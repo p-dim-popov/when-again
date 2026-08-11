@@ -18,6 +18,7 @@ const en = {
   'shell.version.data': 'Data version',
   'shell.version.copy': 'Copy',
   'shell.version.copied': 'Copied',
+  'shell.version.copyFailed': 'Could not copy.',
   'shell.version.check': 'Check for updates',
   'shell.version.checking': 'Checking…',
   'shell.version.upToDate': 'You are up to date.',
@@ -44,6 +45,7 @@ const bg = {
   'shell.version.data': 'Версия на данните',
   'shell.version.copy': 'Копирай',
   'shell.version.copied': 'Копирано',
+  'shell.version.copyFailed': 'Копирането е неуспешно.',
   'shell.version.check': 'Провери за нова версия',
   'shell.version.checking': 'Проверка…',
   'shell.version.upToDate': 'Използвате най-новата версия.',
@@ -72,6 +74,7 @@ declare module '../i18n' {
     'shell.version.data': true;
     'shell.version.copy': true;
     'shell.version.copied': true;
+    'shell.version.copyFailed': true;
     'shell.version.check': true;
     'shell.version.checking': true;
     'shell.version.upToDate': true;
