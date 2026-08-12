@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { t, type Language } from '../i18n';
 import {
@@ -51,18 +51,20 @@ function Segmented<T extends string | null>({
 function ProfileSection({
   initialName,
   initialAddress,
+  saved,
+  onSaved,
 }: {
   initialName: string;
   initialAddress: string;
+  saved: boolean;
+  onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
   const [address, setAddress] = useState(initialAddress);
-  const [saved, setSaved] = useState(false);
 
   const save = async () => {
     await updateSettings({ providerName: name, address: address || undefined });
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2000);
+    onSaved();
   };
 
   return (
@@ -110,6 +112,20 @@ function ProfileSection({
 // The real Settings screen (#7, replaces the Epic-4 placeholder).
 export function SettingsScreen() {
   const settings = useLiveQuery(() => getSettings(), []);
+  // Lives here (not in ProfileSection) so it survives the section's own
+  // remount: saving changes settings.providerName/address, which changes
+  // ProfileSection's `key` below (that key exists to resync the form's
+  // local input state after an *external* change, e.g. a backup import),
+  // remounting it with fresh local state. A "saved" flag stored inside
+  // ProfileSection would be wiped by that remount before it ever painted.
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  useEffect(() => {
+    if (!profileSaved) return;
+    const timer = window.setTimeout(() => setProfileSaved(false), 2000);
+    return () => window.clearTimeout(timer);
+  }, [profileSaved]);
+
   if (settings === undefined) return null;
 
   return (
@@ -138,6 +154,8 @@ export function SettingsScreen() {
           key={`${settings.providerName}|${settings.address ?? ''}`}
           initialName={settings.providerName}
           initialAddress={settings.address ?? ''}
+          saved={profileSaved}
+          onSaved={() => setProfileSaved(true)}
         />
       )}
 

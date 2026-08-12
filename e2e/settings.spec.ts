@@ -36,7 +36,9 @@ test('provider profile reaches the share payload', async ({ page }) => {
   await gotoAsProvider(page, '/when-again/settings');
   await page.getByTestId('profile-name').fill('Studio X');
   await page.getByTestId('profile-save').click();
-  await expect(page.getByTestId('profile-save')).toBeVisible();
+  await expect(
+    page.getByTestId('profile-section').getByRole('status'),
+  ).toHaveText('Saved');
 
   // Book a minimal appointment the way provider-booking.spec.ts /
   // handoff.spec.ts do, reach /appointment/saved, and assert the share
