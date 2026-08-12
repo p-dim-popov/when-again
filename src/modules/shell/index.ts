@@ -1,4 +1,5 @@
 export { AppShell } from './AppShell';
+export { ClientVisitsList } from './ClientVisitsList';
 export { Placeholder } from './Placeholder';
 export { SettingsScreen } from './SettingsScreen';
 export { UpdateBanner } from './UpdateBanner';

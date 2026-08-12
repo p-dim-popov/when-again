@@ -31,6 +31,13 @@ const en = {
   'shell.clientHome.cancelled': 'Cancelled',
   'shell.clientHome.empty':
     'Appointments you receive from a salon appear here.',
+  'shell.chooser.title': 'How will you use when-again?',
+  'shell.chooser.client': 'I book appointments',
+  'shell.chooser.clientHint': 'See the visits a salon sends you.',
+  'shell.chooser.provider': 'I manage a schedule',
+  'shell.chooser.providerHint': 'Keep your calendar and share visits.',
+  'shell.chooser.note': 'You can change this later in Settings.',
+  'shell.tab.home': 'Home',
 } satisfies Strings;
 
 const bg = {
@@ -64,6 +71,13 @@ const bg = {
   'shell.clientHome.cancelled': 'Отменен',
   'shell.clientHome.empty':
     'Часовете, които получите от салон, се показват тук.',
+  'shell.chooser.title': 'Как ще използвате when-again?',
+  'shell.chooser.client': 'Записвам си часове',
+  'shell.chooser.clientHint': 'Вижте часовете, които салонът ви изпраща.',
+  'shell.chooser.provider': 'Управлявам график',
+  'shell.chooser.providerHint': 'Водете календара си и споделяйте часове.',
+  'shell.chooser.note': 'Можете да промените това по-късно в Настройки.',
+  'shell.tab.home': 'Начало',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -97,5 +111,12 @@ declare module '../i18n' {
     'shell.clientHome.past': true;
     'shell.clientHome.cancelled': true;
     'shell.clientHome.empty': true;
+    'shell.chooser.title': true;
+    'shell.chooser.client': true;
+    'shell.chooser.clientHint': true;
+    'shell.chooser.provider': true;
+    'shell.chooser.providerHint': true;
+    'shell.chooser.note': true;
+    'shell.tab.home': true;
   }
 }

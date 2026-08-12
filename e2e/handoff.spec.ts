@@ -1,11 +1,12 @@
 import { expect, type Page, test } from '@playwright/test';
+import { gotoAsProvider } from './helpers';
 
 const BASE = '/when-again/';
 
 async function bookAndReachShare(
   page: Page,
 ): Promise<{ link: string; dateKey: string }> {
-  await page.goto(BASE);
+  await gotoAsProvider(page, BASE);
   await page.getByRole('link', { name: 'New', exact: true }).click();
   await page.getByRole('button', { name: 'Next month' }).click();
   await page.getByRole('button', { name: '15', exact: true }).click();
