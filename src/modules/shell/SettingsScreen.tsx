@@ -1,51 +1,181 @@
+import { useState } from 'react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { t, type Language } from '../i18n';
+import {
+  getSettings,
+  updateSettings,
+  type Mode,
+  type Theme,
+} from '../settings';
+import { BackupSection } from './BackupSection';
 import { applyLanguageChoice } from './switchLanguage';
+import { applyThemeChoice } from './switchTheme';
 import { VersionFooter } from './VersionFooter';
 
-// TEMPORARY language toggle — removed when Epic 7 ships the real Settings
-// screen (and the provider/client mode switch). Both call the same
-// applyLanguageChoice contract, so the permanent control is a drop-in
-// replacement for this widget.
-function LanguageToggle() {
-  const choose = (language: Language | null) => {
-    void applyLanguageChoice(language);
-  };
+function Segmented<T extends string | null>({
+  value,
+  options,
+  onChange,
+  testId,
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  testId: string;
+}) {
   return (
-    <p>
-      <button type="button" onClick={() => choose('bg')}>
-        БГ
-      </button>{' '}
-      <button type="button" onClick={() => choose('en')}>
-        EN
-      </button>{' '}
-      <button type="button" onClick={() => choose(null)}>
-        {t('shell.settings.lang.auto')}
-      </button>
-    </p>
+    <div
+      className="border-line bg-surface rounded-card inline-flex overflow-hidden border"
+      role="group"
+      data-testid={testId}
+    >
+      {options.map((option) => (
+        <button
+          key={String(option.value)}
+          type="button"
+          aria-pressed={option.value === value}
+          onClick={() => onChange(option.value)}
+          className={`cursor-pointer border-0 px-4 py-2 text-sm ${
+            option.value === value
+              ? 'bg-accent text-on-accent font-[650]'
+              : 'bg-surface text-ink'
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
-// TEMPORARY Settings screen for Epic 4. Epic 7 replaces this with the real
-// Settings screen (services, providers) and the provider/client mode switch;
-// until then this keeps the language toggle reachable from the app.
-export function SettingsScreen() {
+function ProfileSection({
+  initialName,
+  initialAddress,
+}: {
+  initialName: string;
+  initialAddress: string;
+}) {
+  const [name, setName] = useState(initialName);
+  const [address, setAddress] = useState(initialAddress);
+  const [saved, setSaved] = useState(false);
+
+  const save = async () => {
+    await updateSettings({ providerName: name, address: address || undefined });
+    setSaved(true);
+    window.setTimeout(() => setSaved(false), 2000);
+  };
+
   return (
-    <main
-      style={{
-        display: 'grid',
-        placeItems: 'center',
-        minHeight: '60vh',
-        textAlign: 'center',
-        padding: 24,
-      }}
-    >
-      <div>
-        <h1>{t('shell.placeholder.settings')}</h1>
-        <p>{t('shell.soon')}</p>
-        <p>{t('shell.settings.tagline')}</p>
-        <LanguageToggle />
-        <VersionFooter />
+    <section className="flex flex-col gap-2" data-testid="profile-section">
+      <h2 className="text-faint text-sm font-semibold">
+        {t('shell.settings.profile.title')}
+      </h2>
+      <label className="text-ink flex flex-col gap-1 text-sm">
+        {t('shell.settings.profile.name')}
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          data-testid="profile-name"
+          className="border-line bg-surface text-ink rounded-card min-h-11 border px-3"
+        />
+      </label>
+      <label className="text-ink flex flex-col gap-1 text-sm">
+        {t('shell.settings.profile.address')}
+        <input
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          data-testid="profile-address"
+          className="border-line bg-surface text-ink rounded-card min-h-11 border px-3"
+        />
+      </label>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => void save()}
+          data-testid="profile-save"
+          className="bg-accent text-on-accent rounded-card cursor-pointer border-0 px-4 py-2 text-sm font-[650]"
+        >
+          {t('shell.settings.profile.save')}
+        </button>
+        {saved && (
+          <span className="text-faint text-sm" role="status">
+            {t('shell.settings.profile.saved')}
+          </span>
+        )}
       </div>
+    </section>
+  );
+}
+
+// The real Settings screen (#7, replaces the Epic-4 placeholder).
+export function SettingsScreen() {
+  const settings = useLiveQuery(() => getSettings(), []);
+  if (settings === undefined) return null;
+
+  return (
+    <main className="flex flex-col gap-6 p-4">
+      <h1 className="text-ink font-serif text-xl">
+        {t('shell.settings.title')}
+      </h1>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-faint text-sm font-semibold">
+          {t('shell.settings.mode.label')}
+        </h2>
+        <Segmented<Mode>
+          value={settings.mode ?? 'provider'}
+          testId="mode-switch"
+          options={[
+            { value: 'provider', label: t('shell.settings.mode.provider') },
+            { value: 'client', label: t('shell.settings.mode.client') },
+          ]}
+          onChange={(mode) => void updateSettings({ mode })}
+        />
+      </section>
+
+      {settings.mode === 'provider' && (
+        <ProfileSection
+          key={`${settings.providerName}|${settings.address ?? ''}`}
+          initialName={settings.providerName}
+          initialAddress={settings.address ?? ''}
+        />
+      )}
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-faint text-sm font-semibold">
+          {t('shell.settings.appearance.title')}
+        </h2>
+        <Segmented<Theme | null>
+          value={settings.theme}
+          testId="theme-switch"
+          options={[
+            { value: 'light', label: t('shell.settings.appearance.light') },
+            { value: 'dark', label: t('shell.settings.appearance.dark') },
+            { value: null, label: t('shell.settings.appearance.auto') },
+          ]}
+          onChange={(theme) => void applyThemeChoice(theme)}
+        />
+      </section>
+
+      <section className="flex flex-col gap-2">
+        <h2 className="text-faint text-sm font-semibold">
+          {t('shell.settings.language.title')}
+        </h2>
+        <Segmented<Language | null>
+          value={settings.language}
+          testId="language-switch"
+          options={[
+            { value: 'bg', label: 'БГ' },
+            { value: 'en', label: 'EN' },
+            { value: null, label: t('shell.settings.lang.auto') },
+          ]}
+          onChange={(language) => void applyLanguageChoice(language)}
+        />
+      </section>
+
+      {settings.mode === 'provider' && <BackupSection />}
+
+      <VersionFooter />
     </main>
   );
 }

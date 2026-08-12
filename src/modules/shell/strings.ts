@@ -8,10 +8,21 @@ const en = {
   'shell.tab.settings': 'Settings',
   'shell.soon': 'Coming soon',
   'shell.placeholder.clients': 'Clients',
-  'shell.placeholder.settings': 'Settings',
-  'shell.settings.tagline':
-    'Appointment reminders. No server. No accounts. No fees.',
   'shell.settings.lang.auto': 'Auto',
+  'shell.settings.title': 'Settings',
+  'shell.settings.mode.label': 'Mode',
+  'shell.settings.mode.provider': 'Provider',
+  'shell.settings.mode.client': 'Client',
+  'shell.settings.profile.title': 'Profile',
+  'shell.settings.profile.name': 'Business name',
+  'shell.settings.profile.address': 'Address',
+  'shell.settings.profile.save': 'Save',
+  'shell.settings.profile.saved': 'Saved',
+  'shell.settings.appearance.title': 'Appearance',
+  'shell.settings.appearance.light': 'Light',
+  'shell.settings.appearance.dark': 'Dark',
+  'shell.settings.appearance.auto': 'Auto',
+  'shell.settings.language.title': 'Language',
   'shell.update.message': 'A new version is ready.',
   'shell.update.action': 'Refresh',
   'shell.version.dev': 'dev',
@@ -60,10 +71,21 @@ const bg = {
   'shell.tab.settings': 'Настройки',
   'shell.soon': 'Скоро',
   'shell.placeholder.clients': 'Клиенти',
-  'shell.placeholder.settings': 'Настройки',
-  'shell.settings.tagline':
-    'Напомняния за часове. Без сървър. Без акаунти. Без такси.',
   'shell.settings.lang.auto': 'Автоматично',
+  'shell.settings.title': 'Настройки',
+  'shell.settings.mode.label': 'Режим',
+  'shell.settings.mode.provider': 'Салон',
+  'shell.settings.mode.client': 'Клиент',
+  'shell.settings.profile.title': 'Профил',
+  'shell.settings.profile.name': 'Име на салона',
+  'shell.settings.profile.address': 'Адрес',
+  'shell.settings.profile.save': 'Запази',
+  'shell.settings.profile.saved': 'Запазено',
+  'shell.settings.appearance.title': 'Изглед',
+  'shell.settings.appearance.light': 'Светъл',
+  'shell.settings.appearance.dark': 'Тъмен',
+  'shell.settings.appearance.auto': 'Автоматично',
+  'shell.settings.language.title': 'Език',
   'shell.update.message': 'Готова е нова версия.',
   'shell.update.action': 'Обнови',
   'shell.version.dev': 'dev',
@@ -116,9 +138,21 @@ declare module '../i18n' {
     'shell.tab.settings': true;
     'shell.soon': true;
     'shell.placeholder.clients': true;
-    'shell.placeholder.settings': true;
-    'shell.settings.tagline': true;
     'shell.settings.lang.auto': true;
+    'shell.settings.title': true;
+    'shell.settings.mode.label': true;
+    'shell.settings.mode.provider': true;
+    'shell.settings.mode.client': true;
+    'shell.settings.profile.title': true;
+    'shell.settings.profile.name': true;
+    'shell.settings.profile.address': true;
+    'shell.settings.profile.save': true;
+    'shell.settings.profile.saved': true;
+    'shell.settings.appearance.title': true;
+    'shell.settings.appearance.light': true;
+    'shell.settings.appearance.dark': true;
+    'shell.settings.appearance.auto': true;
+    'shell.settings.language.title': true;
     'shell.update.message': true;
     'shell.update.action': true;
     'shell.version.dev': true;

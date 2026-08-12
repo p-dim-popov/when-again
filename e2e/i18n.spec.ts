@@ -1,19 +1,22 @@
 import { expect, test } from '@playwright/test';
 import { gotoAsProvider } from './helpers';
 
-const EN_TAGLINE = 'Appointment reminders. No server. No accounts. No fees.';
-const BG_TAGLINE = 'Напомняния за часове. Без сървър. Без акаунти. Без такси.';
+const EN_TITLE = 'Settings';
+const BG_TITLE = 'Настройки';
 
-test('defaults to English and shows the tagline', async ({ page }) => {
+test('defaults to English', async ({ page }) => {
   await gotoAsProvider(page, '/when-again/settings');
-  await expect(page.getByText(EN_TAGLINE)).toBeVisible();
+  await expect(page.getByRole('heading', { name: EN_TITLE })).toBeVisible();
 });
 
 test('switching to Bulgarian persists across a reload', async ({ page }) => {
   await gotoAsProvider(page, '/when-again/settings');
-  await page.getByRole('button', { name: 'БГ' }).click();
-  await expect(page.getByText(BG_TAGLINE)).toBeVisible();
+  await page
+    .getByTestId('language-switch')
+    .getByRole('button', { name: 'БГ' })
+    .click();
+  await expect(page.getByRole('heading', { name: BG_TITLE })).toBeVisible();
 
   await page.reload();
-  await expect(page.getByText(BG_TAGLINE)).toBeVisible();
+  await expect(page.getByRole('heading', { name: BG_TITLE })).toBeVisible();
 });
