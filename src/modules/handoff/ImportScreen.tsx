@@ -10,6 +10,7 @@ import {
 } from '../received';
 import { decodeHandoff } from './codec';
 import { classifyImport, type ImportOutcome } from './classify';
+import { adoptClientModeIfUnset } from '../settings';
 
 function CalmScreen({
   title,
@@ -168,6 +169,7 @@ export function ImportScreen() {
     setWriteError(false);
     try {
       await upsertReceived(incoming);
+      await adoptClientModeIfUnset();
       setSaved(next);
     } catch {
       setWriteError(true);

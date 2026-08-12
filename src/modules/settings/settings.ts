@@ -9,6 +9,7 @@ export interface ServicePreset {
 
 export type Language = 'bg' | 'en';
 export type Mode = 'provider' | 'client';
+export type Theme = 'light' | 'dark';
 
 export interface Settings {
   providerName: string;
@@ -16,6 +17,8 @@ export interface Settings {
   services: ServicePreset[];
   language: Language | null;
   mode: Mode | null;
+  /** Explicit theme choice; null = follow the OS (prefers-color-scheme). */
+  theme: Theme | null;
   /** ISO timestamp of the last backup export, null if never backed up. */
   lastBackupAt: string | null;
 }
@@ -25,6 +28,7 @@ export const DEFAULT_SETTINGS: Settings = {
   services: [],
   language: null,
   mode: null,
+  theme: null,
   lastBackupAt: null,
 };
 
@@ -66,4 +70,12 @@ export async function replaceSettings(settings: Settings): Promise<void> {
     id: SINGLETON_ID,
     ...settings,
   } satisfies StoredSettings);
+}
+
+// Import inference (#7): the first thing a fresh install does via a shared
+// QR/link is import — that person is a client. Only ever fills in a null
+// mode; a provider scanning another salon's QR stays a provider.
+export async function adoptClientModeIfUnset(): Promise<void> {
+  const current = await getSettings();
+  if (current.mode === null) await updateSettings({ mode: 'client' });
 }

@@ -1,5 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { ScheduleScreen, todayKey } from '../../modules/schedule';
+import { ClientVisitsList } from '../../modules/shell';
+import { getSettings } from '../../modules/settings';
 
 interface TodaySearch {
   date?: string;
@@ -23,8 +26,14 @@ export const Route = createFileRoute('/')({
     resume:
       search.resume === true || search.resume === 'true' ? true : undefined,
   }),
-  component: TodayRoute,
+  component: Home,
 });
+
+function Home() {
+  const settings = useLiveQuery(() => getSettings(), []);
+  if (settings === undefined) return null;
+  return settings.mode === 'client' ? <ClientVisitsList /> : <TodayRoute />;
+}
 
 function TodayRoute() {
   const { date, appt, resume } = Route.useSearch();

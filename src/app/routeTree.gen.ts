@@ -10,26 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as BookRouteImport } from './routes/book'
-import { Route as ClientsRouteImport } from './routes/clients'
+import { Route as ProviderRouteImport } from './routes/_provider'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as AppointmentNewRouteImport } from './routes/appointment.new'
-import { Route as AppointmentSavedRouteImport } from './routes/appointment.saved'
+import { Route as ProviderBookRouteImport } from './routes/_provider.book'
+import { Route as ProviderClientsRouteImport } from './routes/_provider.clients'
+import { Route as ProviderAppointmentNewRouteImport } from './routes/_provider.appointment.new'
+import { Route as ProviderAppointmentSavedRouteImport } from './routes/_provider.appointment.saved'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BookRoute = BookRouteImport.update({
-  id: '/book',
-  path: '/book',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ClientsRoute = ClientsRouteImport.update({
-  id: '/clients',
-  path: '/clients',
+const ProviderRoute = ProviderRouteImport.update({
+  id: '/_provider',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImportRoute = ImportRouteImport.update({
@@ -42,83 +37,93 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppointmentNewRoute = AppointmentNewRouteImport.update({
+const ProviderBookRoute = ProviderBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderClientsRoute = ProviderClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => ProviderRoute,
+} as any)
+const ProviderAppointmentNewRoute = ProviderAppointmentNewRouteImport.update({
   id: '/appointment/new',
   path: '/appointment/new',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => ProviderRoute,
 } as any)
-const AppointmentSavedRoute = AppointmentSavedRouteImport.update({
-  id: '/appointment/saved',
-  path: '/appointment/saved',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const ProviderAppointmentSavedRoute =
+  ProviderAppointmentSavedRouteImport.update({
+    id: '/appointment/saved',
+    path: '/appointment/saved',
+    getParentRoute: () => ProviderRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/book': typeof BookRoute
-  '/clients': typeof ClientsRoute
   '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
-  '/appointment/new': typeof AppointmentNewRoute
-  '/appointment/saved': typeof AppointmentSavedRoute
+  '/book': typeof ProviderBookRoute
+  '/clients': typeof ProviderClientsRoute
+  '/appointment/new': typeof ProviderAppointmentNewRoute
+  '/appointment/saved': typeof ProviderAppointmentSavedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/book': typeof BookRoute
-  '/clients': typeof ClientsRoute
   '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
-  '/appointment/new': typeof AppointmentNewRoute
-  '/appointment/saved': typeof AppointmentSavedRoute
+  '/book': typeof ProviderBookRoute
+  '/clients': typeof ProviderClientsRoute
+  '/appointment/new': typeof ProviderAppointmentNewRoute
+  '/appointment/saved': typeof ProviderAppointmentSavedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/book': typeof BookRoute
-  '/clients': typeof ClientsRoute
+  '/_provider': typeof ProviderRouteWithChildren
   '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
-  '/appointment/new': typeof AppointmentNewRoute
-  '/appointment/saved': typeof AppointmentSavedRoute
+  '/_provider/book': typeof ProviderBookRoute
+  '/_provider/clients': typeof ProviderClientsRoute
+  '/_provider/appointment/new': typeof ProviderAppointmentNewRoute
+  '/_provider/appointment/saved': typeof ProviderAppointmentSavedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/book'
-    | '/clients'
     | '/import'
     | '/settings'
+    | '/book'
+    | '/clients'
     | '/appointment/new'
     | '/appointment/saved'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/book'
-    | '/clients'
     | '/import'
     | '/settings'
+    | '/book'
+    | '/clients'
     | '/appointment/new'
     | '/appointment/saved'
   id:
     | '__root__'
     | '/'
-    | '/book'
-    | '/clients'
+    | '/_provider'
     | '/import'
     | '/settings'
-    | '/appointment/new'
-    | '/appointment/saved'
+    | '/_provider/book'
+    | '/_provider/clients'
+    | '/_provider/appointment/new'
+    | '/_provider/appointment/saved'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BookRoute: typeof BookRoute
-  ClientsRoute: typeof ClientsRoute
+  ProviderRoute: typeof ProviderRouteWithChildren
   ImportRoute: typeof ImportRoute
   SettingsRoute: typeof SettingsRoute
-  AppointmentNewRoute: typeof AppointmentNewRoute
-  AppointmentSavedRoute: typeof AppointmentSavedRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -130,18 +135,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/book': {
-      id: '/book'
-      path: '/book'
-      fullPath: '/book'
-      preLoaderRoute: typeof BookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/clients': {
-      id: '/clients'
-      path: '/clients'
-      fullPath: '/clients'
-      preLoaderRoute: typeof ClientsRouteImport
+    '/_provider': {
+      id: '/_provider'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ProviderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/import': {
@@ -158,31 +156,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/appointment/new': {
-      id: '/appointment/new'
+    '/_provider/book': {
+      id: '/_provider/book'
+      path: '/book'
+      fullPath: '/book'
+      preLoaderRoute: typeof ProviderBookRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/_provider/clients': {
+      id: '/_provider/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof ProviderClientsRouteImport
+      parentRoute: typeof ProviderRoute
+    }
+    '/_provider/appointment/new': {
+      id: '/_provider/appointment/new'
       path: '/appointment/new'
       fullPath: '/appointment/new'
-      preLoaderRoute: typeof AppointmentNewRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ProviderAppointmentNewRouteImport
+      parentRoute: typeof ProviderRoute
     }
-    '/appointment/saved': {
-      id: '/appointment/saved'
+    '/_provider/appointment/saved': {
+      id: '/_provider/appointment/saved'
       path: '/appointment/saved'
       fullPath: '/appointment/saved'
-      preLoaderRoute: typeof AppointmentSavedRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof ProviderAppointmentSavedRouteImport
+      parentRoute: typeof ProviderRoute
     }
   }
 }
 
+interface ProviderRouteChildren {
+  ProviderBookRoute: typeof ProviderBookRoute
+  ProviderClientsRoute: typeof ProviderClientsRoute
+  ProviderAppointmentNewRoute: typeof ProviderAppointmentNewRoute
+  ProviderAppointmentSavedRoute: typeof ProviderAppointmentSavedRoute
+}
+
+const ProviderRouteChildren: ProviderRouteChildren = {
+  ProviderBookRoute: ProviderBookRoute,
+  ProviderClientsRoute: ProviderClientsRoute,
+  ProviderAppointmentNewRoute: ProviderAppointmentNewRoute,
+  ProviderAppointmentSavedRoute: ProviderAppointmentSavedRoute,
+}
+
+const ProviderRouteWithChildren = ProviderRoute._addFileChildren(
+  ProviderRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BookRoute: BookRoute,
-  ClientsRoute: ClientsRoute,
+  ProviderRoute: ProviderRouteWithChildren,
   ImportRoute: ImportRoute,
   SettingsRoute: SettingsRoute,
-  AppointmentNewRoute: AppointmentNewRoute,
-  AppointmentSavedRoute: AppointmentSavedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

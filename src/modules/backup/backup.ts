@@ -24,14 +24,18 @@ export async function exportBackup(
   now: Date = new Date(),
 ): Promise<BackupFile> {
   const exportedAt = now.toISOString();
+  // Read before stamping: if a read fails, lastBackupAt must stay
+  // untouched — a stamped time with no file produced would lie.
+  const clients = await listClients();
+  const appointments = await listAllAppointments();
   const settings = await updateSettings({ lastBackupAt: exportedAt });
   return {
     app: 'when-again',
     version: BACKUP_VERSION,
     exportedAt,
     settings,
-    clients: await listClients(),
-    appointments: await listAllAppointments(),
+    clients,
+    appointments,
   };
 }
 

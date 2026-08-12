@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  adoptClientModeIfUnset,
   DEFAULT_SETTINGS,
   getSettings,
   replaceSettings,
@@ -45,5 +46,29 @@ describe('settings', () => {
     };
     await replaceSettings(next);
     expect(await getSettings()).toEqual(next);
+  });
+});
+
+describe('theme setting', () => {
+  it('defaults to null (auto)', async () => {
+    expect((await getSettings()).theme).toBeNull();
+  });
+
+  it('persists an explicit theme', async () => {
+    await updateSettings({ theme: 'dark' });
+    expect((await getSettings()).theme).toBe('dark');
+  });
+});
+
+describe('adoptClientModeIfUnset', () => {
+  it('sets client mode when mode is null', async () => {
+    await adoptClientModeIfUnset();
+    expect((await getSettings()).mode).toBe('client');
+  });
+
+  it('never flips an existing mode', async () => {
+    await updateSettings({ mode: 'provider' });
+    await adoptClientModeIfUnset();
+    expect((await getSettings()).mode).toBe('provider');
   });
 });

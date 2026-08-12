@@ -5,6 +5,6 @@ import { ShareLanding } from '../../modules/booking';
 // `patchDraft({ appointmentId })`; `ShareLanding` reads that id, shows a
 // calm confirmation, and is the funnel's reset point (its "Готово" calls
 // `resetDraft()`). No payload/QR here — that's Epic 6.
-export const Route = createFileRoute('/appointment/saved')({
+export const Route = createFileRoute('/_provider/appointment/saved')({
   component: ShareLanding,
 });

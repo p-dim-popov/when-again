@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { gotoAsProvider } from './helpers';
 
 // Acceptance test for Epic 4 (provider mode — schedule & appointments).
 // Follows the "Design update" flows at the bottom of
@@ -28,7 +29,7 @@ const BASE = '/when-again/';
  * that is guaranteed free (fresh IndexedDB) and guaranteed in the future.
  * Returns the resulting day's `'YYYY-MM-DD'` key, read back off the URL. */
 async function pickFutureDay(page: Page): Promise<string> {
-  await page.goto(BASE);
+  await gotoAsProvider(page, BASE);
   await page.getByRole('link', { name: 'New', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Choose a day' }),

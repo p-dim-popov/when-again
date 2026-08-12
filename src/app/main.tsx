@@ -12,7 +12,7 @@ import {
   registerStrings,
   type Language,
 } from '../modules/i18n';
-import { shellStrings } from '../modules/shell';
+import { applyThemeAttribute, shellStrings } from '../modules/shell';
 import { scheduleStrings } from '../modules/schedule';
 import { bookingStrings } from '../modules/booking';
 import { handoffStrings } from '../modules/handoff';
@@ -50,6 +50,7 @@ async function bootstrap() {
   try {
     const settings = await getSettings();
     language = settings.language ?? detectLanguage();
+    applyThemeAttribute(settings.theme);
   } catch {
     language = detectLanguage();
   }
