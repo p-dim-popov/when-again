@@ -12,7 +12,7 @@ interface BookSearch {
   resume?: boolean;
 }
 
-export const Route = createFileRoute('/book')({
+export const Route = createFileRoute('/_provider/book')({
   validateSearch: (search: Record<string, unknown>): BookSearch => ({
     date: typeof search.date === 'string' ? search.date : undefined,
     appt: typeof search.appt === 'string' ? search.appt : undefined,

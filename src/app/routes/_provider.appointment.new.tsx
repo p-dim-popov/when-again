@@ -18,7 +18,7 @@ interface NewAppointmentSearch {
 // `modules/booking/draftStore.ts`); it seeds the draft with these search
 // params on mount and its "Промени" control navigates back to `/` so the
 // provider can re-pick a time, then returns here.
-export const Route = createFileRoute('/appointment/new')({
+export const Route = createFileRoute('/_provider/appointment/new')({
   validateSearch: (search: Record<string, unknown>): NewAppointmentSearch => ({
     date: typeof search.date === 'string' ? search.date : undefined,
     time: typeof search.time === 'string' ? search.time : undefined,
