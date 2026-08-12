@@ -63,8 +63,11 @@ export default defineConfig({
         name: 'when-again',
         short_name: 'when-again',
         description: 'Appointment reminders. No server. No accounts. No fees.',
-        theme_color: '#1f2937',
-        background_color: '#ffffff',
+        // Keep in sync with the light --bg token in src/app/index.css (the
+        // manifest takes one value; the per-scheme theme-color metas in
+        // index.html handle dark at runtime).
+        theme_color: '#efebe2',
+        background_color: '#efebe2',
         display: 'standalone',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },

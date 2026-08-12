@@ -2,8 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#1f2937" />
+    <!-- viewport-fit=cover: opt into edge-to-edge on installed PWAs so
+         env(safe-area-inset-bottom) reports the gesture-bar height and the
+         tab bar (which already pads with it) paints behind the gesture pill
+         instead of Chrome drawing an opaque band below the app. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <!-- Matches the app's --bg token per scheme (see src/app/index.css). -->
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#efebe2"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0f1512"
+    />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" href="/logo.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
