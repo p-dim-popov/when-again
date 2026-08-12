@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { addAppointment, listAllAppointments } from '../appointments';
 import { addClient, listClients } from '../clients';
 import { destroyDb } from '../db';
@@ -9,6 +9,13 @@ import {
   isBackupStale,
   parseBackup,
 } from './backup';
+
+// Wraps the real implementation so every test but the one below behaves
+// unchanged; that one test overrides it for a single call.
+vi.mock('../appointments', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../appointments')>();
+  return { ...actual, listAllAppointments: vi.fn(actual.listAllAppointments) };
+});
 
 const at = (dateTime: string) => ({ dateTime, timeZone: 'Europe/Sofia' });
 
@@ -37,6 +44,17 @@ describe('exportBackup', () => {
     expect(backup.appointments).toHaveLength(1);
     expect(backup.settings.providerName).toBe('Salon Maria');
     expect((await getSettings()).lastBackupAt).toBe('2026-08-08T10:00:00.000Z');
+  });
+
+  it('does not stamp lastBackupAt when a read fails', async () => {
+    await seed();
+    const failure = new Error('indexeddb read failed');
+    vi.mocked(listAllAppointments).mockRejectedValueOnce(failure);
+
+    await expect(
+      exportBackup(new Date('2026-08-08T10:00:00.000Z')),
+    ).rejects.toThrow(failure);
+    expect((await getSettings()).lastBackupAt).toBeNull();
   });
 });
 

@@ -1,40 +1,49 @@
 import { useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import {
-  exportBackup,
-  importBackup,
-  isBackupStale,
-  type BackupFile,
-} from '../backup';
+import { exportBackup, isBackupStale, type BackupFile } from '../backup';
 import { t } from '../i18n';
 import { getSettings } from '../settings';
+import { applyImportedBackup } from './applyImport';
 import { backupFileName, readBackupText } from './backupFile';
 
 type ImportState =
   | { step: 'idle' }
   | { step: 'confirm'; backup: BackupFile }
   | { step: 'invalid' }
-  | { step: 'done' };
+  | { step: 'importFailed' };
 
 // Backup UI (#7): first UI over the Epic-3 backup module. Export downloads
 // the JSON (exportBackup stamps lastBackupAt itself); import validates,
 // then asks for explicit confirmation before replacing everything.
+// A successful import reloads the page (see applyImportedBackup) so the
+// running UI re-derives theme/language/mode from the imported settings —
+// that reload is the confirmation; there is no "done" state to render.
 export function BackupSection() {
   const settings = useLiveQuery(() => getSettings(), []);
   const [importState, setImportState] = useState<ImportState>({ step: 'idle' });
+  const [exportFailed, setExportFailed] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const download = async () => {
-    const backup = await exportBackup();
-    const blob = new Blob([JSON.stringify(backup, null, 2)], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = backupFileName(backup.exportedAt);
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      setExportFailed(false);
+      const backup = await exportBackup();
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = backupFileName(backup.exportedAt);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // WebKit/standalone-PWA hazard: revoking immediately can cut the
+      // download off before it starts, so defer it a tick.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch {
+      setExportFailed(true);
+    }
   };
 
   const onFilePicked = async (file: File | undefined) => {
@@ -50,8 +59,11 @@ export function BackupSection() {
   };
 
   const confirmImport = async (backup: BackupFile) => {
-    await importBackup(backup);
-    setImportState({ step: 'done' });
+    try {
+      await applyImportedBackup(backup);
+    } catch {
+      setImportState({ step: 'importFailed' });
+    }
   };
 
   if (settings === undefined) return null;
@@ -67,7 +79,7 @@ export function BackupSection() {
           ? t('shell.settings.backup.last', { date: last.slice(0, 10) })
           : t('shell.settings.backup.never')}
       </p>
-      {isBackupStale(last) && (
+      {last !== null && isBackupStale(last) && (
         <p className="text-faint text-sm" data-testid="backup-stale">
           {t('shell.settings.backup.stale')}
         </p>
@@ -99,6 +111,11 @@ export function BackupSection() {
           }}
         />
       </div>
+      {exportFailed && (
+        <p className="text-danger text-sm" role="status">
+          {t('shell.settings.backup.exportFailed')}
+        </p>
+      )}
       {importState.step === 'confirm' && (
         <div className="border-line bg-surface rounded-card flex flex-col gap-2 border p-3">
           <p className="text-ink text-sm">
@@ -130,9 +147,9 @@ export function BackupSection() {
           {t('shell.settings.backup.invalid')}
         </p>
       )}
-      {importState.step === 'done' && (
-        <p className="text-ink text-sm" role="status">
-          {t('shell.settings.backup.imported')}
+      {importState.step === 'importFailed' && (
+        <p className="text-danger text-sm" role="status">
+          {t('shell.settings.backup.importFailed')}
         </p>
       )}
     </section>

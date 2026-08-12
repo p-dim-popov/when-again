@@ -57,10 +57,12 @@ const en = {
   'shell.settings.backup.confirmAction': 'Replace',
   'shell.settings.backup.cancelAction': 'Cancel',
   'shell.settings.backup.invalid': 'This file is not a valid backup.',
-  'shell.settings.backup.imported': 'Backup imported.',
   'shell.settings.backup.last': 'Last backup: {date}',
   'shell.settings.backup.never': 'No backup yet.',
   'shell.settings.backup.stale': 'Your last backup is more than a month old.',
+  'shell.settings.backup.exportFailed': 'Could not export. Try again.',
+  'shell.settings.backup.importFailed':
+    'Could not restore the backup. Try again.',
 } satisfies Strings;
 
 const bg = {
@@ -120,11 +122,14 @@ const bg = {
   'shell.settings.backup.confirmAction': 'Замени',
   'shell.settings.backup.cancelAction': 'Отказ',
   'shell.settings.backup.invalid': 'Този файл не е валидно резервно копие.',
-  'shell.settings.backup.imported': 'Копието е възстановено.',
   'shell.settings.backup.last': 'Последно копие: {date}',
   'shell.settings.backup.never': 'Все още няма резервно копие.',
   'shell.settings.backup.stale':
     'Последното ви копие е отпреди повече от месец.',
+  'shell.settings.backup.exportFailed':
+    'Изтеглянето е неуспешно. Опитайте отново.',
+  'shell.settings.backup.importFailed':
+    'Възстановяването е неуспешно. Опитайте отново.',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -184,9 +189,10 @@ declare module '../i18n' {
     'shell.settings.backup.confirmAction': true;
     'shell.settings.backup.cancelAction': true;
     'shell.settings.backup.invalid': true;
-    'shell.settings.backup.imported': true;
     'shell.settings.backup.last': true;
     'shell.settings.backup.never': true;
     'shell.settings.backup.stale': true;
+    'shell.settings.backup.exportFailed': true;
+    'shell.settings.backup.importFailed': true;
   }
 }
