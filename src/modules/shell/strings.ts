@@ -25,6 +25,12 @@ const en = {
   'shell.version.updateAvailable': 'New version: {version}',
   'shell.version.checkFailed':
     'Could not check. Connect to the internet and try again.',
+  'shell.clientHome.title': 'Your appointments',
+  'shell.clientHome.upcoming': 'Upcoming',
+  'shell.clientHome.past': 'Past',
+  'shell.clientHome.cancelled': 'Cancelled',
+  'shell.clientHome.empty':
+    'Appointments you receive from a salon appear here.',
 } satisfies Strings;
 
 const bg = {
@@ -52,6 +58,12 @@ const bg = {
   'shell.version.updateAvailable': 'Нова версия: {version}',
   'shell.version.checkFailed':
     'Проверката е неуспешна. Свържете се с интернет и опитайте отново.',
+  'shell.clientHome.title': 'Вашите часове',
+  'shell.clientHome.upcoming': 'Предстоящи',
+  'shell.clientHome.past': 'Минали',
+  'shell.clientHome.cancelled': 'Отменен',
+  'shell.clientHome.empty':
+    'Часовете, които получите от салон, се показват тук.',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -80,5 +92,10 @@ declare module '../i18n' {
     'shell.version.upToDate': true;
     'shell.version.updateAvailable': true;
     'shell.version.checkFailed': true;
+    'shell.clientHome.title': true;
+    'shell.clientHome.upcoming': true;
+    'shell.clientHome.past': true;
+    'shell.clientHome.cancelled': true;
+    'shell.clientHome.empty': true;
   }
 }
