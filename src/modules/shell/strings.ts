@@ -38,6 +38,18 @@ const en = {
   'shell.chooser.providerHint': 'Keep your calendar and share visits.',
   'shell.chooser.note': 'You can change this later in Settings.',
   'shell.tab.home': 'Home',
+  'shell.settings.backup.title': 'Backup',
+  'shell.settings.backup.export': 'Export backup',
+  'shell.settings.backup.import': 'Import backup',
+  'shell.settings.backup.confirm':
+    'Replace all data with the backup from {date}?',
+  'shell.settings.backup.confirmAction': 'Replace',
+  'shell.settings.backup.cancelAction': 'Cancel',
+  'shell.settings.backup.invalid': 'This file is not a valid backup.',
+  'shell.settings.backup.imported': 'Backup imported.',
+  'shell.settings.backup.last': 'Last backup: {date}',
+  'shell.settings.backup.never': 'No backup yet.',
+  'shell.settings.backup.stale': 'Your last backup is more than a month old.',
 } satisfies Strings;
 
 const bg = {
@@ -78,6 +90,19 @@ const bg = {
   'shell.chooser.providerHint': 'Водете календара си и споделяйте часове.',
   'shell.chooser.note': 'Можете да промените това по-късно в Настройки.',
   'shell.tab.home': 'Начало',
+  'shell.settings.backup.title': 'Резервно копие',
+  'shell.settings.backup.export': 'Изтегли резервно копие',
+  'shell.settings.backup.import': 'Възстанови от копие',
+  'shell.settings.backup.confirm':
+    'Да заменим ли всички данни с копието от {date}?',
+  'shell.settings.backup.confirmAction': 'Замени',
+  'shell.settings.backup.cancelAction': 'Отказ',
+  'shell.settings.backup.invalid': 'Този файл не е валидно резервно копие.',
+  'shell.settings.backup.imported': 'Копието е възстановено.',
+  'shell.settings.backup.last': 'Последно копие: {date}',
+  'shell.settings.backup.never': 'Все още няма резервно копие.',
+  'shell.settings.backup.stale':
+    'Последното ви копие е отпреди повече от месец.',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -118,5 +143,16 @@ declare module '../i18n' {
     'shell.chooser.providerHint': true;
     'shell.chooser.note': true;
     'shell.tab.home': true;
+    'shell.settings.backup.title': true;
+    'shell.settings.backup.export': true;
+    'shell.settings.backup.import': true;
+    'shell.settings.backup.confirm': true;
+    'shell.settings.backup.confirmAction': true;
+    'shell.settings.backup.cancelAction': true;
+    'shell.settings.backup.invalid': true;
+    'shell.settings.backup.imported': true;
+    'shell.settings.backup.last': true;
+    'shell.settings.backup.never': true;
+    'shell.settings.backup.stale': true;
   }
 }
