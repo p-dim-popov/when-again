@@ -90,3 +90,21 @@ appointments }`; import validates then replaces. IDs are `crypto.randomUUID()`.
 - Some cross-epic decisions are deferred deliberately; check the project's auto
   memory (loaded at session start) for the current list before building on the
   data layer or backup.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues (`p-dim-popov/when-again`), managed
+via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage labels are used as-is (`needs-triage`, `needs-info`,
+`ready-for-agent`, `ready-for-human`, `wontfix`). See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` at the repo root plus `docs/adr/`. See
+`docs/agents/domain.md`.
