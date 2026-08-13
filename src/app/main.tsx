@@ -47,6 +47,9 @@ async function bootstrap() {
     language = detectLanguage();
   }
   initI18n(language);
+  // Language changes always reload the page (switchLanguage / applyImport),
+  // so boot is the only seam that needs to set this. A future reactive
+  // language switch must update this too.
   document.documentElement.lang = language;
 
   createRoot(document.getElementById('root')!).render(

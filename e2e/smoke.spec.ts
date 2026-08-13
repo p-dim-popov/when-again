@@ -50,6 +50,7 @@ test('first run shows the mode chooser and the choice persists', async ({
 }) => {
   await page.goto('/when-again/');
   await expect(page.getByTestId('chooser-provider')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'When Again' })).toBeVisible();
   await page.getByTestId('chooser-client').click();
   await expect(page.getByTestId('client-home')).toBeVisible();
   await page.reload();
