@@ -47,7 +47,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="bg-bg text-ink relative flex h-[var(--app-h,100dvh)] flex-col overflow-hidden">
+    <div className="bg-bg text-ink fixed inset-x-0 top-0 flex h-[var(--app-h,100dvh)] flex-col overflow-hidden">
       <div className="flex-1 overflow-y-auto">
         <Outlet />
       </div>
