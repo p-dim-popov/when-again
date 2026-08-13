@@ -111,3 +111,20 @@ test('import re-applies the backup theme and reloads', async ({ page }) => {
     page.getByTestId('theme-switch').getByRole('button', { name: 'Auto' }),
   ).toHaveAttribute('aria-pressed', 'true');
 });
+
+test('language switch updates the document language', async ({ page }) => {
+  await gotoAsProvider(page, '/when-again/settings');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page
+    .getByTestId('language-switch')
+    .getByRole('button', { name: 'БГ' })
+    .click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'bg');
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'bg');
+  await page
+    .getByTestId('language-switch')
+    .getByRole('button', { name: 'EN' })
+    .click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+});

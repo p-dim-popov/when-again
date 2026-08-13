@@ -16,16 +16,8 @@ import { applyThemeAttribute, shellStrings } from '../modules/shell';
 import { scheduleStrings } from '../modules/schedule';
 import { bookingStrings } from '../modules/booking';
 import { handoffStrings } from '../modules/handoff';
-import '@fontsource/lora/cyrillic-500.css';
-import '@fontsource/lora/cyrillic-600.css';
-import '@fontsource/lora/latin-500.css';
-import '@fontsource/lora/latin-600.css';
-import '@fontsource/ibm-plex-sans/cyrillic-400.css';
-import '@fontsource/ibm-plex-sans/cyrillic-500.css';
-import '@fontsource/ibm-plex-sans/cyrillic-600.css';
-import '@fontsource/ibm-plex-sans/latin-400.css';
-import '@fontsource/ibm-plex-sans/latin-500.css';
-import '@fontsource/ibm-plex-sans/latin-600.css';
+import '@fontsource-variable/sofia-sans-condensed';
+import '@fontsource-variable/manrope';
 import './index.css';
 
 async function bootstrap() {
@@ -55,6 +47,10 @@ async function bootstrap() {
     language = detectLanguage();
   }
   initI18n(language);
+  // Language changes always reload the page (switchLanguage / applyImport),
+  // so boot is the only seam that needs to set this. A future reactive
+  // language switch must update this too.
+  document.documentElement.lang = language;
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

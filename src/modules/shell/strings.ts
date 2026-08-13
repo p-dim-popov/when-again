@@ -42,12 +42,14 @@ const en = {
   'shell.clientHome.cancelled': 'Cancelled',
   'shell.clientHome.empty':
     'Appointments you receive from a salon appear here.',
-  'shell.chooser.title': 'How will you use when-again?',
+  'shell.chooser.title': 'How will you use it?',
   'shell.chooser.client': 'I book appointments',
   'shell.chooser.clientHint': 'See the visits a salon sends you.',
   'shell.chooser.provider': 'I manage a schedule',
   'shell.chooser.providerHint': 'Keep your calendar and share visits.',
   'shell.chooser.note': 'You can change this later in Settings.',
+  'shell.welcome.tagline':
+    'Appointments on your phone — no accounts, no servers.',
   'shell.tab.home': 'Home',
   'shell.settings.backup.title': 'Backup',
   'shell.settings.backup.export': 'Export backup',
@@ -107,12 +109,14 @@ const bg = {
   'shell.clientHome.cancelled': 'Отменен',
   'shell.clientHome.empty':
     'Часовете, които получите от салон, се показват тук.',
-  'shell.chooser.title': 'Как ще използвате when-again?',
+  'shell.chooser.title': 'Как ще го използвате?',
   'shell.chooser.client': 'Записвам си часове',
   'shell.chooser.clientHint': 'Вижте часовете, които салонът ви изпраща.',
   'shell.chooser.provider': 'Управлявам график',
   'shell.chooser.providerHint': 'Водете календара си и споделяйте часове.',
   'shell.chooser.note': 'Можете да промените това по-късно в Настройки.',
+  'shell.welcome.tagline':
+    'Часове на вашия телефон — без акаунти, без сървъри.',
   'shell.tab.home': 'Начало',
   'shell.settings.backup.title': 'Резервно копие',
   'shell.settings.backup.export': 'Изтегли резервно копие',
@@ -181,6 +185,7 @@ declare module '../i18n' {
     'shell.chooser.provider': true;
     'shell.chooser.providerHint': true;
     'shell.chooser.note': true;
+    'shell.welcome.tagline': true;
     'shell.tab.home': true;
     'shell.settings.backup.title': true;
     'shell.settings.backup.export': true;

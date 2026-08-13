@@ -112,7 +112,7 @@ export function MonthPicker({
   return (
     <div className="flex flex-col pb-2">
       <div className="px-[15px] pt-3.5 text-center">
-        <h1 className="font-serif text-[15px] font-[680] tracking-[-0.01em]">
+        <h1 className="font-display text-[15px] font-[680] tracking-[-0.01em]">
           {t('booking.pickDay')}
         </h1>
       </div>
