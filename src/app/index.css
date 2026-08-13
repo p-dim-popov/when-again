@@ -114,14 +114,14 @@
     -webkit-text-size-adjust: 100%;
     height: 100%;
   }
-  /* The app is a fixed frame (see shell/AppShell): the content region is the
-     only scroller, so the document itself must never scroll — Brave's PWA
-     shell exposes a phantom scroll range larger than the visible window
-     after load, which would drag the bottom tab bar off the screen edge. */
+  /* The app is a position:fixed frame (see shell/AppShell), so any document
+     scrolling — including the phantom scroll range Brave's PWA shell exposes
+     after load — moves nothing visible. The document deliberately STAYS
+     scrollable: pull-to-refresh needs the root overscroll gesture, and
+     overflow:hidden here was proven (on device) to kill it. */
   body {
     margin: 0;
     height: 100%;
-    overflow: hidden;
     background: var(--bg);
     color: var(--ink);
     font-family: var(--font-sans);
