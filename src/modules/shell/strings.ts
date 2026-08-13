@@ -42,7 +42,7 @@ const en = {
   'shell.clientHome.cancelled': 'Cancelled',
   'shell.clientHome.empty':
     'Appointments you receive from a salon appear here.',
-  'shell.chooser.title': 'How will you use when-again?',
+  'shell.chooser.title': 'How will you use it?',
   'shell.chooser.client': 'I book appointments',
   'shell.chooser.clientHint': 'See the visits a salon sends you.',
   'shell.chooser.provider': 'I manage a schedule',
@@ -107,7 +107,7 @@ const bg = {
   'shell.clientHome.cancelled': 'Отменен',
   'shell.clientHome.empty':
     'Часовете, които получите от салон, се показват тук.',
-  'shell.chooser.title': 'Как ще използвате when-again?',
+  'shell.chooser.title': 'Как ще го използвате?',
   'shell.chooser.client': 'Записвам си часове',
   'shell.chooser.clientHint': 'Вижте часовете, които салонът ви изпраща.',
   'shell.chooser.provider': 'Управлявам график',

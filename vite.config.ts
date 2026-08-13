@@ -60,8 +60,8 @@ export default defineConfig({
       // with { cache: 'no-store' } (see modules/shell/VersionFooter).
       workbox: { globIgnores: ['**/version.json'] },
       manifest: {
-        name: 'when-again',
-        short_name: 'when-again',
+        name: 'When Again',
+        short_name: 'When Again',
         description: 'Appointment reminders. No server. No accounts. No fees.',
         // Keep in sync with the light --bg token in src/app/index.css (the
         // manifest takes one value; the per-scheme theme-color metas in
