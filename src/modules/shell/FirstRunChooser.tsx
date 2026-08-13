@@ -10,7 +10,7 @@ export function FirstRunChooser() {
   };
   return (
     <main className="fixed inset-x-0 top-0 flex h-[var(--app-h,100dvh)] flex-col items-center justify-center gap-6 overflow-y-auto p-6 text-center">
-      <h1 className="text-ink font-serif text-2xl">
+      <h1 className="text-ink font-display text-2xl">
         {t('shell.chooser.title')}
       </h1>
       <div className="flex w-full max-w-sm flex-col gap-3">

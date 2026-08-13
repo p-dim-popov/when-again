@@ -316,7 +316,7 @@ export function ScheduleScreen({
           aria-label={`${visibleDateText}. ${t('schedule.chooseMonth')}`}
           onClick={openMonthPicker}
         >
-          <div className="font-serif text-[15px] font-semibold tracking-[-0.01em]">
+          <div className="font-display text-[15px] font-semibold tracking-[-0.01em]">
             {weekdayIdx >= 0 ? t(WEEKDAY_LONG_KEYS[weekdayIdx]) : ''},{' '}
             {dateKey.slice(8, 10)} {monthShortLabel(dateKey)}
             <span

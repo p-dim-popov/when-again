@@ -26,7 +26,7 @@ function CalmScreen({
   return (
     <main className="grid min-h-[60vh] place-items-center px-[15px] py-6">
       <div className="flex w-full max-w-[360px] flex-col gap-3.5 text-center">
-        <h1 className="font-serif text-[19px] font-[680] tracking-[-0.01em]">
+        <h1 className="font-display text-[19px] font-[680] tracking-[-0.01em]">
           {title}
         </h1>
         {children}
@@ -217,7 +217,7 @@ export function ImportScreen() {
   return (
     <main className="grid min-h-[60vh] place-items-center px-[15px] py-6">
       <div className="flex w-full max-w-[360px] flex-col gap-3.5 text-center">
-        <h1 className="font-serif text-[19px] font-[680] tracking-[-0.01em]">
+        <h1 className="font-display text-[19px] font-[680] tracking-[-0.01em]">
           {title}
         </h1>
         <Card appt={incoming} />

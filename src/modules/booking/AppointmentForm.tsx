@@ -479,7 +479,7 @@ export function AppointmentForm({
   return (
     <div className="flex flex-col">
       <div className="px-[15px] pt-1 pb-2.5 text-center">
-        <h1 className="font-serif text-[15px] font-[680] tracking-[-0.01em]">
+        <h1 className="font-display text-[15px] font-[680] tracking-[-0.01em]">
           {t(isEditing ? 'booking.form.editTitle' : 'booking.form.title')}
         </h1>
       </div>

@@ -130,7 +130,7 @@ export function SettingsScreen() {
 
   return (
     <main className="flex flex-col gap-6 p-4">
-      <h1 className="text-ink font-serif text-xl">
+      <h1 className="text-ink font-display text-xl">
         {t('shell.settings.title')}
       </h1>
 

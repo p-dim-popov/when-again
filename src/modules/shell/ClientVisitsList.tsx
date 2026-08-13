@@ -52,7 +52,7 @@ export function ClientVisitsList() {
   const { upcoming, past } = partitionVisits(items, wallClockNow().dateTime);
   return (
     <main className="flex flex-col gap-4 p-4" data-testid="client-home">
-      <h1 className="text-ink font-serif text-xl">
+      <h1 className="text-ink font-display text-xl">
         {t('shell.clientHome.title')}
       </h1>
       {items.length === 0 && (
