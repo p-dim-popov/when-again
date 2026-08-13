@@ -1,14 +1,40 @@
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useEffect } from 'react';
 import { getSettings } from '../settings';
 import { t } from '../i18n';
 import { FirstRunChooser } from './FirstRunChooser';
+
+// The app frame's height comes from a JS-maintained --app-h variable, not a
+// CSS viewport unit: Brave's PWA shell resolves dvh/percent heights against
+// a phantom viewport ~56px taller than the visible window right after load
+// (and misses the re-layout when it corrects itself), which pushed the tab
+// bar off the bottom edge. window.innerHeight reported the true height in
+// every observed state — including the broken one — so the frame trusts it.
+// Deliberately NOT visualViewport.height: that shrinks when the keyboard
+// opens, and the frame must stay put under it while typing.
+function useAppFrameHeight() {
+  useEffect(() => {
+    const apply = () =>
+      document.documentElement.style.setProperty(
+        '--app-h',
+        `${window.innerHeight}px`,
+      );
+    apply();
+    window.addEventListener('resize', apply);
+    return () => window.removeEventListener('resize', apply);
+  }, []);
+}
 
 // Bottom tab bar ported from docs/design/epic-4/schedule-and-booking-flow.html
 // Mode-aware (#7): provider keeps the four Epic-4 tabs; client gets
 // Home + Settings. While mode is null the chooser replaces the outlet
 // (except on /import, where a successful import infers client mode).
+// The shell is an app frame: chrome never moves — the content region is the
+// app's only scroller, and bottom-anchored overlays (the time sheet, its
+// backdrop) position against the frame, not the (unreliable) viewport.
 export function AppShell() {
+  useAppFrameHeight();
   const settings = useLiveQuery(() => getSettings(), []);
   const { pathname } = useLocation();
 
@@ -21,12 +47,12 @@ export function AppShell() {
   }
 
   return (
-    <div className="bg-bg text-ink flex min-h-dvh flex-col">
-      <div className="flex-1">
+    <div className="bg-bg text-ink relative flex h-[var(--app-h,100dvh)] flex-col overflow-hidden">
+      <div className="flex-1 overflow-y-auto">
         <Outlet />
       </div>
       <nav
-        className={`border-line bg-surface sticky bottom-0 z-[1] grid items-end border-t px-1.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] ${mode === 'provider' ? 'grid-cols-4' : 'grid-cols-2'}`}
+        className={`border-line bg-surface grid items-end border-t px-1.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] ${mode === 'provider' ? 'grid-cols-4' : 'grid-cols-2'}`}
         aria-label={t('shell.nav.label')}
       >
         {mode === 'provider' ? (

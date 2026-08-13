@@ -402,7 +402,7 @@ export function ScheduleScreen({
       {otherTimeGap && (
         <>
           <div
-            className="fixed inset-0 z-[2] bg-[color-mix(in_srgb,var(--ink)_34%,transparent)]"
+            className="absolute inset-0 z-[2] bg-[color-mix(in_srgb,var(--ink)_34%,transparent)]"
             onClick={() => setOtherTimeGap(null)}
           />
           <TimePicker
