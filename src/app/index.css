@@ -112,10 +112,16 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    height: 100%;
   }
+  /* The app is a fixed frame (see shell/AppShell): the content region is the
+     only scroller, so the document itself must never scroll — Brave's PWA
+     shell exposes a phantom scroll range larger than the visible window
+     after load, which would drag the bottom tab bar off the screen edge. */
   body {
     margin: 0;
-    min-height: 100dvh;
+    height: 100%;
+    overflow: hidden;
     background: var(--bg);
     color: var(--ink);
     font-family: var(--font-sans);

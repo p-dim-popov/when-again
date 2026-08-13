@@ -232,7 +232,7 @@ export function TimePicker({
   return (
     <div
       data-testid="time-sheet"
-      className="bg-surface shadow-sheet fixed inset-x-0 bottom-0 z-[3] rounded-t-[22px] px-4 pt-2.5 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+      className="bg-surface shadow-sheet absolute inset-x-0 bottom-0 z-[3] rounded-t-[22px] px-4 pt-2.5 pb-[calc(1rem+env(safe-area-inset-bottom))]"
     >
       <div className="bg-line mx-auto mt-0.5 mb-3 h-1 w-9 rounded-full" />
       <div className="mb-0.5 flex items-baseline justify-between gap-2.5">

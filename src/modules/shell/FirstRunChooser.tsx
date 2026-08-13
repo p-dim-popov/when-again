@@ -9,7 +9,7 @@ export function FirstRunChooser() {
     void updateSettings({ mode });
   };
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6 text-center">
+    <main className="flex h-[var(--app-h,100dvh)] flex-col items-center justify-center gap-6 overflow-y-auto p-6 text-center">
       <h1 className="text-ink font-serif text-2xl">
         {t('shell.chooser.title')}
       </h1>
