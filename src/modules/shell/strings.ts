@@ -48,6 +48,8 @@ const en = {
   'shell.chooser.provider': 'I manage a schedule',
   'shell.chooser.providerHint': 'Keep your calendar and share visits.',
   'shell.chooser.note': 'You can change this later in Settings.',
+  'shell.welcome.tagline':
+    'Appointments on your phone — no accounts, no servers.',
   'shell.tab.home': 'Home',
   'shell.settings.backup.title': 'Backup',
   'shell.settings.backup.export': 'Export backup',
@@ -113,6 +115,8 @@ const bg = {
   'shell.chooser.provider': 'Управлявам график',
   'shell.chooser.providerHint': 'Водете календара си и споделяйте часове.',
   'shell.chooser.note': 'Можете да промените това по-късно в Настройки.',
+  'shell.welcome.tagline':
+    'Часове на вашия телефон — без акаунти, без сървъри.',
   'shell.tab.home': 'Начало',
   'shell.settings.backup.title': 'Резервно копие',
   'shell.settings.backup.export': 'Изтегли резервно копие',
@@ -181,6 +185,7 @@ declare module '../i18n' {
     'shell.chooser.provider': true;
     'shell.chooser.providerHint': true;
     'shell.chooser.note': true;
+    'shell.welcome.tagline': true;
     'shell.tab.home': true;
     'shell.settings.backup.title': true;
     'shell.settings.backup.export': true;
