@@ -47,6 +47,7 @@ async function bootstrap() {
     language = detectLanguage();
   }
   initI18n(language);
+  document.documentElement.lang = language;
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>
