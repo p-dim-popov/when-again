@@ -23,3 +23,10 @@ _Avoid_: role, account type
 The first-run screen shown while no mode is chosen. It welcomes the person,
 says what the app is, and offers the mode choice.
 _Avoid_: first-run chooser, mode chooser, onboarding
+
+**Saved provider**:
+The client's saved record of a provider (name, address, phone) — not a new
+concept, just the provider as seen from the client's phone. One record per
+provider; the address is an attribute, not an identity. What the client-mode
+tab is labelled is UI copy, not a domain term.
+_Avoid_: salon, business, specialist, place, contact
