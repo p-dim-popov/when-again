@@ -168,6 +168,12 @@ export function ImportScreen() {
   const outcome: ImportOutcome = classifyImport(incoming, stored);
 
   async function write(next: 'added' | 'updated' | 'removed') {
+    // `incoming`/`decoded` are narrowed above in the component body, but
+    // that narrowing doesn't reach into this nested function's closure —
+    // TypeScript sees both as their declared (nullable) types here. Guard
+    // locally rather than asserting with `!`; unreachable at runtime since
+    // `write` is only ever invoked after the outer narrowing succeeded.
+    if (!decoded?.ok || !incoming) return;
     setWriteError(false);
     try {
       await applyHandoffImport(incoming, decoded.provider.phone);
