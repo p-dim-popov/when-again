@@ -7,6 +7,12 @@ async function bookAndReachShare(
   page: Page,
 ): Promise<{ link: string; dateKey: string }> {
   await gotoAsProvider(page, BASE);
+  // Provider sets a phone number so it rides along in the handoff payload
+  // (`f`, ADR-0002) and shows up on the client's next-visit card.
+  await page.goto(`${BASE}settings`);
+  await page.getByTestId('profile-phone').fill('+359881234567');
+  await page.getByTestId('profile-save').click();
+  await page.goto(BASE);
   await page.getByRole('link', { name: 'New', exact: true }).click();
   await page.getByRole('button', { name: 'Next month' }).click();
   await page.getByRole('button', { name: '15', exact: true }).click();
@@ -34,6 +40,16 @@ test('the share screen renders a QR and a decodable handoff link', async ({
   // QR is an inline SVG inside the share widget.
   await expect(page.locator('svg').first()).toBeVisible();
   expect(link).toMatch(/\/when-again\/import#.+/);
+
+  const fragment = link.split('#')[1];
+  const wire = JSON.parse(
+    Buffer.from(
+      fragment.replace(/-/g, '+').replace(/_/g, '/'),
+      'base64',
+    ).toString('utf8'),
+  ) as { k?: string; f?: string };
+  expect(wire.f).toBe('+359881234567');
+  expect(wire.k).toMatch(/^[0-9a-f-]{36}$/); // minted provider id rides along
 });
 
 test('import: empty and invalid links show calm states', async ({ page }) => {
