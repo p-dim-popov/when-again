@@ -3,13 +3,10 @@ import { useNavigate } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getActiveLanguage, t } from '../i18n';
 import { formatDayLabel } from '../schedule';
-import {
-  getReceived,
-  upsertReceived,
-  type ReceivedAppointment,
-} from '../received';
+import { getReceived, type ReceivedAppointment } from '../received';
 import { decodeHandoff } from './codec';
 import { classifyImport, type ImportOutcome } from './classify';
+import { applyHandoffImport, enrichWithProviderKey } from './importWrite';
 import { adoptClientModeIfUnset } from '../settings';
 
 function CalmScreen({
@@ -102,6 +99,9 @@ export function ImportScreen() {
   }, []);
 
   const decoded = fragment ? decodeHandoff(fragment) : null;
+  const incoming = decoded?.ok
+    ? enrichWithProviderKey(decoded.appointment, decoded.provider.id)
+    : null;
   const incomingId = decoded?.ok ? decoded.appointment.id : undefined;
 
   const storedResult = useLiveQuery(
@@ -139,7 +139,9 @@ export function ImportScreen() {
     );
   }
 
-  const incoming = decoded.appointment;
+  // decoded.ok is guaranteed by the edge-state returns above, so `incoming`
+  // was set by the ternary — narrow without the non-null assertion operator.
+  if (!incoming) return null;
 
   // --- post-write confirmation ------------------------------------------
   if (saved) {
@@ -166,9 +168,15 @@ export function ImportScreen() {
   const outcome: ImportOutcome = classifyImport(incoming, stored);
 
   async function write(next: 'added' | 'updated' | 'removed') {
+    // `incoming`/`decoded` are narrowed above in the component body, but
+    // that narrowing doesn't reach into this nested function's closure —
+    // TypeScript sees both as their declared (nullable) types here. Guard
+    // locally rather than asserting with `!`; unreachable at runtime since
+    // `write` is only ever invoked after the outer narrowing succeeded.
+    if (!decoded?.ok || !incoming) return;
     setWriteError(false);
     try {
-      await upsertReceived(incoming);
+      await applyHandoffImport(incoming, decoded.provider.phone);
       await adoptClientModeIfUnset();
       setSaved(next);
     } catch {

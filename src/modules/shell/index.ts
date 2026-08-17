@@ -1,7 +1,8 @@
 export { AppShell } from './AppShell';
-export { ClientVisitsList } from './ClientVisitsList';
+export { ClientHome } from './ClientHome';
 export { ModeGate } from './ModeGate';
 export { Placeholder } from './Placeholder';
+export { ProvidersScreen } from './ProvidersScreen';
 export { SettingsScreen } from './SettingsScreen';
 export { UpdateBanner } from './UpdateBanner';
 export { VersionFooter } from './VersionFooter';

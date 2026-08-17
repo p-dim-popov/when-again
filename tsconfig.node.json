@@ -17,6 +17,18 @@
     "vite.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
-    "e2e"
+    "e2e",
+    // e2e/client-home.spec.ts deep-imports the pure handoff codec (not the
+    // module index, which re-exports React screens) — see the comment there.
+    // Composite projects must list every file reachable from `include`, so
+    // its leaf transitive deps are named explicitly rather than pulling in
+    // all of `src` (which needs the app project's jsx/vite types).
+    "src/modules/handoff/codec.ts",
+    "src/modules/received/index.ts",
+    "src/modules/received/received.ts",
+    "src/modules/db/index.ts",
+    "src/modules/db/db.ts",
+    "src/modules/time/index.ts",
+    "src/modules/time/wallClock.ts"
   ]
 }

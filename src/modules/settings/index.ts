@@ -2,6 +2,7 @@ export {
   adoptClientModeIfUnset,
   DEFAULT_SETTINGS,
   defineSettingsStore,
+  ensureProviderId,
   getSettings,
   replaceSettings,
   updateSettings,

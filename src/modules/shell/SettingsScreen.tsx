@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { t, type Language } from '../i18n';
 import {
@@ -17,24 +17,51 @@ function Segmented<T extends string | null>({
   options,
   onChange,
   testId,
+  label,
 }: {
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
   testId: string;
+  label: string;
 }) {
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // WAI-ARIA APG radiogroup pattern: the group is one Tab stop (roving
+  // tabindex on the checked option) and arrow keys move + select.
+  const selectByArrow = (currentIndex: number, delta: 1 | -1) => {
+    const nextIndex = (currentIndex + delta + options.length) % options.length;
+    onChange(options[nextIndex].value);
+    buttonRefs.current[nextIndex]?.focus();
+  };
+
   return (
     <div
       className="border-line bg-surface rounded-card inline-flex overflow-hidden border"
-      role="group"
+      role="radiogroup"
+      aria-label={label}
       data-testid={testId}
     >
-      {options.map((option) => (
+      {options.map((option, index) => (
         <button
           key={String(option.value)}
+          ref={(el) => {
+            buttonRefs.current[index] = el;
+          }}
           type="button"
-          aria-pressed={option.value === value}
+          role="radio"
+          aria-checked={option.value === value}
+          tabIndex={option.value === value ? 0 : -1}
           onClick={() => onChange(option.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              selectByArrow(index, 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              selectByArrow(index, -1);
+            }
+          }}
           className={`cursor-pointer border-0 px-4 py-2 text-sm ${
             option.value === value
               ? 'bg-accent text-on-accent font-[650]'
@@ -51,19 +78,26 @@ function Segmented<T extends string | null>({
 function ProfileSection({
   initialName,
   initialAddress,
+  initialPhone,
   saved,
   onSaved,
 }: {
   initialName: string;
   initialAddress: string;
+  initialPhone: string;
   saved: boolean;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
   const [address, setAddress] = useState(initialAddress);
+  const [phone, setPhone] = useState(initialPhone);
 
   const save = async () => {
-    await updateSettings({ providerName: name, address: address || undefined });
+    await updateSettings({
+      providerName: name,
+      address: address || undefined,
+      phone: phone || undefined,
+    });
     onSaved();
   };
 
@@ -87,6 +121,16 @@ function ProfileSection({
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           data-testid="profile-address"
+          className="border-line bg-surface text-ink rounded-card min-h-11 border px-3"
+        />
+      </label>
+      <label className="text-ink flex flex-col gap-1 text-sm">
+        {t('shell.settings.profile.phone')}
+        <input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          type="tel"
+          data-testid="profile-phone"
           className="border-line bg-surface text-ink rounded-card min-h-11 border px-3"
         />
       </label>
@@ -141,6 +185,7 @@ export function SettingsScreen() {
         <Segmented<Mode>
           value={settings.mode ?? 'provider'}
           testId="mode-switch"
+          label={t('shell.settings.mode.label')}
           options={[
             { value: 'provider', label: t('shell.settings.mode.provider') },
             { value: 'client', label: t('shell.settings.mode.client') },
@@ -151,9 +196,10 @@ export function SettingsScreen() {
 
       {settings.mode === 'provider' && (
         <ProfileSection
-          key={`${settings.providerName}|${settings.address ?? ''}`}
+          key={`${settings.providerName}|${settings.address ?? ''}|${settings.phone ?? ''}`}
           initialName={settings.providerName}
           initialAddress={settings.address ?? ''}
+          initialPhone={settings.phone ?? ''}
           saved={profileSaved}
           onSaved={() => setProfileSaved(true)}
         />
@@ -166,6 +212,7 @@ export function SettingsScreen() {
         <Segmented<Theme | null>
           value={settings.theme}
           testId="theme-switch"
+          label={t('shell.settings.appearance.title')}
           options={[
             { value: 'light', label: t('shell.settings.appearance.light') },
             { value: 'dark', label: t('shell.settings.appearance.dark') },
@@ -182,6 +229,7 @@ export function SettingsScreen() {
         <Segmented<Language | null>
           value={settings.language}
           testId="language-switch"
+          label={t('shell.settings.language.title')}
           options={[
             { value: 'bg', label: 'БГ' },
             { value: 'en', label: 'EN' },

@@ -2,9 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { db, getDataVersion, requestPersistentStorage } from './db';
 
 describe('db', () => {
-  it('exposes the four registered stores', () => {
+  it('exposes the five registered stores', () => {
     expect(db.tables.map((t) => t.name).sort()).toEqual(
-      ['appointments', 'clients', 'received', 'settings'].sort(),
+      [
+        'appointments',
+        'clients',
+        'received',
+        'savedProviders',
+        'settings',
+      ].sort(),
     );
   });
 
@@ -22,8 +28,8 @@ describe('requestPersistentStorage', () => {
 
 describe('getDataVersion', () => {
   it('reports the native IndexedDB version (declared Dexie version × 10)', async () => {
-    // src/test/setup-db.ts declares every store at Dexie version(1),
-    // which Dexie opens as native IndexedDB version 10.
-    expect(await getDataVersion()).toBe(10);
+    // src/test/setup-db.ts declares stores up to Dexie version(2),
+    // which Dexie opens as native IndexedDB version 20.
+    expect(await getDataVersion()).toBe(20);
   });
 });

@@ -5,6 +5,7 @@ import { defineAppointmentsStore } from '../modules/appointments';
 import { defineClientsStore } from '../modules/clients';
 import { defineSettingsStore } from '../modules/settings';
 import { defineReceivedStore } from '../modules/received';
+import { defineSavedProvidersStore } from '../modules/savedProviders';
 
 // Register every store once, before any test touches the DB. A missing store is
 // a hard throw, and cross-store readers (e.g. clients.getVisitHistory reads the
@@ -13,6 +14,7 @@ defineAppointmentsStore(db);
 defineClientsStore(db);
 defineSettingsStore(db);
 defineReceivedStore(db);
+defineSavedProvidersStore(db);
 
 // Isolate every test: delete the database after each. The version declarations
 // live on the `db` instance, so the next operation reopens with the same

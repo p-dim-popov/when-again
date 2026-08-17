@@ -5,6 +5,7 @@ import { defineAppointmentsStore } from '../modules/appointments';
 import { defineClientsStore } from '../modules/clients';
 import { db } from '../modules/db';
 import { defineReceivedStore } from '../modules/received';
+import { defineSavedProvidersStore } from '../modules/savedProviders';
 import { defineSettingsStore, getSettings } from '../modules/settings';
 import {
   detectLanguage,
@@ -25,6 +26,7 @@ async function bootstrap() {
   defineClientsStore(db);
   defineSettingsStore(db);
   defineReceivedStore(db);
+  defineSavedProvidersStore(db);
 
   registerStrings('en', {
     ...shellStrings.en,

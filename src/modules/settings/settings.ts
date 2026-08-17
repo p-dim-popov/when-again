@@ -14,6 +14,14 @@ export type Theme = 'light' | 'dark';
 export interface Settings {
   providerName: string;
   address?: string;
+  /** Provider phone, shown to clients on their next-visit card (#7). */
+  phone?: string;
+  /**
+   * Minted provider identity carried in every handoff payload (ADR-0002).
+   * Created lazily by ensureProviderId() on first share; never regenerated —
+   * this id IS the provider's identity on client devices.
+   */
+  providerId: string | null;
   services: ServicePreset[];
   language: Language | null;
   mode: Mode | null;
@@ -25,6 +33,7 @@ export interface Settings {
 
 export const DEFAULT_SETTINGS: Settings = {
   providerName: '',
+  providerId: null,
   services: [],
   language: null,
   mode: null,
@@ -70,6 +79,14 @@ export async function replaceSettings(settings: Settings): Promise<void> {
     id: SINGLETON_ID,
     ...settings,
   } satisfies StoredSettings);
+}
+
+export async function ensureProviderId(): Promise<string> {
+  const current = await getSettings();
+  if (current.providerId) return current.providerId;
+  const id = crypto.randomUUID();
+  await updateSettings({ providerId: id });
+  return id;
 }
 
 // Import inference (#7): the first thing a fresh install does via a shared

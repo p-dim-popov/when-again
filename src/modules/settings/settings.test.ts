@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   adoptClientModeIfUnset,
   DEFAULT_SETTINGS,
+  ensureProviderId,
   getSettings,
   replaceSettings,
   updateSettings,
@@ -57,6 +58,20 @@ describe('theme setting', () => {
   it('persists an explicit theme', async () => {
     await updateSettings({ theme: 'dark' });
     expect((await getSettings()).theme).toBe('dark');
+  });
+});
+
+describe('ensureProviderId', () => {
+  it('mints a uuid once and returns the same id forever after', async () => {
+    const first = await ensureProviderId();
+    expect(first).toMatch(/^[0-9a-f-]{36}$/);
+    const second = await ensureProviderId();
+    expect(second).toBe(first);
+    expect((await getSettings()).providerId).toBe(first);
+  });
+
+  it('defaults to null on a fresh profile', async () => {
+    expect((await getSettings()).providerId).toBeNull();
   });
 });
 

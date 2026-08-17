@@ -1,10 +1,11 @@
+import { useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useNavigate } from '@tanstack/react-router';
 import { formatCurrency, getActiveLanguage, t } from '../i18n';
 import { getAppointment } from '../appointments';
 import { getClient } from '../clients';
 import { formatDayLabel } from '../schedule';
-import { getSettings } from '../settings';
+import { ensureProviderId, getSettings } from '../settings';
 import { HandoffShare } from '../handoff';
 import { resetDraft, useBookingDraft } from './draftStore';
 
@@ -21,6 +22,13 @@ export function ShareLanding() {
   const navigate = useNavigate();
   const draft = useBookingDraft();
   const appointmentId = draft.appointmentId;
+
+  // Mint the provider identity the first time a handoff is built (ADR-0002).
+  // The settings live query picks the new id up reactively; the QR without
+  // `k` exists for a single render frame at worst — not scannable by a human.
+  useEffect(() => {
+    void ensureProviderId();
+  }, []);
 
   const record = useLiveQuery(
     () =>
@@ -141,6 +149,8 @@ export function ShareLanding() {
             appointment={appointment}
             providerName={settings?.providerName ?? ''}
             address={settings?.address}
+            providerId={settings?.providerId ?? undefined}
+            phone={settings?.phone}
           />
         )}
 

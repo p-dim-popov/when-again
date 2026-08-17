@@ -11,10 +11,14 @@ export function HandoffShare({
   appointment,
   providerName,
   address,
+  providerId,
+  phone,
 }: {
   appointment: Appointment;
   providerName: string;
   address?: string;
+  providerId?: string;
+  phone?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [copyFailed, setCopyFailed] = useState(false);
@@ -24,6 +28,8 @@ export function HandoffShare({
       id: appointment.id,
       providerName,
       ...(address ? { address } : {}),
+      ...(providerId ? { providerId } : {}),
+      ...(phone ? { phone } : {}),
       service: appointment.service,
       start: appointment.start,
       durationMinutes: appointment.durationMinutes,

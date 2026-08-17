@@ -52,7 +52,7 @@ export function AppShell() {
         <Outlet />
       </div>
       <nav
-        className={`border-line bg-surface grid items-end border-t px-1.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] ${mode === 'provider' ? 'grid-cols-4' : 'grid-cols-2'}`}
+        className={`border-line bg-surface grid items-end border-t px-1.5 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] ${mode === 'provider' ? 'grid-cols-4' : 'grid-cols-3'}`}
         aria-label={t('shell.nav.label')}
       >
         {mode === 'provider' ? (
@@ -109,6 +109,15 @@ export function AppShell() {
                 ▤
               </span>
               {t('shell.tab.home')}
+            </Link>
+            <Link
+              to="/providers"
+              className="text-faint data-[status=active]:text-accent flex flex-col items-center gap-[3px] text-center text-[10px] no-underline data-[status=active]:font-semibold"
+            >
+              <span className="text-base leading-none" aria-hidden="true">
+                ⌂
+              </span>
+              {t('shell.tab.providers')}
             </Link>
             <Link
               to="/settings"

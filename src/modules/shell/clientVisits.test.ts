@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { partitionVisits } from './clientVisits';
+import {
+  nextVisitByProvider,
+  partitionVisits,
+  selectNextVisit,
+} from './clientVisits';
 import type { ReceivedAppointment } from '../received';
 
 function visit(
@@ -49,5 +53,35 @@ describe('partitionVisits', () => {
       now,
     );
     expect(upcoming.map((v) => v.id)).toEqual(['b', 'a']);
+  });
+});
+
+describe('selectNextVisit', () => {
+  it('picks the earliest upcoming non-cancelled visit', () => {
+    const upcoming = [
+      visit('v1', '2026-09-01T10:00', 'cancelled'),
+      visit('v2', '2026-09-02T10:00', 'booked'),
+      visit('v3', '2026-09-03T10:00', 'booked'),
+    ];
+    expect(selectNextVisit(upcoming)?.id).toBe('v2');
+  });
+  it('returns undefined when everything upcoming is cancelled', () => {
+    expect(
+      selectNextVisit([visit('v1', '2026-09-01T10:00', 'cancelled')]),
+    ).toBeUndefined();
+  });
+});
+
+describe('nextVisitByProvider', () => {
+  it('maps each provider to its earliest upcoming non-cancelled visit', () => {
+    const items = [
+      { ...visit('v1', '2026-09-05T10:00', 'booked'), providerId: 'p1' },
+      { ...visit('v2', '2026-09-02T10:00', 'booked'), providerId: 'p1' },
+      { ...visit('v3', '2026-09-03T10:00', 'cancelled'), providerId: 'p2' },
+      { ...visit('v4', '2026-08-01T10:00', 'booked'), providerId: 'p2' }, // past
+    ];
+    const map = nextVisitByProvider(items, '2026-09-01T00:00');
+    expect(map.get('p1')?.id).toBe('v2');
+    expect(map.has('p2')).toBe(false);
   });
 });

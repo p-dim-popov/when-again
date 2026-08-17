@@ -53,4 +53,14 @@ describe('t', () => {
     expect(t('settings.title')).toBe('Settings');
     expect(t('greeting', { name: 'Sam' })).toBe('Hello, Sam');
   });
+
+  it('plural selection is stable across repeated calls (cached rules)', () => {
+    registerStrings('en', {
+      'x.days': { one: 'in {count} day', other: 'in {count} days' },
+    });
+    initI18n('en');
+    expect(t('x.days' as never, { count: 1 })).toBe('in 1 day');
+    expect(t('x.days' as never, { count: 3 })).toBe('in 3 days');
+    expect(t('x.days' as never, { count: 1 })).toBe('in 1 day');
+  });
 });

@@ -10,6 +10,12 @@ import { type WallClock } from '../time';
 export interface ReceivedAppointment {
   id: string;
   providerName: string;
+  /**
+   * Grouping key → savedProviders.id (minted id from the payload, or the
+   * synthetic name key for payloads that predate it — ADR-0002). Absent on
+   * rows imported before #7 sub-project 2. Not indexed.
+   */
+  providerId?: string;
   address?: string;
   service: string;
   start: WallClock;

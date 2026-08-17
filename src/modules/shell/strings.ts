@@ -16,6 +16,7 @@ const en = {
   'shell.settings.profile.title': 'Profile',
   'shell.settings.profile.name': 'Business name',
   'shell.settings.profile.address': 'Address',
+  'shell.settings.profile.phone': 'Phone',
   'shell.settings.profile.save': 'Save',
   'shell.settings.profile.saved': 'Saved',
   'shell.settings.appearance.title': 'Appearance',
@@ -40,8 +41,17 @@ const en = {
   'shell.clientHome.upcoming': 'Upcoming',
   'shell.clientHome.past': 'Past',
   'shell.clientHome.cancelled': 'Cancelled',
-  'shell.clientHome.empty':
-    'Appointments you receive from a salon appear here.',
+  'shell.clientHome.inMinutes': 'In {count} min',
+  'shell.clientHome.today': 'Today at {time}',
+  'shell.clientHome.tomorrow': 'Tomorrow at {time}',
+  'shell.clientHome.inDays': {
+    one: 'In {count} day',
+    other: 'In {count} days',
+  },
+  'shell.clientHome.call': 'Call',
+  'shell.clientHome.emptyCard.title': 'No upcoming visit',
+  'shell.clientHome.emptyCard.hint':
+    'Scan the QR code at the salon to add your next visit.',
   'shell.chooser.title': 'How will you use it?',
   'shell.chooser.client': 'I book appointments',
   'shell.chooser.clientHint': 'See the visits a salon sends you.',
@@ -65,6 +75,15 @@ const en = {
   'shell.settings.backup.exportFailed': 'Could not export. Try again.',
   'shell.settings.backup.importFailed':
     'Could not restore the backup. Try again.',
+  'shell.tab.providers': 'Salons',
+  'shell.providers.title': 'Salons',
+  'shell.providers.empty': 'Salons appear here after you scan their QR code.',
+  'shell.providers.nextVisit': 'Next visit: {date}',
+  'shell.providers.delete': 'Remove',
+  'shell.providers.deleteConfirm': 'Remove {name} and all its visits?',
+  'shell.providers.deleteAction': 'Remove',
+  'shell.providers.cancel': 'Cancel',
+  'shell.providers.deleteFailed': 'Could not remove. Try again.',
 } satisfies Strings;
 
 const bg = {
@@ -83,6 +102,7 @@ const bg = {
   'shell.settings.profile.title': 'Профил',
   'shell.settings.profile.name': 'Име на салона',
   'shell.settings.profile.address': 'Адрес',
+  'shell.settings.profile.phone': 'Телефон',
   'shell.settings.profile.save': 'Запази',
   'shell.settings.profile.saved': 'Запазено',
   'shell.settings.appearance.title': 'Изглед',
@@ -107,8 +127,17 @@ const bg = {
   'shell.clientHome.upcoming': 'Предстоящи',
   'shell.clientHome.past': 'Минали',
   'shell.clientHome.cancelled': 'Отменен',
-  'shell.clientHome.empty':
-    'Часовете, които получите от салон, се показват тук.',
+  'shell.clientHome.inMinutes': 'След {count} мин',
+  'shell.clientHome.today': 'Днес в {time}',
+  'shell.clientHome.tomorrow': 'Утре в {time}',
+  'shell.clientHome.inDays': {
+    one: 'След {count} ден',
+    other: 'След {count} дни',
+  },
+  'shell.clientHome.call': 'Обади се',
+  'shell.clientHome.emptyCard.title': 'Няма предстоящ час',
+  'shell.clientHome.emptyCard.hint':
+    'Сканирайте QR кода в салона, за да добавите следващия си час.',
   'shell.chooser.title': 'Как ще го използвате?',
   'shell.chooser.client': 'Записвам си часове',
   'shell.chooser.clientHint': 'Вижте часовете, които салонът ви изпраща.',
@@ -134,6 +163,17 @@ const bg = {
     'Изтеглянето е неуспешно. Опитайте отново.',
   'shell.settings.backup.importFailed':
     'Възстановяването е неуспешно. Опитайте отново.',
+  'shell.tab.providers': 'Салони',
+  'shell.providers.title': 'Салони',
+  'shell.providers.empty':
+    'Салоните се показват тук, след като сканирате техния QR код.',
+  'shell.providers.nextVisit': 'Следващ час: {date}',
+  'shell.providers.delete': 'Премахни',
+  'shell.providers.deleteConfirm':
+    'Да премахнем ли {name} и всичките му часове?',
+  'shell.providers.deleteAction': 'Премахни',
+  'shell.providers.cancel': 'Отказ',
+  'shell.providers.deleteFailed': 'Премахването е неуспешно. Опитайте отново.',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -155,6 +195,7 @@ declare module '../i18n' {
     'shell.settings.profile.title': true;
     'shell.settings.profile.name': true;
     'shell.settings.profile.address': true;
+    'shell.settings.profile.phone': true;
     'shell.settings.profile.save': true;
     'shell.settings.profile.saved': true;
     'shell.settings.appearance.title': true;
@@ -178,7 +219,13 @@ declare module '../i18n' {
     'shell.clientHome.upcoming': true;
     'shell.clientHome.past': true;
     'shell.clientHome.cancelled': true;
-    'shell.clientHome.empty': true;
+    'shell.clientHome.inMinutes': true;
+    'shell.clientHome.today': true;
+    'shell.clientHome.tomorrow': true;
+    'shell.clientHome.inDays': true;
+    'shell.clientHome.call': true;
+    'shell.clientHome.emptyCard.title': true;
+    'shell.clientHome.emptyCard.hint': true;
     'shell.chooser.title': true;
     'shell.chooser.client': true;
     'shell.chooser.clientHint': true;
@@ -199,5 +246,14 @@ declare module '../i18n' {
     'shell.settings.backup.stale': true;
     'shell.settings.backup.exportFailed': true;
     'shell.settings.backup.importFailed': true;
+    'shell.tab.providers': true;
+    'shell.providers.title': true;
+    'shell.providers.empty': true;
+    'shell.providers.nextVisit': true;
+    'shell.providers.delete': true;
+    'shell.providers.deleteConfirm': true;
+    'shell.providers.deleteAction': true;
+    'shell.providers.cancel': true;
+    'shell.providers.deleteFailed': true;
   }
 }

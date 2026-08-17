@@ -5,13 +5,13 @@ test('mode switch swaps the tab bar both ways', async ({ page }) => {
   await gotoAsProvider(page, '/when-again/settings');
   await page
     .getByTestId('mode-switch')
-    .getByRole('button', { name: 'Client' })
+    .getByRole('radio', { name: 'Client' })
     .click();
   await expect(page.getByRole('link', { name: 'Home' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Today' })).not.toBeVisible();
   await page
     .getByTestId('mode-switch')
-    .getByRole('button', { name: 'Provider' })
+    .getByRole('radio', { name: 'Provider' })
     .click();
   await expect(page.getByRole('link', { name: 'Today' })).toBeVisible();
 });
@@ -20,14 +20,14 @@ test('theme choice sets data-theme and survives reload', async ({ page }) => {
   await gotoAsProvider(page, '/when-again/settings');
   await page
     .getByTestId('theme-switch')
-    .getByRole('button', { name: 'Dark' })
+    .getByRole('radio', { name: 'Dark' })
     .click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page
     .getByTestId('theme-switch')
-    .getByRole('button', { name: 'Auto' })
+    .getByRole('radio', { name: 'Auto' })
     .click();
   await expect(page.locator('html')).not.toHaveAttribute('data-theme');
 });
@@ -96,7 +96,7 @@ test('import re-applies the backup theme and reloads', async ({ page }) => {
   // Switch to Dark so the import has a stale UI state to correct.
   await page
     .getByTestId('theme-switch')
-    .getByRole('button', { name: 'Dark' })
+    .getByRole('radio', { name: 'Dark' })
     .click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
 
@@ -108,8 +108,8 @@ test('import re-applies the backup theme and reloads', async ({ page }) => {
   // the imported (Auto) settings rather than keep the Dark choice made above.
   await expect(page.locator('html')).not.toHaveAttribute('data-theme');
   await expect(
-    page.getByTestId('theme-switch').getByRole('button', { name: 'Auto' }),
-  ).toHaveAttribute('aria-pressed', 'true');
+    page.getByTestId('theme-switch').getByRole('radio', { name: 'Auto' }),
+  ).toHaveAttribute('aria-checked', 'true');
 });
 
 test('language switch updates the document language', async ({ page }) => {
@@ -117,14 +117,14 @@ test('language switch updates the document language', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   await page
     .getByTestId('language-switch')
-    .getByRole('button', { name: 'БГ' })
+    .getByRole('radio', { name: 'БГ' })
     .click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'bg');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('lang', 'bg');
   await page
     .getByTestId('language-switch')
-    .getByRole('button', { name: 'EN' })
+    .getByRole('radio', { name: 'EN' })
     .click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
 });
