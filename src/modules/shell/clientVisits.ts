@@ -23,3 +23,17 @@ export function selectNextVisit(
 ): ReceivedAppointment | undefined {
   return upcoming.find((v) => v.status !== 'cancelled');
 }
+
+// Providers tab chip: each provider's earliest upcoming non-cancelled visit.
+export function nextVisitByProvider(
+  items: ReceivedAppointment[],
+  nowDateTime: string,
+): Map<string, ReceivedAppointment> {
+  const { upcoming } = partitionVisits(items, nowDateTime);
+  const map = new Map<string, ReceivedAppointment>();
+  for (const v of upcoming) {
+    if (v.status === 'cancelled' || !v.providerId) continue;
+    if (!map.has(v.providerId)) map.set(v.providerId, v);
+  }
+  return map;
+}

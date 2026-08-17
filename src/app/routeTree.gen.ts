@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientRouteImport } from './routes/_client'
 import { Route as ProviderRouteImport } from './routes/_provider'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ClientProvidersRouteImport } from './routes/_client.providers'
 import { Route as ProviderBookRouteImport } from './routes/_provider.book'
 import { Route as ProviderClientsRouteImport } from './routes/_provider.clients'
 import { Route as ProviderAppointmentNewRouteImport } from './routes/_provider.appointment.new'
@@ -21,6 +23,10 @@ import { Route as ProviderAppointmentSavedRouteImport } from './routes/_provider
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientRoute = ClientRouteImport.update({
+  id: '/_client',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProviderRoute = ProviderRouteImport.update({
@@ -36,6 +42,11 @@ const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ClientProvidersRoute = ClientProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
+  getParentRoute: () => ClientRoute,
 } as any)
 const ProviderBookRoute = ProviderBookRouteImport.update({
   id: '/book',
@@ -63,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
+  '/providers': typeof ClientProvidersRoute
   '/book': typeof ProviderBookRoute
   '/clients': typeof ProviderClientsRoute
   '/appointment/new': typeof ProviderAppointmentNewRoute
@@ -72,6 +84,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
+  '/providers': typeof ClientProvidersRoute
   '/book': typeof ProviderBookRoute
   '/clients': typeof ProviderClientsRoute
   '/appointment/new': typeof ProviderAppointmentNewRoute
@@ -80,9 +93,11 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_client': typeof ClientRouteWithChildren
   '/_provider': typeof ProviderRouteWithChildren
   '/import': typeof ImportRoute
   '/settings': typeof SettingsRoute
+  '/_client/providers': typeof ClientProvidersRoute
   '/_provider/book': typeof ProviderBookRoute
   '/_provider/clients': typeof ProviderClientsRoute
   '/_provider/appointment/new': typeof ProviderAppointmentNewRoute
@@ -94,6 +109,7 @@ export interface FileRouteTypes {
     | '/'
     | '/import'
     | '/settings'
+    | '/providers'
     | '/book'
     | '/clients'
     | '/appointment/new'
@@ -103,6 +119,7 @@ export interface FileRouteTypes {
     | '/'
     | '/import'
     | '/settings'
+    | '/providers'
     | '/book'
     | '/clients'
     | '/appointment/new'
@@ -110,9 +127,11 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_client'
     | '/_provider'
     | '/import'
     | '/settings'
+    | '/_client/providers'
     | '/_provider/book'
     | '/_provider/clients'
     | '/_provider/appointment/new'
@@ -121,6 +140,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ClientRoute: typeof ClientRouteWithChildren
   ProviderRoute: typeof ProviderRouteWithChildren
   ImportRoute: typeof ImportRoute
   SettingsRoute: typeof SettingsRoute
@@ -133,6 +153,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_client': {
+      id: '/_client'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof ClientRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_provider': {
@@ -155,6 +182,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_client/providers': {
+      id: '/_client/providers'
+      path: '/providers'
+      fullPath: '/providers'
+      preLoaderRoute: typeof ClientProvidersRouteImport
+      parentRoute: typeof ClientRoute
     }
     '/_provider/book': {
       id: '/_provider/book'
@@ -187,6 +221,17 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ClientRouteChildren {
+  ClientProvidersRoute: typeof ClientProvidersRoute
+}
+
+const ClientRouteChildren: ClientRouteChildren = {
+  ClientProvidersRoute: ClientProvidersRoute,
+}
+
+const ClientRouteWithChildren =
+  ClientRoute._addFileChildren(ClientRouteChildren)
+
 interface ProviderRouteChildren {
   ProviderBookRoute: typeof ProviderBookRoute
   ProviderClientsRoute: typeof ProviderClientsRoute
@@ -207,6 +252,7 @@ const ProviderRouteWithChildren = ProviderRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ClientRoute: ClientRouteWithChildren,
   ProviderRoute: ProviderRouteWithChildren,
   ImportRoute: ImportRoute,
   SettingsRoute: SettingsRoute,

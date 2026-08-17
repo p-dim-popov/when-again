@@ -75,6 +75,14 @@ const en = {
   'shell.settings.backup.exportFailed': 'Could not export. Try again.',
   'shell.settings.backup.importFailed':
     'Could not restore the backup. Try again.',
+  'shell.tab.providers': 'Salons',
+  'shell.providers.title': 'Salons',
+  'shell.providers.empty': 'Salons appear here after you scan their QR code.',
+  'shell.providers.nextVisit': 'Next visit: {date}',
+  'shell.providers.delete': 'Remove',
+  'shell.providers.deleteConfirm': 'Remove {name} and all its visits?',
+  'shell.providers.deleteAction': 'Remove',
+  'shell.providers.cancel': 'Cancel',
 } satisfies Strings;
 
 const bg = {
@@ -154,6 +162,16 @@ const bg = {
     'Изтеглянето е неуспешно. Опитайте отново.',
   'shell.settings.backup.importFailed':
     'Възстановяването е неуспешно. Опитайте отново.',
+  'shell.tab.providers': 'Салони',
+  'shell.providers.title': 'Салони',
+  'shell.providers.empty':
+    'Салоните се показват тук, след като сканирате техния QR код.',
+  'shell.providers.nextVisit': 'Следващ час: {date}',
+  'shell.providers.delete': 'Премахни',
+  'shell.providers.deleteConfirm':
+    'Да премахнем ли {name} и всичките му часове?',
+  'shell.providers.deleteAction': 'Премахни',
+  'shell.providers.cancel': 'Отказ',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -226,5 +244,13 @@ declare module '../i18n' {
     'shell.settings.backup.stale': true;
     'shell.settings.backup.exportFailed': true;
     'shell.settings.backup.importFailed': true;
+    'shell.tab.providers': true;
+    'shell.providers.title': true;
+    'shell.providers.empty': true;
+    'shell.providers.nextVisit': true;
+    'shell.providers.delete': true;
+    'shell.providers.deleteConfirm': true;
+    'shell.providers.deleteAction': true;
+    'shell.providers.cancel': true;
   }
 }
