@@ -102,14 +102,14 @@ export function ProvidersScreen() {
                   setConfirming(null),
                 );
               }}
-              className="bg-accent text-on-accent rounded-card cursor-pointer border-0 px-4 py-2 text-sm font-[650]"
+              className="bg-accent text-on-accent rounded-card min-h-11 cursor-pointer border-0 px-4 py-2 text-sm font-[650]"
             >
               {t('shell.providers.deleteAction')}
             </button>
             <button
               type="button"
               onClick={() => setConfirming(null)}
-              className="border-line bg-surface text-ink rounded-card cursor-pointer border px-4 py-2 text-sm"
+              className="border-line bg-surface text-ink rounded-card min-h-11 cursor-pointer border px-4 py-2 text-sm"
             >
               {t('shell.providers.cancel')}
             </button>
