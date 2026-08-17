@@ -20,6 +20,7 @@ function backupWith(theme: BackupFile['settings']['theme']): BackupFile {
     exportedAt: '2026-08-08T10:00:00.000Z',
     settings: {
       providerName: 'Salon Maria',
+      providerId: null,
       services: [],
       language: 'bg',
       mode: 'provider',
