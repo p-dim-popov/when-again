@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ScheduleScreen, todayKey } from '../../modules/schedule';
-import { ClientVisitsList } from '../../modules/shell';
+import { ClientHome } from '../../modules/shell';
 import { getSettings } from '../../modules/settings';
 
 interface TodaySearch {
@@ -32,7 +32,7 @@ export const Route = createFileRoute('/')({
 function Home() {
   const settings = useLiveQuery(() => getSettings(), []);
   if (settings === undefined) return null;
-  return settings.mode === 'client' ? <ClientVisitsList /> : <TodayRoute />;
+  return settings.mode === 'client' ? <ClientHome /> : <TodayRoute />;
 }
 
 function TodayRoute() {

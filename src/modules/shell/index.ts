@@ -1,5 +1,5 @@
 export { AppShell } from './AppShell';
-export { ClientVisitsList } from './ClientVisitsList';
+export { ClientHome } from './ClientHome';
 export { ModeGate } from './ModeGate';
 export { Placeholder } from './Placeholder';
 export { SettingsScreen } from './SettingsScreen';

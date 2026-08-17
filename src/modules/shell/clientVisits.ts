@@ -15,3 +15,11 @@ export function partitionVisits(
     .sort((a, b) => b.start.dateTime.localeCompare(a.start.dateTime));
   return { upcoming, past };
 }
+
+// The big card shows the earliest upcoming non-cancelled visit; cancelled
+// upcoming rows still appear in the list below it.
+export function selectNextVisit(
+  upcoming: ReceivedAppointment[],
+): ReceivedAppointment | undefined {
+  return upcoming.find((v) => v.status !== 'cancelled');
+}

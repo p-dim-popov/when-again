@@ -41,8 +41,17 @@ const en = {
   'shell.clientHome.upcoming': 'Upcoming',
   'shell.clientHome.past': 'Past',
   'shell.clientHome.cancelled': 'Cancelled',
-  'shell.clientHome.empty':
-    'Appointments you receive from a salon appear here.',
+  'shell.clientHome.inMinutes': 'In {count} min',
+  'shell.clientHome.today': 'Today at {time}',
+  'shell.clientHome.tomorrow': 'Tomorrow at {time}',
+  'shell.clientHome.inDays': {
+    one: 'In {count} day',
+    other: 'In {count} days',
+  },
+  'shell.clientHome.call': 'Call',
+  'shell.clientHome.emptyCard.title': 'No upcoming visit',
+  'shell.clientHome.emptyCard.hint':
+    'Scan the QR code at the salon to add your next visit.',
   'shell.chooser.title': 'How will you use it?',
   'shell.chooser.client': 'I book appointments',
   'shell.chooser.clientHint': 'See the visits a salon sends you.',
@@ -109,8 +118,17 @@ const bg = {
   'shell.clientHome.upcoming': 'Предстоящи',
   'shell.clientHome.past': 'Минали',
   'shell.clientHome.cancelled': 'Отменен',
-  'shell.clientHome.empty':
-    'Часовете, които получите от салон, се показват тук.',
+  'shell.clientHome.inMinutes': 'След {count} мин',
+  'shell.clientHome.today': 'Днес в {time}',
+  'shell.clientHome.tomorrow': 'Утре в {time}',
+  'shell.clientHome.inDays': {
+    one: 'След {count} ден',
+    other: 'След {count} дни',
+  },
+  'shell.clientHome.call': 'Обади се',
+  'shell.clientHome.emptyCard.title': 'Няма предстоящ час',
+  'shell.clientHome.emptyCard.hint':
+    'Сканирайте QR кода в салона, за да добавите следващия си час.',
   'shell.chooser.title': 'Как ще го използвате?',
   'shell.chooser.client': 'Записвам си часове',
   'shell.chooser.clientHint': 'Вижте часовете, които салонът ви изпраща.',
@@ -181,7 +199,13 @@ declare module '../i18n' {
     'shell.clientHome.upcoming': true;
     'shell.clientHome.past': true;
     'shell.clientHome.cancelled': true;
-    'shell.clientHome.empty': true;
+    'shell.clientHome.inMinutes': true;
+    'shell.clientHome.today': true;
+    'shell.clientHome.tomorrow': true;
+    'shell.clientHome.inDays': true;
+    'shell.clientHome.call': true;
+    'shell.clientHome.emptyCard.title': true;
+    'shell.clientHome.emptyCard.hint': true;
     'shell.chooser.title': true;
     'shell.chooser.client': true;
     'shell.chooser.clientHint': true;
