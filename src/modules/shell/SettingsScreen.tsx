@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { t, type Language } from '../i18n';
 import {
@@ -25,6 +25,16 @@ function Segmented<T extends string | null>({
   testId: string;
   label: string;
 }) {
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // WAI-ARIA APG radiogroup pattern: the group is one Tab stop (roving
+  // tabindex on the checked option) and arrow keys move + select.
+  const selectByArrow = (currentIndex: number, delta: 1 | -1) => {
+    const nextIndex = (currentIndex + delta + options.length) % options.length;
+    onChange(options[nextIndex].value);
+    buttonRefs.current[nextIndex]?.focus();
+  };
+
   return (
     <div
       className="border-line bg-surface rounded-card inline-flex overflow-hidden border"
@@ -32,13 +42,26 @@ function Segmented<T extends string | null>({
       aria-label={label}
       data-testid={testId}
     >
-      {options.map((option) => (
+      {options.map((option, index) => (
         <button
           key={String(option.value)}
+          ref={(el) => {
+            buttonRefs.current[index] = el;
+          }}
           type="button"
           role="radio"
           aria-checked={option.value === value}
+          tabIndex={option.value === value ? 0 : -1}
           onClick={() => onChange(option.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              selectByArrow(index, 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              selectByArrow(index, -1);
+            }
+          }}
           className={`cursor-pointer border-0 px-4 py-2 text-sm ${
             option.value === value
               ? 'bg-accent text-on-accent font-[650]'
