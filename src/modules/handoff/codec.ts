@@ -12,6 +12,10 @@ export interface HandoffInput {
   start: WallClock;
   durationMinutes: number;
   status: 'booked' | 'cancelled';
+  /** Minted provider identity (ADR-0002). Optional: absent pre-#7 payloads. */
+  providerId?: string;
+  /** Provider phone, free-text as entered in Settings → Profile. */
+  phone?: string;
 }
 
 const SCHEMA_VERSION = 1;
@@ -31,6 +35,9 @@ interface Wire {
   z: string;
   d: number;
   c: 0 | 1;
+  // k: provider id, f: phone — optional, added by #7 sub-project 2; decode ignores unknown keys, so these are v:1-compatible both directions (ADR-0002)
+  k?: string;
+  f?: string;
 }
 
 function toBase64Url(json: string): string {
@@ -59,12 +66,21 @@ export function encodeHandoff(input: HandoffInput): string {
     z: input.start.timeZone,
     d: input.durationMinutes,
     c: input.status === 'cancelled' ? 1 : 0,
+    ...(input.providerId ? { k: input.providerId } : {}),
+    ...(input.phone ? { f: input.phone } : {}),
   };
   return toBase64Url(JSON.stringify(wire));
 }
 
 export type DecodeResult =
-  | { ok: true; appointment: ReceivedAppointment }
+  | {
+      ok: true;
+      appointment: ReceivedAppointment;
+      /** Provider identity/contact riding alongside the appointment. The
+       * import flow (not the codec) resolves the grouping key, because the
+       * synthetic-name fallback lives in savedProviders. */
+      provider: { id?: string; phone?: string };
+    }
   | { ok: false; reason: 'malformed' | 'unsupported-version' };
 
 export function decodeHandoff(fragment: string): DecodeResult {
@@ -93,7 +109,9 @@ export function decodeHandoff(fragment: string): DecodeResult {
     !isStr(d.z) ||
     typeof d.d !== 'number' ||
     (d.c !== 0 && d.c !== 1) ||
-    (d.a !== undefined && !isStr(d.a))
+    (d.a !== undefined && !isStr(d.a)) ||
+    (d.k !== undefined && !isStr(d.k)) ||
+    (d.f !== undefined && !isStr(d.f))
   ) {
     return { ok: false, reason: 'malformed' };
   }
@@ -107,6 +125,10 @@ export function decodeHandoff(fragment: string): DecodeResult {
       start: { dateTime: d.t, timeZone: d.z },
       durationMinutes: d.d,
       status: d.c === 1 ? 'cancelled' : 'booked',
+    },
+    provider: {
+      ...(isStr(d.k) && d.k ? { id: d.k } : {}),
+      ...(isStr(d.f) && d.f ? { phone: d.f } : {}),
     },
   };
 }

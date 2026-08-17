@@ -30,6 +30,7 @@ describe('handoff codec', () => {
         durationMinutes: 45,
         status: 'booked',
       },
+      provider: {},
     });
   });
 
@@ -95,5 +96,62 @@ describe('handoff codec', () => {
     expect(url.startsWith('https://example.com/when-again/import#')).toBe(true);
     const frag = url.slice(url.indexOf('#') + 1);
     expect(decodeHandoff(frag).ok).toBe(true);
+  });
+
+  it('round-trips providerId and phone via k/f', () => {
+    const encoded = encodeHandoff({
+      id: 'a1',
+      providerName: 'Студио Мария',
+      service: 'Подстригване',
+      start: { dateTime: '2026-09-01T15:00', timeZone: 'Europe/Sofia' },
+      durationMinutes: 30,
+      status: 'booked',
+      providerId: 'prov-1',
+      phone: '+359 88 123 4567',
+    });
+    const decoded = decodeHandoff(encoded);
+    expect(decoded.ok).toBe(true);
+    if (!decoded.ok) return;
+    expect(decoded.provider).toEqual({
+      id: 'prov-1',
+      phone: '+359 88 123 4567',
+    });
+    expect('providerId' in decoded.appointment).toBe(false);
+  });
+
+  it('decodes a payload without k/f (pre-field payloads stay valid)', () => {
+    const encoded = encodeHandoff({
+      id: 'a1',
+      providerName: 'Студио Мария',
+      service: 'Подстригване',
+      start: { dateTime: '2026-09-01T15:00', timeZone: 'Europe/Sofia' },
+      durationMinutes: 30,
+      status: 'booked',
+    });
+    const decoded = decodeHandoff(encoded);
+    expect(decoded.ok).toBe(true);
+    if (!decoded.ok) return;
+    expect(decoded.provider).toEqual({});
+  });
+
+  it('rejects a non-string k or f as malformed', () => {
+    const wire = {
+      v: 1,
+      i: 'a1',
+      p: 'X',
+      s: 'Y',
+      t: '2026-09-01T15:00',
+      z: 'Europe/Sofia',
+      d: 30,
+      c: 0,
+      k: 7,
+    };
+    const fragment = btoa(
+      String.fromCharCode(...new TextEncoder().encode(JSON.stringify(wire))),
+    )
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    expect(decodeHandoff(fragment)).toEqual({ ok: false, reason: 'malformed' });
   });
 });

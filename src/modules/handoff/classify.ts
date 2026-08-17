@@ -20,7 +20,11 @@ function sameFields(a: ReceivedAppointment, b: ReceivedAppointment): boolean {
     a.start.dateTime === b.start.dateTime &&
     a.start.timeZone === b.start.timeZone &&
     a.durationMinutes === b.durationMinutes &&
-    a.status === b.status
+    a.status === b.status &&
+    // providerId included deliberately: a stored row imported before the
+    // minted id (#7) differs from the enriched incoming one exactly once —
+    // the resulting "changed" → update writes the id (self-heal, ADR-0002).
+    a.providerId === b.providerId
   );
 }
 
