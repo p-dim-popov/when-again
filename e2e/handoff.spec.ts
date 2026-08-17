@@ -12,6 +12,9 @@ async function bookAndReachShare(
   await page.goto(`${BASE}settings`);
   await page.getByTestId('profile-phone').fill('+359881234567');
   await page.getByTestId('profile-save').click();
+  await expect(
+    page.getByTestId('profile-section').getByRole('status'),
+  ).toHaveText('Saved');
   await page.goto(BASE);
   await page.getByRole('link', { name: 'New', exact: true }).click();
   await page.getByRole('button', { name: 'Next month' }).click();
@@ -33,6 +36,16 @@ async function bookAndReachShare(
   return { link, dateKey };
 }
 
+function decodeWire(link: string): { k?: string; f?: string } {
+  const fragment = link.split('#')[1];
+  return JSON.parse(
+    Buffer.from(
+      fragment.replace(/-/g, '+').replace(/_/g, '/'),
+      'base64',
+    ).toString('utf8'),
+  ) as { k?: string; f?: string };
+}
+
 test('the share screen renders a QR and a decodable handoff link', async ({
   page,
 }) => {
@@ -41,13 +54,25 @@ test('the share screen renders a QR and a decodable handoff link', async ({
   await expect(page.locator('svg').first()).toBeVisible();
   expect(link).toMatch(/\/when-again\/import#.+/);
 
-  const fragment = link.split('#')[1];
-  const wire = JSON.parse(
-    Buffer.from(
-      fragment.replace(/-/g, '+').replace(/_/g, '/'),
-      'base64',
-    ).toString('utf8'),
-  ) as { k?: string; f?: string };
+  // The provider id is minted asynchronously (ensureProviderId, a useEffect
+  // on the share screen's first mount) and the link's `k` segment only
+  // reflects it once that Dexie write settles and the live query re-renders
+  // — poll instead of trusting the first textContent() snapshot.
+  await expect
+    .poll(async () => {
+      const current = (
+        await page.getByTestId('handoff-link').textContent()
+      )?.trim();
+      return current ? decodeWire(current).k : undefined;
+    })
+    .toMatch(/^[0-9a-f-]{36}$/);
+
+  const finalLink = (
+    await page.getByTestId('handoff-link').textContent()
+  )?.trim();
+  if (!finalLink)
+    throw new Error('expected a handoff link on the share screen');
+  const wire = decodeWire(finalLink);
   expect(wire.f).toBe('+359881234567');
   expect(wire.k).toMatch(/^[0-9a-f-]{36}$/); // minted provider id rides along
 });
