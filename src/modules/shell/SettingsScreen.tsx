@@ -51,19 +51,26 @@ function Segmented<T extends string | null>({
 function ProfileSection({
   initialName,
   initialAddress,
+  initialPhone,
   saved,
   onSaved,
 }: {
   initialName: string;
   initialAddress: string;
+  initialPhone: string;
   saved: boolean;
   onSaved: () => void;
 }) {
   const [name, setName] = useState(initialName);
   const [address, setAddress] = useState(initialAddress);
+  const [phone, setPhone] = useState(initialPhone);
 
   const save = async () => {
-    await updateSettings({ providerName: name, address: address || undefined });
+    await updateSettings({
+      providerName: name,
+      address: address || undefined,
+      phone: phone || undefined,
+    });
     onSaved();
   };
 
@@ -87,6 +94,16 @@ function ProfileSection({
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           data-testid="profile-address"
+          className="border-line bg-surface text-ink rounded-card min-h-11 border px-3"
+        />
+      </label>
+      <label className="text-ink flex flex-col gap-1 text-sm">
+        {t('shell.settings.profile.phone')}
+        <input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          type="tel"
+          data-testid="profile-phone"
           className="border-line bg-surface text-ink rounded-card min-h-11 border px-3"
         />
       </label>
@@ -151,9 +168,10 @@ export function SettingsScreen() {
 
       {settings.mode === 'provider' && (
         <ProfileSection
-          key={`${settings.providerName}|${settings.address ?? ''}`}
+          key={`${settings.providerName}|${settings.address ?? ''}|${settings.phone ?? ''}`}
           initialName={settings.providerName}
           initialAddress={settings.address ?? ''}
+          initialPhone={settings.phone ?? ''}
           saved={profileSaved}
           onSaved={() => setProfileSaved(true)}
         />

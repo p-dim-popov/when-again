@@ -16,6 +16,7 @@ const en = {
   'shell.settings.profile.title': 'Profile',
   'shell.settings.profile.name': 'Business name',
   'shell.settings.profile.address': 'Address',
+  'shell.settings.profile.phone': 'Phone',
   'shell.settings.profile.save': 'Save',
   'shell.settings.profile.saved': 'Saved',
   'shell.settings.appearance.title': 'Appearance',
@@ -83,6 +84,7 @@ const bg = {
   'shell.settings.profile.title': 'Профил',
   'shell.settings.profile.name': 'Име на салона',
   'shell.settings.profile.address': 'Адрес',
+  'shell.settings.profile.phone': 'Телефон',
   'shell.settings.profile.save': 'Запази',
   'shell.settings.profile.saved': 'Запазено',
   'shell.settings.appearance.title': 'Изглед',
@@ -155,6 +157,7 @@ declare module '../i18n' {
     'shell.settings.profile.title': true;
     'shell.settings.profile.name': true;
     'shell.settings.profile.address': true;
+    'shell.settings.profile.phone': true;
     'shell.settings.profile.save': true;
     'shell.settings.profile.saved': true;
     'shell.settings.appearance.title': true;
