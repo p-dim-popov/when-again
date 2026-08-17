@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getActiveLanguage, t } from '../i18n';
 import { listReceived } from '../received';
@@ -64,9 +64,24 @@ export function ProvidersScreen() {
   const providers = useLiveQuery(() => listSavedProviders(), []);
   const items = useLiveQuery(() => listReceived(), []);
   const [confirming, setConfirming] = useState<SavedProvider | null>(null);
+  const [deleteFailed, setDeleteFailed] = useState(false);
+  const confirmPanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (confirming) confirmPanel.current?.focus();
+  }, [confirming]);
   if (providers === undefined || items === undefined) return null;
 
   const nextBy = nextVisitByProvider(items, now);
+
+  const confirmDelete = async (id: string) => {
+    setDeleteFailed(false);
+    try {
+      await deleteSavedProviderWithVisits(id);
+      setConfirming(null);
+    } catch {
+      setDeleteFailed(true);
+    }
+  };
 
   return (
     <main className="flex flex-col gap-4 p-4" data-testid="providers-screen">
@@ -84,12 +99,19 @@ export function ProvidersScreen() {
             key={provider.id}
             provider={provider}
             nextDate={nextBy.get(provider.id)?.start.dateTime.slice(0, 10)}
-            onDelete={() => setConfirming(provider)}
+            onDelete={() => {
+              setDeleteFailed(false);
+              setConfirming(provider);
+            }}
           />
         ))}
       </ul>
       {confirming && (
-        <div className="border-line bg-surface rounded-card flex flex-col gap-2 border p-3">
+        <div
+          ref={confirmPanel}
+          tabIndex={-1}
+          className="border-line bg-surface rounded-card flex flex-col gap-2 border p-3"
+        >
           <p className="text-ink text-sm">
             {t('shell.providers.deleteConfirm', { name: confirming.name })}
           </p>
@@ -97,23 +119,27 @@ export function ProvidersScreen() {
             <button
               type="button"
               data-testid="provider-delete-confirm"
-              onClick={() => {
-                void deleteSavedProviderWithVisits(confirming.id).then(() =>
-                  setConfirming(null),
-                );
-              }}
+              onClick={() => void confirmDelete(confirming.id)}
               className="bg-accent text-on-accent rounded-card min-h-11 cursor-pointer border-0 px-4 py-2 text-sm font-[650]"
             >
               {t('shell.providers.deleteAction')}
             </button>
             <button
               type="button"
-              onClick={() => setConfirming(null)}
+              onClick={() => {
+                setDeleteFailed(false);
+                setConfirming(null);
+              }}
               className="border-line bg-surface text-ink rounded-card min-h-11 cursor-pointer border px-4 py-2 text-sm"
             >
               {t('shell.providers.cancel')}
             </button>
           </div>
+          {deleteFailed && (
+            <p className="text-danger text-sm" role="status">
+              {t('shell.providers.deleteFailed')}
+            </p>
+          )}
         </div>
       )}
     </main>

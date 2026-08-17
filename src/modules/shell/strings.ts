@@ -83,6 +83,7 @@ const en = {
   'shell.providers.deleteConfirm': 'Remove {name} and all its visits?',
   'shell.providers.deleteAction': 'Remove',
   'shell.providers.cancel': 'Cancel',
+  'shell.providers.deleteFailed': 'Could not remove. Try again.',
 } satisfies Strings;
 
 const bg = {
@@ -172,6 +173,7 @@ const bg = {
     'Да премахнем ли {name} и всичките му часове?',
   'shell.providers.deleteAction': 'Премахни',
   'shell.providers.cancel': 'Отказ',
+  'shell.providers.deleteFailed': 'Премахването е неуспешно. Опитайте отново.',
 } satisfies Strings;
 
 export const shellStrings = { en, bg };
@@ -252,5 +254,6 @@ declare module '../i18n' {
     'shell.providers.deleteConfirm': true;
     'shell.providers.deleteAction': true;
     'shell.providers.cancel': true;
+    'shell.providers.deleteFailed': true;
   }
 }

@@ -25,4 +25,7 @@ The id is identity, everything else is attribute: display name, address, and
 phone always come from the latest import, so a rename heals a client's
 grouping retroactively. The id is meaningless outside the app (random, no
 server registry) — two devices for one provider mint two identities, which
-is accepted: the schedule lives on one phone by design.
+is accepted: the schedule lives on one phone by design. Restoring a backup
+made before the id was minted resets `providerId` to null, so the next share
+mints a fresh identity and clients' groupings split the same way — accepted
+for the same reason as the two-devices case.
