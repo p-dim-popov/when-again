@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { exportBackup, isBackupStale, type BackupFile } from '../backup';
 import { t } from '../i18n';
@@ -23,6 +23,10 @@ export function BackupSection() {
   const [importState, setImportState] = useState<ImportState>({ step: 'idle' });
   const [exportFailed, setExportFailed] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const confirmPanel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (importState.step === 'confirm') confirmPanel.current?.focus();
+  }, [importState.step]);
 
   const download = async () => {
     try {
@@ -117,7 +121,11 @@ export function BackupSection() {
         </p>
       )}
       {importState.step === 'confirm' && (
-        <div className="border-line bg-surface rounded-card flex flex-col gap-2 border p-3">
+        <div
+          ref={confirmPanel}
+          tabIndex={-1}
+          className="border-line bg-surface rounded-card flex flex-col gap-2 border p-3"
+        >
           <p className="text-ink text-sm">
             {t('shell.settings.backup.confirm', {
               date: importState.backup.exportedAt.slice(0, 10),

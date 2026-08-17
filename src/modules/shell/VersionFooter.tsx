@@ -75,6 +75,7 @@ export function VersionFooter() {
       <button
         type="button"
         onClick={() => setExpanded((value) => !value)}
+        aria-expanded={expanded}
         className="cursor-pointer"
       >
         {formatStamp(buildInfo)}
@@ -106,16 +107,18 @@ export function VersionFooter() {
                 : t('shell.version.check')}
             </button>
           </div>
-          {typeof check === 'object' && (
-            <p role="status">
-              {check.status === 'up-to-date' && t('shell.version.upToDate')}
-              {check.status === 'update-available' &&
-                t('shell.version.updateAvailable', {
-                  version: formatBuiltAt(check.builtAt),
-                })}
-              {check.status === 'failed' && t('shell.version.checkFailed')}
-            </p>
-          )}
+          <p role="status">
+            {typeof check === 'object' && (
+              <>
+                {check.status === 'up-to-date' && t('shell.version.upToDate')}
+                {check.status === 'update-available' &&
+                  t('shell.version.updateAvailable', {
+                    version: formatBuiltAt(check.builtAt),
+                  })}
+                {check.status === 'failed' && t('shell.version.checkFailed')}
+              </>
+            )}
+          </p>
         </div>
       )}
     </footer>

@@ -17,23 +17,27 @@ function Segmented<T extends string | null>({
   options,
   onChange,
   testId,
+  label,
 }: {
   value: T;
   options: { value: T; label: string }[];
   onChange: (value: T) => void;
   testId: string;
+  label: string;
 }) {
   return (
     <div
       className="border-line bg-surface rounded-card inline-flex overflow-hidden border"
-      role="group"
+      role="radiogroup"
+      aria-label={label}
       data-testid={testId}
     >
       {options.map((option) => (
         <button
           key={String(option.value)}
           type="button"
-          aria-pressed={option.value === value}
+          role="radio"
+          aria-checked={option.value === value}
           onClick={() => onChange(option.value)}
           className={`cursor-pointer border-0 px-4 py-2 text-sm ${
             option.value === value
@@ -158,6 +162,7 @@ export function SettingsScreen() {
         <Segmented<Mode>
           value={settings.mode ?? 'provider'}
           testId="mode-switch"
+          label={t('shell.settings.mode.label')}
           options={[
             { value: 'provider', label: t('shell.settings.mode.provider') },
             { value: 'client', label: t('shell.settings.mode.client') },
@@ -184,6 +189,7 @@ export function SettingsScreen() {
         <Segmented<Theme | null>
           value={settings.theme}
           testId="theme-switch"
+          label={t('shell.settings.appearance.title')}
           options={[
             { value: 'light', label: t('shell.settings.appearance.light') },
             { value: 'dark', label: t('shell.settings.appearance.dark') },
@@ -200,6 +206,7 @@ export function SettingsScreen() {
         <Segmented<Language | null>
           value={settings.language}
           testId="language-switch"
+          label={t('shell.settings.language.title')}
           options={[
             { value: 'bg', label: 'БГ' },
             { value: 'en', label: 'EN' },
