@@ -1,0 +1,27 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//when-again//appointment reminders//EN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:a1b2c3d4-0000-4000-8000-fixture00001@when-again
+DTSTAMP:20260818T180000Z
+SEQUENCE:2
+DTSTART;TZID=Europe/Sofia:20260915T150000
+DTEND;TZID=Europe/Sofia:20260915T160000
+SUMMARY:Дамска подстрижка — Салон Мария
+LOCATION:ул. Витоша 15\, София
+DESCRIPTION:https://p-dim-popov.github.io/when-again/import#fixture-payload
+ -placeholder
+STATUS:CANCELLED
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-P1D
+DESCRIPTION:Дамска подстрижка — Салон Мария
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT1H
+DESCRIPTION:Дамска подстрижка — Салон Мария
+END:VALARM
+END:VEVENT
+END:VCALENDAR
