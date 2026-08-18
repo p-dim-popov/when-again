@@ -95,7 +95,7 @@ test('import: new → add → re-open shows up to date (idempotent)', async ({
     page.getByRole('heading', { name: 'New appointment' }),
   ).toBeVisible();
   await expect(page.getByText('Haircut')).toBeVisible();
-  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
   await expect(page.getByRole('heading', { name: 'Added' })).toBeVisible();
 
   // Re-opening the same link is idempotent.
@@ -111,7 +111,7 @@ test('round-trip: book → import → reschedule → cancel, no duplicates', asy
   // 1. Book and import as new.
   const { link: firstLink, dateKey } = await bookAndReachShare(page);
   await page.goto(firstLink);
-  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
   await expect(page.getByRole('heading', { name: 'Added' })).toBeVisible();
 
   // 2. Provider reschedules the appointment, then re-shares. The appointment

@@ -23,10 +23,15 @@ const en = {
   'handoff.field.duration': 'Duration',
   'handoff.field.address': 'Address',
   'handoff.import.previously': 'was {value}',
-  // Import screen — actions + confirmations
-  'handoff.import.add': 'Add appointment',
-  'handoff.import.update': 'Update',
-  'handoff.import.ok': 'OK',
+  // Calendar handoff — combined actions + disclosure (R10) + iOS fallback hint (KTD9)
+  'handoff.calendar.add': 'Add to calendar',
+  'handoff.calendar.update': 'Update your calendar',
+  'handoff.calendar.remove': 'Remove from calendar',
+  'handoff.calendar.disclosure':
+    'The calendar event contains a link back to this appointment.',
+  'handoff.calendar.fallbackHint':
+    'If your calendar did not change, remove the old event and add this one.',
+  // Import screen — confirmations
   'handoff.import.done': 'Done',
   'handoff.import.added': 'Added',
   'handoff.import.updated': 'Updated',
@@ -58,9 +63,13 @@ const bg = {
   'handoff.field.duration': 'Времетраене',
   'handoff.field.address': 'Адрес',
   'handoff.import.previously': 'беше {value}',
-  'handoff.import.add': 'Добави часа',
-  'handoff.import.update': 'Обнови',
-  'handoff.import.ok': 'Добре',
+  'handoff.calendar.add': 'Добави в календара',
+  'handoff.calendar.update': 'Обнови календара си',
+  'handoff.calendar.remove': 'Премахни от календара',
+  'handoff.calendar.disclosure':
+    'Събитието в календара съдържа връзка към този час.',
+  'handoff.calendar.fallbackHint':
+    'Ако календарът ви не се промени, премахнете старото събитие и добавете това.',
   'handoff.import.done': 'Готово',
   'handoff.import.added': 'Добавен',
   'handoff.import.updated': 'Обновен',
@@ -93,9 +102,11 @@ declare module '../i18n' {
     'handoff.field.duration': true;
     'handoff.field.address': true;
     'handoff.import.previously': true;
-    'handoff.import.add': true;
-    'handoff.import.update': true;
-    'handoff.import.ok': true;
+    'handoff.calendar.add': true;
+    'handoff.calendar.update': true;
+    'handoff.calendar.remove': true;
+    'handoff.calendar.disclosure': true;
+    'handoff.calendar.fallbackHint': true;
     'handoff.import.done': true;
     'handoff.import.added': true;
     'handoff.import.updated': true;

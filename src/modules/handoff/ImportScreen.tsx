@@ -7,6 +7,7 @@ import { getReceived, type ReceivedAppointment } from '../received';
 import { decodeHandoff } from './codec';
 import { classifyImport, type ImportOutcome } from './classify';
 import { applyHandoffImport, enrichWithProviderKey } from './importWrite';
+import { CalendarAction } from './CalendarAction';
 import { adoptClientModeIfUnset } from '../settings';
 
 function CalmScreen({
@@ -180,6 +181,13 @@ export function ImportScreen() {
         doneLabel={t('handoff.import.done')}
       >
         <Card appt={incoming} />
+        {saved !== 'added' && (
+          // KTD9: iOS can silently no-op a same-UID re-import; after an
+          // update or cancel, one guidance line covers the manual fix.
+          <p className="text-muted text-center text-[11.5px]">
+            {t('handoff.calendar.fallbackHint')}
+          </p>
+        )}
       </CalmScreen>
     );
   }
@@ -241,23 +249,25 @@ export function ImportScreen() {
     );
   }
 
-  // new / changed / cancelled all render a card + a primary action.
+  // new / changed / cancelled all render a card + ONE combined primary
+  // action (P0): the calendar handoff and the store write share the button,
+  // so the label leads with the calendar verb for the outcome.
   const { title, action, next } =
     outcome.kind === 'new'
       ? {
           title: t('handoff.import.new.title'),
-          action: t('handoff.import.add'),
+          action: t('handoff.calendar.add'),
           next: 'added' as const,
         }
       : outcome.kind === 'changed'
         ? {
             title: t('handoff.import.changed.title'),
-            action: t('handoff.import.update'),
+            action: t('handoff.calendar.update'),
             next: 'updated' as const,
           }
         : {
             title: t('handoff.import.cancelled.title'),
-            action: t('handoff.import.ok'),
+            action: t('handoff.calendar.remove'),
             next: 'removed' as const,
           };
 
@@ -272,13 +282,12 @@ export function ImportScreen() {
           <ChangedNote incoming={incoming} stored={outcome.stored} />
         )}
         {errorNote}
-        <button
-          type="button"
-          onClick={() => void write(next)}
-          className="rounded-card bg-accent text-on-accent shadow-fab w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650]"
-        >
-          {action}
-        </button>
+        <CalendarAction
+          label={action}
+          appointment={decoded.appointment}
+          provider={decoded.provider}
+          onActivate={() => void write(next)}
+        />
       </div>
     </main>
   );

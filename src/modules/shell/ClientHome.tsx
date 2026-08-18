@@ -1,4 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
+import { CalendarAction } from '../handoff';
 import { getActiveLanguage, t } from '../i18n';
 import { listReceived, type ReceivedAppointment } from '../received';
 import { listSavedProviders } from '../savedProviders';
@@ -57,6 +58,16 @@ function NextVisitCard({
           {t('shell.clientHome.call')}: {phone}
         </a>
       )}
+      {/* The stored row (with its own revision → SEQUENCE) plus the saved
+          provider's phone rebuild the re-import link for the .ics. */}
+      <CalendarAction
+        label={t('handoff.calendar.add')}
+        appointment={visit}
+        provider={{
+          ...(visit.providerId ? { id: visit.providerId } : {}),
+          ...(phone ? { phone } : {}),
+        }}
+      />
     </section>
   );
 }
