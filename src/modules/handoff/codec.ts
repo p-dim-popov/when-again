@@ -16,6 +16,8 @@ export interface HandoffInput {
   providerId?: string;
   /** Provider phone, free-text as entered in Settings → Profile. */
   phone?: string;
+  /** Monotonic per-appointment revision. Optional: absent on pre-field payloads. */
+  revision?: number;
 }
 
 const SCHEMA_VERSION = 1;
@@ -38,6 +40,8 @@ interface Wire {
   // k: provider id, f: phone — optional, added by #7 sub-project 2; decode ignores unknown keys, so these are v:1-compatible both directions (ADR-0002)
   k?: string;
   f?: string;
+  // r: appointment revision — optional, added by the .ics epic; same v:1-compatible additive-key story (absent decodes as revision 0)
+  r?: number;
 }
 
 function toBase64Url(json: string): string {
@@ -68,6 +72,7 @@ export function encodeHandoff(input: HandoffInput): string {
     c: input.status === 'cancelled' ? 1 : 0,
     ...(input.providerId ? { k: input.providerId } : {}),
     ...(input.phone ? { f: input.phone } : {}),
+    ...(input.revision ? { r: input.revision } : {}),
   };
   return toBase64Url(JSON.stringify(wire));
 }
@@ -111,7 +116,8 @@ export function decodeHandoff(fragment: string): DecodeResult {
     (d.c !== 0 && d.c !== 1) ||
     (d.a !== undefined && !isStr(d.a)) ||
     (d.k !== undefined && !isStr(d.k)) ||
-    (d.f !== undefined && !isStr(d.f))
+    (d.f !== undefined && !isStr(d.f)) ||
+    (d.r !== undefined && typeof d.r !== 'number')
   ) {
     return { ok: false, reason: 'malformed' };
   }
@@ -125,6 +131,7 @@ export function decodeHandoff(fragment: string): DecodeResult {
       start: { dateTime: d.t, timeZone: d.z },
       durationMinutes: d.d,
       status: d.c === 1 ? 'cancelled' : 'booked',
+      revision: typeof d.r === 'number' ? d.r : 0,
     },
     provider: {
       ...(isStr(d.k) && d.k ? { id: d.k } : {}),

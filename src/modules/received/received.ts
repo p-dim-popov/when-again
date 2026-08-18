@@ -21,6 +21,12 @@ export interface ReceivedAppointment {
   start: WallClock;
   durationMinutes: number;
   status: 'booked' | 'cancelled';
+  /**
+   * Monotonic per-appointment revision carried in the handoff payload
+   * (iCalendar SEQUENCE derives from it). Absent on rows imported before the
+   * field existed. Not indexed.
+   */
+  revision?: number;
 }
 
 declare module '../db' {
