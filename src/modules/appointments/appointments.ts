@@ -46,10 +46,17 @@ export async function updateAppointment(
   appointment: Appointment,
 ): Promise<void> {
   // Every provider mutation bumps the revision unconditionally (a no-op edit
-  // bumping is accepted). Legacy rows without one count as revision 0.
-  await db.appointments.put({
-    ...appointment,
-    revision: (appointment.revision ?? 0) + 1,
+  // bumping is accepted). The bump derives from the STORED row inside the
+  // transaction, not the caller's copy — a stale in-memory object (unresolved
+  // live query, second tab) must never regress the monotonic revision that
+  // drives .ics SEQUENCE and the client-side stale guard. Legacy rows without
+  // one count as revision 0.
+  await db.transaction('rw', db.appointments, async () => {
+    const current = await db.appointments.get(appointment.id);
+    await db.appointments.put({
+      ...appointment,
+      revision: (current?.revision ?? appointment.revision ?? 0) + 1,
+    });
   });
 }
 

@@ -6,7 +6,11 @@ import { formatDayLabel } from '../schedule';
 import { getReceived, type ReceivedAppointment } from '../received';
 import { decodeHandoff } from './codec';
 import { classifyImport, type ImportOutcome } from './classify';
-import { applyHandoffImport, enrichWithProviderKey } from './importWrite';
+import {
+  applyHandoffImport,
+  catchUpReceivedRevision,
+  enrichWithProviderKey,
+} from './importWrite';
 import { CalendarAction } from './CalendarAction';
 import { adoptClientModeIfUnset } from '../settings';
 
@@ -126,13 +130,21 @@ export function ImportScreen() {
   // Write-through: a reshared no-op edit carries a higher revision over
   // identical fields. Classify still reports upToDate — nothing the client
   // sees changes — but the stored row must catch up silently, or a later
-  // calendar emit from the saved card would use a stale SEQUENCE. Best
-  // effort: on failure the next open of the same link retries.
+  // calendar emit from the saved card would use a stale SEQUENCE. Narrowed
+  // to the revision only (never `applyHandoffImport`): with no user
+  // interaction, nothing else may change — a crafted link with identical
+  // appointment fields and a bumped revision must not silently rewrite the
+  // saved provider's name/address/phone. Best effort: on failure the next
+  // open of the same link retries.
   useEffect(() => {
     if (!decoded?.ok || !incoming || !stored) return;
     const outcome = classifyImport(incoming, stored);
     if (outcome.kind !== 'upToDate' || !outcome.revisionBehind) return;
-    void applyHandoffImport(incoming, decoded.provider.phone).catch(() => {});
+    // `revisionBehind` guarantees the incoming revision is defined (it is
+    // strictly ahead of the stored one); `?? 0` only satisfies the type.
+    void catchUpReceivedRevision(stored, incoming.revision ?? 0).catch(
+      () => {},
+    );
   }, [decoded, incoming, stored]);
 
   const goHome = () => void navigate({ to: '/' });
@@ -213,12 +225,6 @@ export function ImportScreen() {
     }
   }
 
-  const errorNote = writeError ? (
-    <p className="text-danger text-center text-[11.5px]">
-      {t('handoff.import.writeFailed')}
-    </p>
-  ) : null;
-
   // A stale link never touches the store and offers no save or calendar
   // action — the card shows the STORED appointment, the client's real,
   // current one, not the outdated payload.
@@ -245,6 +251,18 @@ export function ImportScreen() {
         doneLabel={t('handoff.import.done')}
       >
         <Card appt={incoming} />
+        {/* Calendar export for an appointment that is already saved — e.g.
+            one that is not the next visit, so the saved card offers nothing.
+            No `onActivate`: there is nothing to save. Data source: the
+            decoded payload (same shape the branches below pass). In this
+            branch its fields equal the stored row's and its revision is
+            never behind (stale gates earlier), so the SEQUENCE is correct
+            even before the write-through effect lands. */}
+        <CalendarAction
+          label={t('handoff.calendar.add')}
+          appointment={decoded.appointment}
+          provider={decoded.provider}
+        />
       </CalmScreen>
     );
   }
@@ -281,13 +299,32 @@ export function ImportScreen() {
         {outcome.kind === 'changed' && (
           <ChangedNote incoming={incoming} stored={outcome.stored} />
         )}
-        {errorNote}
-        <CalendarAction
-          label={action}
-          appointment={decoded.appointment}
-          provider={decoded.provider}
-          onActivate={() => void write(next)}
-        />
+        {writeError ? (
+          // The combined action already fired its calendar half — delivery
+          // is synchronous in the tap, before the store write (settled
+          // order). The retry is save-only: no second share sheet, and the
+          // copy says the calendar part is done.
+          <>
+            <p className="text-danger text-center text-[11.5px]">
+              {t('handoff.import.writeFailed')}{' '}
+              {t('handoff.import.writeFailed.calendarDone')}
+            </p>
+            <button
+              type="button"
+              onClick={() => void write(next)}
+              className="rounded-card bg-accent text-on-accent shadow-fab w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650]"
+            >
+              {t('handoff.import.saveRetry')}
+            </button>
+          </>
+        ) : (
+          <CalendarAction
+            label={action}
+            appointment={decoded.appointment}
+            provider={decoded.provider}
+            onActivate={() => void write(next)}
+          />
+        )}
       </div>
     </main>
   );

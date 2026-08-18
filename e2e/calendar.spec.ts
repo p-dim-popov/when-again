@@ -38,6 +38,7 @@ function uidLine(lines: string[]): string {
 async function rescheduleAndReachShare(
   page: Page,
   dateKey: string,
+  revision: number,
 ): Promise<string> {
   await page.goto(`${BASE}?date=${dateKey}`);
   await page.getByTestId('appt-block').first().click();
@@ -50,7 +51,7 @@ async function rescheduleAndReachShare(
   await expect(
     page.getByRole('heading', { name: 'Appointment saved' }),
   ).toBeVisible();
-  return shareLinkAtRevision(page, 1);
+  return shareLinkAtRevision(page, revision);
 }
 
 async function shareLinkAtRevision(
@@ -112,7 +113,7 @@ test('calendar story: add on import, home-card export, update on reschedule, rem
 
   // F2/AE2 (app side): reschedule → the action reads "Update your calendar";
   // the file keeps the UID and bumps SEQUENCE; the card shows the new time.
-  const changedLink = await rescheduleAndReachShare(page, dateKey);
+  const changedLink = await rescheduleAndReachShare(page, dateKey, 1);
   const newTime = decodeWire(changedLink).t.slice(11, 16);
   await client.goto(changedLink);
   await expect(
@@ -132,6 +133,28 @@ test('calendar story: add on import, home-card export, update on reschedule, rem
   await client.getByRole('button', { name: 'Done' }).click();
   await expect(client.getByTestId('next-visit-card')).toBeVisible();
 
+  // A SECOND reschedule keeps counting: same UID, SEQUENCE:2. Regression
+  // guard — the form's edit path used to drop the stored revision, so every
+  // edit wrote revision 1 and repeat reschedules never advanced (or even
+  // regressed after a cancel), making clients refuse genuinely newer links.
+  const secondLink = await rescheduleAndReachShare(page, dateKey, 2);
+  const secondTime = decodeWire(secondLink).t.slice(11, 16);
+  await client.goto(secondLink);
+  await expect(
+    client.getByRole('heading', { name: 'Updated appointment' }),
+  ).toBeVisible();
+  const updatedAgain = await clickAndCaptureIcs(
+    client,
+    client.getByRole('button', { name: 'Update your calendar' }),
+  );
+  expect(updatedAgain.fileName).toBe(`when-again-appointment-${dateKey}.ics`);
+  expect(uidLine(updatedAgain.lines)).toBe(uid);
+  expect(updatedAgain.lines).toContain('SEQUENCE:2');
+  await expect(client.getByRole('heading', { name: 'Updated' })).toBeVisible();
+  await expect(client.locator('dl')).toContainText(`· ${secondTime}`);
+  await client.getByRole('button', { name: 'Done' }).click();
+  await expect(client.getByTestId('next-visit-card')).toBeVisible();
+
   // F3: cancel → "Remove from calendar"; the file voids the event.
   await page.goto(`${BASE}?date=${dateKey}`);
   await page.getByTestId('appt-block').first().click();
@@ -139,7 +162,7 @@ test('calendar story: add on import, home-card export, update on reschedule, rem
   await expect(
     page.getByRole('heading', { name: 'Appointment cancelled' }),
   ).toBeVisible();
-  const cancelledLink = await shareLinkAtRevision(page, 2);
+  const cancelledLink = await shareLinkAtRevision(page, 3);
   await client.goto(cancelledLink);
   await expect(
     client.getByRole('heading', { name: 'Appointment cancelled' }),
@@ -171,7 +194,7 @@ test('AE1: an out-of-date link is refused and the stored card keeps the newer da
   await expect(client.getByRole('heading', { name: 'Added' })).toBeVisible();
   await client.getByRole('button', { name: 'Done' }).click();
   await expect(client.getByTestId('next-visit-card')).toBeVisible();
-  const changedLink = await rescheduleAndReachShare(page, dateKey);
+  const changedLink = await rescheduleAndReachShare(page, dateKey, 1);
   const newTime = decodeWire(changedLink).t.slice(11, 16);
   await client.goto(changedLink);
   await client.getByRole('button', { name: 'Update your calendar' }).click();

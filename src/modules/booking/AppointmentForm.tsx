@@ -393,13 +393,15 @@ export function AppointmentForm({
 
     let savedId: string;
     if (draft.appointmentId) {
-      // Edit / reschedule. Preserve the ORIGINAL status (read from the loaded
-      // appointment, not hardcoded 'booked') so editing a 'done'/'cancelled'
-      // record — or rescheduling one — keeps its state. `editLoad` is served
-      // from the `['appointment', id]` cache in edit mode, so its status is
-      // available synchronously; fall back to 'booked' only if it is somehow
-      // absent (should not happen once appointmentId is set).
-      const status = editLoad?.appointment?.status ?? 'booked';
+      // Edit / reschedule. Preserve the ORIGINAL status and revision from the
+      // current stored row. `editLoad` is a live query and may not have
+      // resolved yet on a fast save after the Change round-trip, so fall back
+      // to an authoritative read — building the update from an unresolved
+      // load would silently flip status to 'booked' and reset the revision,
+      // making clients stale-refuse genuinely newer links.
+      const current =
+        editLoad?.appointment ?? (await getAppointment(draft.appointmentId));
+      const status = current?.status ?? 'booked';
       const updated: Appointment = {
         id: draft.appointmentId,
         clientId: resolvedClientId,
@@ -408,6 +410,9 @@ export function AppointmentForm({
         durationMinutes: value.durationMinutes,
         ...(value.price !== null ? { price: value.price } : {}),
         status,
+        ...(current?.revision !== undefined
+          ? { revision: current.revision }
+          : {}),
       };
       await updateAppointmentMutation.mutateAsync(updated);
       savedId = updated.id;

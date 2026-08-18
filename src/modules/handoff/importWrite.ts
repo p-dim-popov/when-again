@@ -27,6 +27,12 @@ export async function applyHandoffImport(
   const key =
     appointment.providerId ?? syntheticProviderId(appointment.providerName);
   await db.transaction('rw', db.savedProviders, db.received, async () => {
+    // Never regress the stored revision: a tap whose closure-captured
+    // payload lands after a concurrent newer write (another tab, liveQuery
+    // lag) must not undo it. Classify refuses stale links at render time;
+    // this is the same guard at the write path. Absent revisions count as 0.
+    const stored = await db.received.get(appointment.id);
+    if ((appointment.revision ?? 0) < (stored?.revision ?? 0)) return;
     await upsertSavedProvider({
       id: key,
       name: appointment.providerName,
@@ -35,4 +41,18 @@ export async function applyHandoffImport(
     });
     await db.received.put({ ...appointment, providerId: key });
   });
+}
+
+// The upToDate/revisionBehind write-through: catch the stored row's revision
+// up to the payload's and touch NOTHING else. Deliberately not
+// `applyHandoffImport` — that would also overwrite saved-provider
+// name/address/phone (a tap-to-call surface) with no user interaction, so a
+// crafted link with identical appointment fields and a bumped revision could
+// silently replace the provider's phone on mere open. Attribute healing
+// stays behind the interaction-gated import paths.
+export async function catchUpReceivedRevision(
+  stored: ReceivedAppointment,
+  revision: number,
+): Promise<void> {
+  await db.received.put({ ...stored, revision });
 }

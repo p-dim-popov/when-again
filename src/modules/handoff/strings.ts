@@ -36,7 +36,10 @@ const en = {
   'handoff.import.added': 'Added',
   'handoff.import.updated': 'Updated',
   'handoff.import.removed': 'Cancelled',
-  'handoff.import.writeFailed': "Couldn't save. Try again.",
+  'handoff.import.writeFailed': "Couldn't save.",
+  'handoff.import.writeFailed.calendarDone':
+    'The calendar was already updated.',
+  'handoff.import.saveRetry': 'Try saving again',
   // Import screen — edge states
   'handoff.import.invalid.malformed': "This link isn't valid.",
   'handoff.import.invalid.version':
@@ -74,7 +77,9 @@ const bg = {
   'handoff.import.added': 'Добавен',
   'handoff.import.updated': 'Обновен',
   'handoff.import.removed': 'Отменен',
-  'handoff.import.writeFailed': 'Неуспешен запис. Опитайте отново.',
+  'handoff.import.writeFailed': 'Неуспешен запис.',
+  'handoff.import.writeFailed.calendarDone': 'Календарът вече е обновен.',
+  'handoff.import.saveRetry': 'Опитайте да запазите отново',
   'handoff.import.invalid.malformed': 'Тази връзка е невалидна.',
   'handoff.import.invalid.version':
     'Тази връзка е от по-нова версия. Обновете приложението.',
@@ -112,6 +117,8 @@ declare module '../i18n' {
     'handoff.import.updated': true;
     'handoff.import.removed': true;
     'handoff.import.writeFailed': true;
+    'handoff.import.writeFailed.calendarDone': true;
+    'handoff.import.saveRetry': true;
     'handoff.import.invalid.malformed': true;
     'handoff.import.invalid.version': true;
     'handoff.import.empty': true;

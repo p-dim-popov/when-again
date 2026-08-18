@@ -47,6 +47,13 @@ describe('appointments', () => {
     expect((await getAppointment(a.id))?.revision).toBe(2);
   });
 
+  it('bumps from the stored row, so a stale caller copy cannot regress the revision', async () => {
+    const a = await addAppointment({ ...base, start: at('2026-08-21T14:00') });
+    await updateAppointment({ ...a, service: 'Trim' });
+    await updateAppointment({ ...a, service: 'Trim again' }); // stale copy: still revision 0
+    expect((await getAppointment(a.id))?.revision).toBe(2);
+  });
+
   it('treats a missing revision as 0 when updating a legacy record', async () => {
     const legacy: Appointment = {
       ...base,
