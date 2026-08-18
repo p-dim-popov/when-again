@@ -13,6 +13,9 @@ const en = {
   'handoff.import.changed.title': 'Updated appointment',
   'handoff.import.cancelled.title': 'Appointment cancelled',
   'handoff.import.upToDate.title': 'Already added',
+  'handoff.import.stale.title': 'This link is out of date',
+  'handoff.import.stale.current':
+    'Your saved appointment below is the current one.',
   // Import screen — field labels
   'handoff.field.provider': 'From',
   'handoff.field.service': 'Service',
@@ -47,6 +50,8 @@ const bg = {
   'handoff.import.changed.title': 'Променен час',
   'handoff.import.cancelled.title': 'Отменен час',
   'handoff.import.upToDate.title': 'Вече е добавен',
+  'handoff.import.stale.title': 'Тази връзка е остаряла',
+  'handoff.import.stale.current': 'Запазеният час по-долу е актуалният.',
   'handoff.field.provider': 'От',
   'handoff.field.service': 'Услуга',
   'handoff.field.when': 'Кога',
@@ -80,6 +85,8 @@ declare module '../i18n' {
     'handoff.import.changed.title': true;
     'handoff.import.cancelled.title': true;
     'handoff.import.upToDate.title': true;
+    'handoff.import.stale.title': true;
+    'handoff.import.stale.current': true;
     'handoff.field.provider': true;
     'handoff.field.service': true;
     'handoff.field.when': true;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getActiveLanguage, t } from '../i18n';
@@ -98,10 +98,19 @@ export function ImportScreen() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  const decoded = fragment ? decodeHandoff(fragment) : null;
-  const incoming = decoded?.ok
-    ? enrichWithProviderKey(decoded.appointment, decoded.provider.id)
-    : null;
+  // Memoized so the write-through effect below keys on the fragment, not on
+  // a fresh object identity every render.
+  const decoded = useMemo(
+    () => (fragment ? decodeHandoff(fragment) : null),
+    [fragment],
+  );
+  const incoming = useMemo(
+    () =>
+      decoded?.ok
+        ? enrichWithProviderKey(decoded.appointment, decoded.provider.id)
+        : null,
+    [decoded],
+  );
   const incomingId = decoded?.ok ? decoded.appointment.id : undefined;
 
   const storedResult = useLiveQuery(
@@ -111,6 +120,19 @@ export function ImportScreen() {
         : undefined,
     [incomingId],
   );
+  const stored = storedResult?.value;
+
+  // Write-through: a reshared no-op edit carries a higher revision over
+  // identical fields. Classify still reports upToDate — nothing the client
+  // sees changes — but the stored row must catch up silently, or a later
+  // calendar emit from the saved card would use a stale SEQUENCE. Best
+  // effort: on failure the next open of the same link retries.
+  useEffect(() => {
+    if (!decoded?.ok || !incoming || !stored) return;
+    const outcome = classifyImport(incoming, stored);
+    if (outcome.kind !== 'upToDate' || !outcome.revisionBehind) return;
+    void applyHandoffImport(incoming, decoded.provider.phone).catch(() => {});
+  }, [decoded, incoming, stored]);
 
   const goHome = () => void navigate({ to: '/' });
 
@@ -163,7 +185,6 @@ export function ImportScreen() {
   }
 
   if (incomingId != null && storedResult === undefined) return null;
-  const stored = storedResult?.value;
 
   const outcome: ImportOutcome = classifyImport(incoming, stored);
 
@@ -189,6 +210,24 @@ export function ImportScreen() {
       {t('handoff.import.writeFailed')}
     </p>
   ) : null;
+
+  // A stale link never touches the store and offers no save or calendar
+  // action — the card shows the STORED appointment, the client's real,
+  // current one, not the outdated payload.
+  if (outcome.kind === 'stale') {
+    return (
+      <CalmScreen
+        title={t('handoff.import.stale.title')}
+        onDone={goHome}
+        doneLabel={t('handoff.import.done')}
+      >
+        <p className="text-muted text-center text-[11.5px]">
+          {t('handoff.import.stale.current')}
+        </p>
+        <Card appt={outcome.stored} />
+      </CalmScreen>
+    );
+  }
 
   if (outcome.kind === 'upToDate') {
     return (
