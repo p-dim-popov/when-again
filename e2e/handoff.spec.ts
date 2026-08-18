@@ -140,7 +140,7 @@ test('round-trip: book → import → reschedule → cancel, no duplicates', asy
   await expect(
     page.getByRole('heading', { name: 'Updated appointment' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Update' }).click();
+  await page.getByRole('button', { name: 'Update your calendar' }).click();
   await expect(page.getByRole('heading', { name: 'Updated' })).toBeVisible();
 
   // 4. Provider cancels, then re-shares. Same `?date=` reasoning as above —
@@ -162,7 +162,7 @@ test('round-trip: book → import → reschedule → cancel, no duplicates', asy
   await expect(
     page.getByRole('heading', { name: 'Appointment cancelled' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'OK' }).click();
+  await page.getByRole('button', { name: 'Remove from calendar' }).click();
   await expect(page.getByRole('heading', { name: 'Cancelled' })).toBeVisible();
 
   // 6. No duplicates: exactly one received record, now cancelled.
