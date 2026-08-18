@@ -30,22 +30,7 @@ export function buildCalendarHandoff(
   opts: { origin: string; basePath: string },
   now?: Date,
 ): CalendarHandoff {
-  const reimportUrl = buildHandoffUrl(
-    {
-      id: appointment.id,
-      providerName: appointment.providerName,
-      ...(appointment.address ? { address: appointment.address } : {}),
-      service: appointment.service,
-      start: appointment.start,
-      durationMinutes: appointment.durationMinutes,
-      status: appointment.status,
-      ...(provider.id ? { providerId: provider.id } : {}),
-      ...(provider.phone ? { phone: provider.phone } : {}),
-      ...(appointment.revision ? { revision: appointment.revision } : {}),
-    },
-    opts,
-  );
-  const icsAppointment: IcsAppointment = {
+  const common = {
     id: appointment.id,
     providerName: appointment.providerName,
     ...(appointment.address ? { address: appointment.address } : {}),
@@ -53,6 +38,19 @@ export function buildCalendarHandoff(
     start: appointment.start,
     durationMinutes: appointment.durationMinutes,
     status: appointment.status,
+  };
+  const reimportUrl = buildHandoffUrl(
+    {
+      ...common,
+      ...(provider.id ? { providerId: provider.id } : {}),
+      ...(provider.phone ? { phone: provider.phone } : {}),
+      // Falsy guard on purpose: revision 0 stays off the wire (QR compactness).
+      ...(appointment.revision ? { revision: appointment.revision } : {}),
+    },
+    opts,
+  );
+  const icsAppointment: IcsAppointment = {
+    ...common,
     ...(appointment.revision !== undefined
       ? { revision: appointment.revision }
       : {}),
