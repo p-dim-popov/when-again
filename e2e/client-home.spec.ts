@@ -29,7 +29,7 @@ function importUrl(over: Partial<Parameters<typeof encodeHandoff>[0]> = {}) {
 
 test('import lands a fresh profile on the big-card home', async ({ page }) => {
   await page.goto(importUrl());
-  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
   await page.getByRole('button', { name: 'Done' }).click();
 
   const card = page.getByTestId('next-visit-card');
@@ -51,7 +51,7 @@ test('providers tab lists the salon; delete removes salon and visits', async ({
   page,
 }) => {
   await page.goto(importUrl());
-  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
   await page.getByRole('button', { name: 'Done' }).click();
 
   await page.goto(`${BASE}providers`);
@@ -73,7 +73,7 @@ test('a payload without provider id groups under the synthetic record', async ({
   page,
 }) => {
   await page.goto(importUrl({ providerId: undefined, phone: undefined }));
-  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
   await page.getByRole('button', { name: 'Done' }).click();
   await page.goto(`${BASE}providers`);
   await expect(page.getByTestId('provider-card')).toContainText('Студио Мария');

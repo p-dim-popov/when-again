@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getActiveLanguage, t } from '../i18n';
@@ -6,7 +6,12 @@ import { formatDayLabel } from '../schedule';
 import { getReceived, type ReceivedAppointment } from '../received';
 import { decodeHandoff } from './codec';
 import { classifyImport, type ImportOutcome } from './classify';
-import { applyHandoffImport, enrichWithProviderKey } from './importWrite';
+import {
+  applyHandoffImport,
+  catchUpReceivedRevision,
+  enrichWithProviderKey,
+} from './importWrite';
+import { CalendarAction } from './CalendarAction';
 import { adoptClientModeIfUnset } from '../settings';
 
 function CalmScreen({
@@ -98,10 +103,19 @@ export function ImportScreen() {
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  const decoded = fragment ? decodeHandoff(fragment) : null;
-  const incoming = decoded?.ok
-    ? enrichWithProviderKey(decoded.appointment, decoded.provider.id)
-    : null;
+  // Memoized so the write-through effect below keys on the fragment, not on
+  // a fresh object identity every render.
+  const decoded = useMemo(
+    () => (fragment ? decodeHandoff(fragment) : null),
+    [fragment],
+  );
+  const incoming = useMemo(
+    () =>
+      decoded?.ok
+        ? enrichWithProviderKey(decoded.appointment, decoded.provider.id)
+        : null,
+    [decoded],
+  );
   const incomingId = decoded?.ok ? decoded.appointment.id : undefined;
 
   const storedResult = useLiveQuery(
@@ -111,6 +125,27 @@ export function ImportScreen() {
         : undefined,
     [incomingId],
   );
+  const stored = storedResult?.value;
+
+  // Write-through: a reshared no-op edit carries a higher revision over
+  // identical fields. Classify still reports upToDate — nothing the client
+  // sees changes — but the stored row must catch up silently, or a later
+  // calendar emit from the saved card would use a stale SEQUENCE. Narrowed
+  // to the revision only (never `applyHandoffImport`): with no user
+  // interaction, nothing else may change — a crafted link with identical
+  // appointment fields and a bumped revision must not silently rewrite the
+  // saved provider's name/address/phone. Best effort: on failure the next
+  // open of the same link retries.
+  useEffect(() => {
+    if (!decoded?.ok || !incoming || !stored) return;
+    const outcome = classifyImport(incoming, stored);
+    if (outcome.kind !== 'upToDate' || !outcome.revisionBehind) return;
+    // `revisionBehind` guarantees the incoming revision is defined (it is
+    // strictly ahead of the stored one); `?? 0` only satisfies the type.
+    void catchUpReceivedRevision(stored, incoming.revision ?? 0).catch(
+      () => {},
+    );
+  }, [decoded, incoming, stored]);
 
   const goHome = () => void navigate({ to: '/' });
 
@@ -158,12 +193,18 @@ export function ImportScreen() {
         doneLabel={t('handoff.import.done')}
       >
         <Card appt={incoming} />
+        {saved !== 'added' && (
+          // KTD9: iOS can silently no-op a same-UID re-import; after an
+          // update or cancel, one guidance line covers the manual fix.
+          <p className="text-muted text-center text-[11.5px]">
+            {t('handoff.calendar.fallbackHint')}
+          </p>
+        )}
       </CalmScreen>
     );
   }
 
   if (incomingId != null && storedResult === undefined) return null;
-  const stored = storedResult?.value;
 
   const outcome: ImportOutcome = classifyImport(incoming, stored);
 
@@ -184,11 +225,23 @@ export function ImportScreen() {
     }
   }
 
-  const errorNote = writeError ? (
-    <p className="text-danger text-center text-[11.5px]">
-      {t('handoff.import.writeFailed')}
-    </p>
-  ) : null;
+  // A stale link never touches the store and offers no save or calendar
+  // action — the card shows the STORED appointment, the client's real,
+  // current one, not the outdated payload.
+  if (outcome.kind === 'stale') {
+    return (
+      <CalmScreen
+        title={t('handoff.import.stale.title')}
+        onDone={goHome}
+        doneLabel={t('handoff.import.done')}
+      >
+        <p className="text-muted text-center text-[11.5px]">
+          {t('handoff.import.stale.current')}
+        </p>
+        <Card appt={outcome.stored} />
+      </CalmScreen>
+    );
+  }
 
   if (outcome.kind === 'upToDate') {
     return (
@@ -198,27 +251,41 @@ export function ImportScreen() {
         doneLabel={t('handoff.import.done')}
       >
         <Card appt={incoming} />
+        {/* Calendar export for an appointment that is already saved — e.g.
+            one that is not the next visit, so the saved card offers nothing.
+            No `onActivate`: there is nothing to save. Data source: the
+            decoded payload (same shape the branches below pass). In this
+            branch its fields equal the stored row's and its revision is
+            never behind (stale gates earlier), so the SEQUENCE is correct
+            even before the write-through effect lands. */}
+        <CalendarAction
+          label={t('handoff.calendar.add')}
+          appointment={decoded.appointment}
+          provider={decoded.provider}
+        />
       </CalmScreen>
     );
   }
 
-  // new / changed / cancelled all render a card + a primary action.
+  // new / changed / cancelled all render a card + ONE combined primary
+  // action (P0): the calendar handoff and the store write share the button,
+  // so the label leads with the calendar verb for the outcome.
   const { title, action, next } =
     outcome.kind === 'new'
       ? {
           title: t('handoff.import.new.title'),
-          action: t('handoff.import.add'),
+          action: t('handoff.calendar.add'),
           next: 'added' as const,
         }
       : outcome.kind === 'changed'
         ? {
             title: t('handoff.import.changed.title'),
-            action: t('handoff.import.update'),
+            action: t('handoff.calendar.update'),
             next: 'updated' as const,
           }
         : {
             title: t('handoff.import.cancelled.title'),
-            action: t('handoff.import.ok'),
+            action: t('handoff.calendar.remove'),
             next: 'removed' as const,
           };
 
@@ -232,14 +299,32 @@ export function ImportScreen() {
         {outcome.kind === 'changed' && (
           <ChangedNote incoming={incoming} stored={outcome.stored} />
         )}
-        {errorNote}
-        <button
-          type="button"
-          onClick={() => void write(next)}
-          className="rounded-card bg-accent text-on-accent shadow-fab w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650]"
-        >
-          {action}
-        </button>
+        {writeError ? (
+          // The combined action already fired its calendar half — delivery
+          // is synchronous in the tap, before the store write (settled
+          // order). The retry is save-only: no second share sheet, and the
+          // copy says the calendar part is done.
+          <>
+            <p className="text-danger text-center text-[11.5px]">
+              {t('handoff.import.writeFailed')}{' '}
+              {t('handoff.import.writeFailed.calendarDone')}
+            </p>
+            <button
+              type="button"
+              onClick={() => void write(next)}
+              className="rounded-card bg-accent text-on-accent shadow-fab w-full cursor-pointer border-0 p-[13px] text-center text-[15px] font-[650]"
+            >
+              {t('handoff.import.saveRetry')}
+            </button>
+          </>
+        ) : (
+          <CalendarAction
+            label={action}
+            appointment={decoded.appointment}
+            provider={decoded.provider}
+            onActivate={() => void write(next)}
+          />
+        )}
       </div>
     </main>
   );

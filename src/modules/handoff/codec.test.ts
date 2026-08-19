@@ -29,6 +29,7 @@ describe('handoff codec', () => {
         start: { dateTime: '2026-08-15T15:00', timeZone: 'Europe/Sofia' },
         durationMinutes: 45,
         status: 'booked',
+        revision: 0,
       },
       provider: {},
     });
@@ -132,6 +133,84 @@ describe('handoff codec', () => {
     expect(decoded.ok).toBe(true);
     if (!decoded.ok) return;
     expect(decoded.provider).toEqual({});
+  });
+
+  it('round-trips the revision via r', () => {
+    const r = decodeHandoff(encodeHandoff({ ...input, revision: 3 }));
+    expect(r.ok && r.appointment.revision).toBe(3);
+  });
+
+  it('decodes a payload without r to revision 0 (pre-field payloads)', () => {
+    // `input` carries no revision, so the encoder omits `r` — same wire shape
+    // as a payload built before the field existed.
+    const r = decodeHandoff(encodeHandoff(input));
+    expect(r.ok && r.appointment.revision).toBe(0);
+  });
+
+  it('rejects a non-numeric r as malformed', () => {
+    const wire = {
+      v: 1,
+      i: 'a1',
+      p: 'X',
+      s: 'Y',
+      t: '2026-09-01T15:00',
+      z: 'Europe/Sofia',
+      d: 30,
+      c: 0,
+      r: 'high',
+    };
+    const fragment = btoa(
+      String.fromCharCode(...new TextEncoder().encode(JSON.stringify(wire))),
+    )
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+    expect(decodeHandoff(fragment)).toEqual({ ok: false, reason: 'malformed' });
+  });
+
+  // Craft a raw wire fragment directly (bypassing encodeHandoff) so tests
+  // can probe decode-side validation of values the encoder never emits.
+  const wireFragment = (wire: object): string =>
+    btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(wire))))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+  const baseWire = {
+    v: 1,
+    i: 'a1',
+    p: 'X',
+    s: 'Y',
+    t: '2026-09-01T15:00',
+    z: 'Europe/Sofia',
+    d: 30,
+    c: 0,
+  };
+
+  it('rejects a non-integer r as malformed', () => {
+    expect(decodeHandoff(wireFragment({ ...baseWire, r: 1.5 }))).toEqual({
+      ok: false,
+      reason: 'malformed',
+    });
+  });
+
+  it('rejects a negative r as malformed', () => {
+    expect(decodeHandoff(wireFragment({ ...baseWire, r: -1 }))).toEqual({
+      ok: false,
+      reason: 'malformed',
+    });
+  });
+
+  it('rejects an r above the ceiling as malformed', () => {
+    expect(decodeHandoff(wireFragment({ ...baseWire, r: 1e15 }))).toEqual({
+      ok: false,
+      reason: 'malformed',
+    });
+  });
+
+  it('decodes an explicit r: 0 (encode omits it, but the wire allows it)', () => {
+    const r = decodeHandoff(wireFragment({ ...baseWire, r: 0 }));
+    expect(r.ok && r.appointment.revision).toBe(0);
   });
 
   it('rejects a non-string k or f as malformed', () => {

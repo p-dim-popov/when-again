@@ -13,6 +13,9 @@ const en = {
   'handoff.import.changed.title': 'Updated appointment',
   'handoff.import.cancelled.title': 'Appointment cancelled',
   'handoff.import.upToDate.title': 'Already added',
+  'handoff.import.stale.title': 'This link is out of date',
+  'handoff.import.stale.current':
+    'Your saved appointment below is the current one.',
   // Import screen — field labels
   'handoff.field.provider': 'From',
   'handoff.field.service': 'Service',
@@ -20,15 +23,23 @@ const en = {
   'handoff.field.duration': 'Duration',
   'handoff.field.address': 'Address',
   'handoff.import.previously': 'was {value}',
-  // Import screen — actions + confirmations
-  'handoff.import.add': 'Add appointment',
-  'handoff.import.update': 'Update',
-  'handoff.import.ok': 'OK',
+  // Calendar handoff — combined actions + disclosure (R10) + iOS fallback hint (KTD9)
+  'handoff.calendar.add': 'Add to calendar',
+  'handoff.calendar.update': 'Update your calendar',
+  'handoff.calendar.remove': 'Remove from calendar',
+  'handoff.calendar.disclosure':
+    'The calendar event contains a link back to this appointment.',
+  'handoff.calendar.fallbackHint':
+    'If your calendar did not change, remove the old event and add this one.',
+  // Import screen — confirmations
   'handoff.import.done': 'Done',
   'handoff.import.added': 'Added',
   'handoff.import.updated': 'Updated',
   'handoff.import.removed': 'Cancelled',
-  'handoff.import.writeFailed': "Couldn't save. Try again.",
+  'handoff.import.writeFailed': "Couldn't save.",
+  'handoff.import.writeFailed.calendarDone':
+    'The calendar was already updated.',
+  'handoff.import.saveRetry': 'Try saving again',
   // Import screen — edge states
   'handoff.import.invalid.malformed': "This link isn't valid.",
   'handoff.import.invalid.version':
@@ -47,20 +58,28 @@ const bg = {
   'handoff.import.changed.title': 'Променен час',
   'handoff.import.cancelled.title': 'Отменен час',
   'handoff.import.upToDate.title': 'Вече е добавен',
+  'handoff.import.stale.title': 'Тази връзка е остаряла',
+  'handoff.import.stale.current': 'Запазеният час по-долу е актуалният.',
   'handoff.field.provider': 'От',
   'handoff.field.service': 'Услуга',
   'handoff.field.when': 'Кога',
   'handoff.field.duration': 'Времетраене',
   'handoff.field.address': 'Адрес',
   'handoff.import.previously': 'беше {value}',
-  'handoff.import.add': 'Добави часа',
-  'handoff.import.update': 'Обнови',
-  'handoff.import.ok': 'Добре',
+  'handoff.calendar.add': 'Добави в календара',
+  'handoff.calendar.update': 'Обнови календара си',
+  'handoff.calendar.remove': 'Премахни от календара',
+  'handoff.calendar.disclosure':
+    'Събитието в календара съдържа връзка към този час.',
+  'handoff.calendar.fallbackHint':
+    'Ако календарът ви не се промени, премахнете старото събитие и добавете това.',
   'handoff.import.done': 'Готово',
   'handoff.import.added': 'Добавен',
   'handoff.import.updated': 'Обновен',
   'handoff.import.removed': 'Отменен',
-  'handoff.import.writeFailed': 'Неуспешен запис. Опитайте отново.',
+  'handoff.import.writeFailed': 'Неуспешен запис.',
+  'handoff.import.writeFailed.calendarDone': 'Календарът вече е обновен.',
+  'handoff.import.saveRetry': 'Опитайте да запазите отново',
   'handoff.import.invalid.malformed': 'Тази връзка е невалидна.',
   'handoff.import.invalid.version':
     'Тази връзка е от по-нова версия. Обновете приложението.',
@@ -80,20 +99,26 @@ declare module '../i18n' {
     'handoff.import.changed.title': true;
     'handoff.import.cancelled.title': true;
     'handoff.import.upToDate.title': true;
+    'handoff.import.stale.title': true;
+    'handoff.import.stale.current': true;
     'handoff.field.provider': true;
     'handoff.field.service': true;
     'handoff.field.when': true;
     'handoff.field.duration': true;
     'handoff.field.address': true;
     'handoff.import.previously': true;
-    'handoff.import.add': true;
-    'handoff.import.update': true;
-    'handoff.import.ok': true;
+    'handoff.calendar.add': true;
+    'handoff.calendar.update': true;
+    'handoff.calendar.remove': true;
+    'handoff.calendar.disclosure': true;
+    'handoff.calendar.fallbackHint': true;
     'handoff.import.done': true;
     'handoff.import.added': true;
     'handoff.import.updated': true;
     'handoff.import.removed': true;
     'handoff.import.writeFailed': true;
+    'handoff.import.writeFailed.calendarDone': true;
+    'handoff.import.saveRetry': true;
     'handoff.import.invalid.malformed': true;
     'handoff.import.invalid.version': true;
     'handoff.import.empty': true;

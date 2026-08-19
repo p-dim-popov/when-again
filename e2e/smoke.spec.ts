@@ -69,7 +69,7 @@ test('import-first flow infers client mode without showing the chooser', async (
   await expect(
     page.getByRole('heading', { name: 'New appointment' }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Add appointment' }).click();
+  await page.getByRole('button', { name: 'Add to calendar' }).click();
   await expect(page.getByRole('heading', { name: 'Added' })).toBeVisible();
 
   await page.goto('/when-again/');

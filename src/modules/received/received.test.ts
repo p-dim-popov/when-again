@@ -26,6 +26,11 @@ describe('received store', () => {
     expect(await getReceived('appt-1')).toEqual(sample);
   });
 
+  it('persists the revision when present', async () => {
+    await upsertReceived({ ...sample, revision: 4 });
+    expect((await getReceived('appt-1'))?.revision).toBe(4);
+  });
+
   it('overwrites in place on a second upsert with the same id', async () => {
     await upsertReceived(sample);
     await upsertReceived({ ...sample, status: 'cancelled' });

@@ -32,6 +32,39 @@ describe('appointments', () => {
     expect((await getAppointment(a.id))?.status).toBe('cancelled');
   });
 
+  it('seeds revision 0 on create', async () => {
+    const a = await addAppointment({ ...base, start: at('2026-08-21T14:00') });
+    expect(a.revision).toBe(0);
+    expect((await getAppointment(a.id))?.revision).toBe(0);
+  });
+
+  it('bumps revision on every update, including a status flip', async () => {
+    const a = await addAppointment({ ...base, start: at('2026-08-21T14:00') });
+    await updateAppointment({ ...a, service: 'Trim' });
+    const after1 = await getAppointment(a.id);
+    expect(after1?.revision).toBe(1);
+    await updateAppointment({ ...after1!, status: 'cancelled' });
+    expect((await getAppointment(a.id))?.revision).toBe(2);
+  });
+
+  it('bumps from the stored row, so a stale caller copy cannot regress the revision', async () => {
+    const a = await addAppointment({ ...base, start: at('2026-08-21T14:00') });
+    await updateAppointment({ ...a, service: 'Trim' });
+    await updateAppointment({ ...a, service: 'Trim again' }); // stale copy: still revision 0
+    expect((await getAppointment(a.id))?.revision).toBe(2);
+  });
+
+  it('treats a missing revision as 0 when updating a legacy record', async () => {
+    const legacy: Appointment = {
+      ...base,
+      id: 'legacy-1',
+      start: at('2026-08-21T14:00'),
+    };
+    await replaceAllAppointments([legacy]);
+    await updateAppointment({ ...legacy, service: 'Trim' });
+    expect((await getAppointment('legacy-1'))?.revision).toBe(1);
+  });
+
   it('lists a day sorted by start time, excluding other days', async () => {
     await addAppointment({ ...base, start: at('2026-08-21T15:00') });
     await addAppointment({ ...base, start: at('2026-08-21T09:30') });
@@ -65,5 +98,13 @@ describe('appointments', () => {
     ];
     await replaceAllAppointments(restored);
     expect(await listAllAppointments()).toEqual(restored);
+  });
+
+  it('replaceAllAppointments preserves stored revisions untouched', async () => {
+    const restored: Appointment[] = [
+      { ...base, id: 'x1', start: at('2027-01-01T08:00'), revision: 5 },
+    ];
+    await replaceAllAppointments(restored);
+    expect((await getAppointment('x1'))?.revision).toBe(5);
   });
 });

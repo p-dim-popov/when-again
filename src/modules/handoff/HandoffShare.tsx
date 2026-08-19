@@ -34,6 +34,7 @@ export function HandoffShare({
       start: appointment.start,
       durationMinutes: appointment.durationMinutes,
       status: appointment.status === 'cancelled' ? 'cancelled' : 'booked',
+      ...(appointment.revision ? { revision: appointment.revision } : {}),
     },
     { origin: window.location.origin, basePath: import.meta.env.BASE_URL },
   );

@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ideation: What's Next for when-again</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Condensed:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --ink: #1f1d1a;
+  --ink-soft: #5b564e;
+  --line: #e4e0d8;
+  --accent: #7a4a2b;
+  --accent-soft: #f3e9df;
+  --accent-text: #6b3f22;
+  --good: #2e6b46;
+  --good-soft: #e6f0e9;
+  --warn: #8a5a17;
+  --warn-soft: #f6eeda;
+  --bad: #9c3a2e;
+  --bad-soft: #f7e8e5;
+  --chip-ink: #4a453d;
+  --diagram-bg: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171512;
+    --surface: #201d19;
+    --ink: #ece8e1;
+    --ink-soft: #b0a89b;
+    --line: #38332c;
+    --accent: #d29a6b;
+    --accent-soft: #2e2620;
+    --accent-text: #dcab7f;
+    --good: #7cc39a;
+    --good-soft: #1f2b23;
+    --warn: #d9ae5f;
+    --warn-soft: #2d2718;
+    --bad: #e08a7d;
+    --bad-soft: #2f201d;
+    --chip-ink: #c9c2b6;
+    --diagram-bg: #201d19;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+}
+.page {
+  max-width: 900px;
+  margin-inline: auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+h1, h2, h3 {
+  font-family: "Sofia Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+h1 { font-size: 2.4rem; font-weight: 800; margin: 0.4rem 0 0.2rem; }
+h2 { font-size: 1.55rem; font-weight: 700; margin: 2.8rem 0 0.8rem; border-bottom: 2px solid var(--line); padding-bottom: 0.35rem; }
+h3 { font-size: 1.22rem; font-weight: 700; margin: 0 0 0.4rem; }
+p, li { max-width: 72ch; }
+code {
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
+  font-size: 0.88em;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  padding: 0.08em 0.35em;
+  border-radius: 4px;
+}
+a { color: var(--accent-text); }
+.eyebrow {
+  font-family: "Sofia Sans Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.meta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.9rem 0 0;
+}
+.meta-strip span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--chip-ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.22rem 0.75rem;
+}
+.lede { font-size: 1.05rem; color: var(--ink-soft); max-width: 76ch; }
+.jump {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.9rem 1.2rem;
+  margin: 1rem 0 1.8rem;
+}
+.jump ol { margin: 0.3rem 0 0; padding-left: 1.4rem; }
+.jump li { margin: 0.2rem 0; }
+.jump a { text-decoration: none; font-weight: 600; }
+.jump a:hover { text-decoration: underline; }
+article.idea {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.3rem 1.5rem 1.1rem;
+  margin: 1.3rem 0;
+}
+.idea-head { display: flex; align-items: baseline; gap: 0.7rem; flex-wrap: wrap; }
+.rank {
+  font-family: "Sofia Sans Condensed", sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--accent-text);
+}
+.chips { display: flex; gap: 0.45rem; flex-wrap: wrap; margin: 0.5rem 0 0.9rem; }
+.chip {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 0.18rem 0.7rem;
+  border: 1px solid transparent;
+}
+.chip.conf-high { background: var(--good-soft); color: var(--good); }
+.chip.conf-med  { background: var(--warn-soft); color: var(--warn); }
+.chip.cx        { background: var(--accent-soft); color: var(--accent-text); }
+.chip.frames    { background: transparent; border-color: var(--line); color: var(--chip-ink); }
+dl.fields { margin: 0.8rem 0 0.2rem; }
+dl.fields dt {
+  font-family: "Sofia Sans Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.83rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: 0.8rem;
+}
+dl.fields dd { margin: 0.15rem 0 0; }
+dl.fields dd p { margin: 0.3rem 0; }
+.callout {
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin: 0.9rem 0;
+  font-size: 0.93rem;
+}
+.callout.warn { background: var(--warn-soft); }
+.callout.warn .co-label { color: var(--warn); }
+.callout.note { background: var(--accent-soft); }
+.callout.note .co-label { color: var(--accent-text); }
+.co-label {
+  font-family: "Sofia Sans Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+figure { margin: 1.1rem 0; }
+figure svg { max-width: 100%; height: auto; display: block; }
+figcaption { font-size: 0.83rem; color: var(--ink-soft); margin-top: 0.35rem; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: 0.92rem; }
+th, td { text-align: left; padding: 0.5rem 0.7rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th {
+  font-family: "Sofia Sans Condensed", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+footer.composition-signal {
+  margin-top: 3.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+.svg-label { font-family: "Manrope", sans-serif; font-size: 12px; fill: var(--ink); paint-order: stroke fill; stroke: var(--diagram-bg); stroke-width: 3px; }
+.svg-label-soft { font-family: "Manrope", sans-serif; font-size: 11px; fill: var(--ink-soft); paint-order: stroke fill; stroke: var(--diagram-bg); stroke-width: 3px; }
+.svg-box { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.2; rx: 8; }
+.svg-box-plain { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; rx: 8; }
+.svg-arrow { stroke: var(--ink-soft); stroke-width: 1.5; fill: none; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <span class="eyebrow">Ideation</span>
+  <h1>What's Next for when-again</h1>
+  <p class="lede">An open (surprise-me) ideation run over the whole project: codebase, docs, issue tracker, and external research. Seven ranked directions survived generation by six independent framing agents and an adversarial verification pass that opened every cited file — and, for one idea, ran a production build.</p>
+  <div class="meta-strip">
+    <span>date: 2026-08-18</span>
+    <span>topic: open-ideation</span>
+    <span>mode: repo-grounded</span>
+    <span>48 raw → 23 candidates → 7 survivors</span>
+  </div>
+</header>
+
+<section id="grounding-context">
+<h2>Grounding Context</h2>
+<p><strong>Codebase.</strong> 13 modules in a clean modulith — zero deep-reach import violations, zero inline debt markers (no TODO/FIXME/skipped tests anywhere), all modules unit-tested (~211 unit + 31 e2e). Debt lives as tracked issues, not code rot. <code>shell</code> is the outlier: 30 files / ~2,046&nbsp;LOC bundling app chrome, both mode home screens, settings, and update UI — the default landing spot for every new screen because the project bans a <code>shared/</code> folder. The provider-side <code>/clients</code> route is a bare placeholder (epic #5). <strong>No <code>.ics</code> code exists anywhere</strong>, despite the README promising "One tap adds it to your calendar, and the calendar reminds you."</p>
+<p><strong>Backlog.</strong> Four open epics, all unspecified — and two of them (#9 robustness, #10 testing/CI) largely describe work that already shipped. Untracked gaps named in specs but filed nowhere: client-mode backup v2, per-provider detail route, services-editor question, synthetic-provider merge.</p>
+<p><strong>External research (2026).</strong> No dedicated no-backend appointment product exists anywhere — the niche is unclaimed. Fresha killed its free tier in 2025 ($19.95/mo); Booksy has none ($29.99/mo). Google abandoned the Notification Triggers API with no replacement, so scheduled local notifications are dead as a web capability — which makes <code>.ics</code> calendar handoff the <em>only durable</em> serverless reminder path, not a stopgap. QR practical ceiling ~800 bytes. iOS push requires home-screen install + iOS 16.4+.</p>
+<p><strong>Verification.</strong> Every candidate's citations were checked against the live repo by fresh-context verifiers (14 sound / 6 weak / 0 refuted). Corrections they forced are folded into the cards below and flagged where they matter.</p>
+</section>
+
+<section id="topic-axes">
+<h2>Topic Axes</h2>
+<p>Decomposition skipped — surprise-me mode. Each framing agent chose its own subjects; convergence across frames was scored instead of axis spread.</p>
+</section>
+
+<section id="ranked-ideas">
+<h2>Ranked Ideas</h2>
+
+<nav class="jump">
+  <span class="eyebrow">Jump to</span>
+  <ol>
+    <li><a href="#idea-1">Ship .ics as the product's sync channel, not a button</a></li>
+    <li><a href="#idea-2">"Your data survives" — one release, three layers</a></li>
+    <li><a href="#idea-3">Re-spec epic #5 as a recall &amp; rebook engine</a></li>
+    <li><a href="#idea-4">Make the handoff a two-way protocol</a></li>
+    <li><a href="#idea-5">Stop shipping the provider app to clients</a></li>
+    <li><a href="#idea-6">Make the hard constraints executable</a></li>
+    <li><a href="#idea-7">Decide what shell is: mode as the seam, or no mode at all</a></li>
+  </ol>
+</nav>
+
+<article class="idea" id="idea-1">
+  <div class="idea-head"><span class="rank">1.</span><h3>Ship <code>.ics</code> as the product's sync channel, not an "add to calendar" button</h3></div>
+  <div class="chips">
+    <span class="chip conf-high">Confidence 85%</span>
+    <span class="chip cx">Complexity: Medium</span>
+    <span class="chip frames">All 6 frames converged here</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p>Epic #8 is currently framed as "one button on the client home card." Reframe it as the app's only cross-device write channel. The provider's share action hands over the <code>.ics</code> <em>as the shared file</em> (<code>navigator.share({ files })</code>, blob-download fallback), so the OS calendar takes it and the reminder exists before the client has ever opened when-again. A stable <code>UID</code> derived from the appointment id plus an incrementing <code>SEQUENCE</code> gives mutation semantics: a reshare <em>replaces</em> the client's calendar entry instead of duplicating it, and <code>STATUS:CANCELLED</code> retracts it. Every later feature that changes an appointment (edit, cancel, reschedule) inherits a working propagation path instead of inventing one.</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> <code>README.md:15-16</code> — "One tap adds it to your calendar, and the calendar reminds you" — against zero <code>.ics</code> code anywhere in <code>src/</code> (verified by repo-wide grep). The handoff wire format already carries everything a VEVENT needs (<code>codec.ts:28-41</code>: dateTime, IANA zone, duration, cancelled flag). <strong>external:</strong> Google ended Notification Triggers API development with no standards-track replacement, so scheduled local web notifications are dead; <code>VALARM</code> (RFC 5545 §3.6.6) is broadly honored on import by Google and Apple Calendar.</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>This is the product's entire reminder mechanism and its only unbacked public promise, and the external research says it is the near-unique market position: no competitor serves the "client installs nothing" case. Framing it as transport rather than export means the reminder works with no install, no permission grant, no iOS version floor — on an ancient Android with WhatsApp and a stock calendar.</p></dd>
+    <dt>Downsides &amp; open forks</dt>
+    <dd>
+      <p>Two genuine design forks the generating frames disagreed on, to settle in a brainstorm: <strong>floating <code>DTSTART</code> vs <code>DTSTART;TZID=</code></strong> (floating time is the literal iCalendar encoding of the wall-clock rule; TZID is what makes the alarm fire in the client's real local time) — and whether the event <code>DESCRIPTION</code> carries a self-restoring re-import link, which would travel to the client's own Google/Apple account and needs a plain-language privacy disclosure rather than silence.</p>
+    </dd>
+  </dl>
+  <div class="callout warn"><span class="co-label">Verified prerequisite</span><code>received</code> has no revision field — only <code>status: 'booked' | 'cancelled'</code> — and a reshare "overwrites in place" silently. Without a monotonic revision in the payload and the row, the app can only ever emit <code>SEQUENCE:0</code>, and calendar clients may drop reschedule updates as duplicates (plausible but confirmed only via secondary sources — validate against real Google/Apple Calendar early). The data-layer field is a prerequisite for this epic being correct, not an enhancement after it.</div>
+  <div class="callout note"><span class="co-label">Sequencing tension (verified real)</span>Shipping this well substantially undercuts the client's reason to keep the PWA — the calendar carries the reminder. Decide client mode's standalone value in the same breath; the strongest candidate answer is the "lifelong multi-provider visit record" reframing (see Rejection Summary — folded into this decision, not lost).</div>
+  <figure>
+    <svg viewBox="0 0 720 150" role="img" aria-label="Flow: provider share emits an .ics file that the OS calendar imports; a reshare with incremented SEQUENCE replaces the event">
+      <rect class="svg-box" x="10" y="20" width="150" height="44" rx="8"/>
+      <text class="svg-label" x="85" y="46" text-anchor="middle">Provider taps share</text>
+      <rect class="svg-box-plain" x="240" y="20" width="180" height="44" rx="8"/>
+      <text class="svg-label" x="330" y="39" text-anchor="middle">.ics file + link</text>
+      <text class="svg-label-soft" x="330" y="55" text-anchor="middle">UID = appt id · SEQUENCE · VALARM</text>
+      <rect class="svg-box" x="500" y="20" width="200" height="44" rx="8"/>
+      <text class="svg-label" x="600" y="39" text-anchor="middle">Client's OS calendar</text>
+      <text class="svg-label-soft" x="600" y="55" text-anchor="middle">reminder exists — app never opened</text>
+      <path class="svg-arrow" d="M160 42 L235 42" marker-end="url(#ar1)"/>
+      <path class="svg-arrow" d="M420 42 L495 42" marker-end="url(#ar1)"/>
+      <path class="svg-arrow" d="M85 64 L85 112 L495 112" marker-end="url(#ar1)"/>
+      <text class="svg-label-soft" x="290" y="104" text-anchor="middle">reschedule → reshare, SEQUENCE+1 → calendar replaces the event (no duplicate)</text>
+      <defs><marker id="ar1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
+    </svg>
+    <figcaption>The reminder as payload, not app feature — with amendment riding the same channel.</figcaption>
+  </figure>
+</article>
+
+<article class="idea" id="idea-2">
+  <div class="idea-head"><span class="rank">2.</span><h3>"Your data survives" — one release, three layers</h3></div>
+  <div class="chips">
+    <span class="chip conf-high">Confidence 90%</span>
+    <span class="chip cx">Complexity: Medium</span>
+    <span class="chip frames">Pain · Leverage · Analogy · Flip frames</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p>Three verified defects form one story, and each alone is insufficient. <strong>(a)&nbsp;Eviction:</strong> <code>requestPersistentStorage()</code> is written, exported from <code>db</code>'s public API, and unit-tested — and called from nowhere (verified: zero app call sites). Every provider's business record sits in default, evictable IndexedDB; WebKit caps script-writable storage at 7 days of non-use for non-installed sites. <strong>(b)&nbsp;Completeness &amp; forward-compat:</strong> <code>exportBackup</code> hand-lists three tables, so <code>received</code> and <code>savedProviders</code> are silently absent from export <em>and</em> the import transaction — a client who backs up gets a file omitting their own data — and <code>parseBackup</code> rejects on strict version equality, so the day v2 lands, every v1 file users saved becomes unimportable. Fix structurally: each module contributes its backup slice through the same <code>defineXStore(db)</code> registry it already uses for schema, plus a version-upgrade ladder and frozen v1 golden fixtures now, while exactly one version exists. <strong>(c)&nbsp;Habit:</strong> attach backup to a "close the day" ritual (day summary → backup file as the closing act), stamping <code>lastBackupAt</code> on completion — which resolves the deferred stamping-contract decision (verified: the stamp currently fires before any save dialog) — and add a restore drill that parses a backup and reports its contents without writing (<code>parseBackup</code> is already a pure validator).</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> <code>db.ts:28</code> + zero call sites (grep-verified); <code>backup.ts:12-19</code>, <code>:48</code>, <code>:63-73</code> (all verified line-exact); the stamping comment at <code>backup.ts:27-31</code>. <strong>external:</strong> WebKit ITP 7-day cap confirmed via webkit.org; local-first peers (Obsidian, Standard Notes) draw complaints precisely on recovery UX.</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>Device death and silent eviction are the only failure modes that destroy everything with no error and no recovery — the worst possible outcome for a product whose pitch is "your data never leaves your phone." Persistence without a complete backup still loses client data; a complete backup nobody makes still loses everything; a ritual over an evictable store is theatre. Three layers, one release.</p></dd>
+    <dt>Downsides</dt>
+    <dd><p>The registry-derived backup is a format change and needs the upgrade ladder shipped in the same release. "Close the day" is a new surface that must earn its place on summary value the provider actually wants, or it becomes a nag.</p></dd>
+  </dl>
+</article>
+
+<article class="idea" id="idea-3">
+  <div class="idea-head"><span class="rank">3.</span><h3>Re-spec epic #5 as a recall &amp; rebook engine, not an alphabetical list</h3></div>
+  <div class="chips">
+    <span class="chip conf-high">Confidence 80%</span>
+    <span class="chip cx">Complexity: Medium</span>
+    <span class="chip frames">5 frames converged</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p>Epic #5's stated scope is a filing cabinet: "alphabetical client list; client page with phone tap-to-call, notes, visit history newest-first." Build the <em>recall list</em> instead: derive each client's personal cadence (median gap between their own visits) from history already in the database, lead the screen with "due for a visit (7)" ranked overdue-first, and make the primary control a one-tap rebook — "same as last time, four weeks out" — that writes an appointment directly, demoting the multi-screen funnel to the exception path. Alphabetical browse becomes the secondary view. A prefilled WhatsApp/SMS nudge per due client rides along as the outreach channel.</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> <code>_provider.clients.tsx</code> is entirely a <code>&lt;Placeholder&gt;</code> (verified); <code>getVisitHistory</code> already returns non-cancelled visits newest-first; forward-looking next-visit logic exists <em>only on the client side</em> (<code>clientVisits.ts:28-39</code>) — the provider has no "who is due" computation at all. <strong>external:</strong> dental/optometry recall systems run on exactly this constraint — no push channel, revenue recovered by computing who is overdue from one's own records. The caveat is real: their interval is protocol-fixed; hair/nail cadence must be learned per client and shown as an overridable estimate.</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>An alphabetical list is a screen the provider maintains; a recall queue is a screen that makes them money — and it is the one thing paper genuinely cannot do. The app is named <em>when-again</em> and nothing in it currently answers that question. This is the last unbuilt provider screen and no spec exists yet, so reshaping it costs nothing today and a rewrite later.</p></dd>
+    <dt>Downsides</dt>
+    <dd><p>Cadence inference needs ≥2 visits per client to say anything; the screen must degrade gracefully to the plain list for new providers. Scope is larger than the epic's current body — this is a re-spec decision, not scope creep to smuggle in.</p></dd>
+  </dl>
+</article>
+
+<article class="idea" id="idea-4">
+  <div class="idea-head"><span class="rank">4.</span><h3>Make the handoff a two-way protocol: card, request, ack</h3></div>
+  <div class="chips">
+    <span class="chip conf-med">Confidence 65%</span>
+    <span class="chip cx">Complexity: High</span>
+    <span class="chip frames">4 frames converged</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p>The handoff's one-directionality is an accident of which way the QR points, not a constraint. Add payload <em>kinds</em> to the existing codec: <strong>card</strong> (a client hands over their own name and phone — the provider stops transcribing, and duplicate clients stop being created at the source), <strong>request</strong> (a client proposes a service and time window; the provider's inbox pre-fills the booking form), and <strong>ack</strong> (a tiny return link confirming the appointment landed). A no-tech companion: a 4-character match code derived from the appointment's canonical fields, rendered on both the provider's row and the client's card — read aloud at contact, it is a handoff receipt <em>and</em> staleness detection (codes differ ⇒ the client holds a pre-reschedule card). This also unlocks "your clients are your replica set": a provider whose phone died recovers their book gradually as regulars scan their copies back — recovery no competitor and no local-first tool has, using zero infrastructure.</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> <code>codec.ts:38</code> — "decode ignores unknown keys, so these are v:1-compatible both directions" (verified verbatim) — a kind discriminator ships without a version bump. The <code>Wire</code> interface has <strong>no client-name field</strong> (verified field-by-field), so payloads cannot yet say whose appointment they are: a cheap additive key today, impossible retroactively once payloads are in the wild. Client→provider payloads carry only an id and revision — orders of magnitude under the ~800-byte QR ceiling. <strong>external:</strong> client-initiated booking is the flagship feature Booksy/Fresha charge $20–30/mo for; LOCKSS is the honest analogy for the recovery path (regeneration, not restore — lazy, partial, only the clients who return).</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>"Did they get it?" is the provider's real anxiety and the reason paid tools sell delivery receipts. Doing requests, receipts, and disaster recovery with no server converts the architecture's apparent weakness into its moat — and the protocol change is one codec seam feeding three features.</p></dd>
+    <dt>Downsides</dt>
+    <dd><p>Largest design surface of the seven: an inbox UI, new payload kinds, and honest UX about what recovery can and cannot restore (never the provider's notes or prices). Do the additive client-name key early even if the rest waits.</p></dd>
+  </dl>
+  <figure>
+    <svg viewBox="0 0 720 168" role="img" aria-label="Today the payload flows provider to client only; the proposal adds card, request, and ack kinds flowing client to provider over the same codec">
+      <rect class="svg-box" x="20" y="30" width="170" height="46" rx="8"/>
+      <text class="svg-label" x="105" y="49" text-anchor="middle">Provider's phone</text>
+      <text class="svg-label-soft" x="105" y="65" text-anchor="middle">schedule · client book</text>
+      <rect class="svg-box" x="530" y="30" width="170" height="46" rx="8"/>
+      <text class="svg-label" x="615" y="49" text-anchor="middle">Client's phone</text>
+      <text class="svg-label-soft" x="615" y="65" text-anchor="middle">installs nothing</text>
+      <path class="svg-arrow" d="M190 42 L525 42" marker-end="url(#ar2)"/>
+      <text class="svg-label" x="357" y="34" text-anchor="middle">appointment (today — the only direction)</text>
+      <path class="svg-arrow" d="M525 100 L190 100" marker-end="url(#ar2)" stroke-dasharray="5 4"/>
+      <text class="svg-label" x="357" y="92" text-anchor="middle">card · request · ack (proposed kinds)</text>
+      <text class="svg-label-soft" x="357" y="126" text-anchor="middle">same codec, same URL-fragment link over WhatsApp/QR — additive keys, no version bump</text>
+      <text class="svg-label-soft" x="357" y="150" text-anchor="middle">side effect: every client's copy becomes a shard of the provider's backup</text>
+      <defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--ink-soft)"/></marker></defs>
+    </svg>
+    <figcaption>One seam, three features: capture-at-source identity, requests, receipts — plus lazy disaster recovery.</figcaption>
+  </figure>
+</article>
+
+<article class="idea" id="idea-5">
+  <div class="idea-head"><span class="rank">5.</span><h3>Stop shipping the provider app to clients on first load</h3></div>
+  <div class="chips">
+    <span class="chip conf-high">Confidence 90%</span>
+    <span class="chip cx">Complexity: Low</span>
+    <span class="chip frames">Constraint-flip frame · verified by real build</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p>The verifier ran <code>npm run build</code> and confirmed it: <code>dist/index.html</code> unconditionally <code>modulepreload</code>s the schedule chunk (121.8&nbsp;KB) and booking chunk (80.1&nbsp;KB) for every visitor — provider-only code a client can never reach — because the <code>/</code> route's <code>Home()</code> component statically imports both <code>ClientHome</code> and <code>ScheduleScreen</code> and branches at runtime on <code>settings.mode</code>. TanStack Router's <code>autoCodeSplitting</code> is already on and already splits per-route; it cannot split a runtime branch inside one file. The fix is small and precise: <code>React.lazy</code> the two branches inside <code>Home()</code> (and audit the preload hints), then add a CI size budget on the client entry so the property is a ratchet, not a one-time cleanup.</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> zero <code>lazy</code>/<code>import(</code> hits in <code>src/app/</code> (verified), <code>autoCodeSplitting: true</code> at <code>vite.config.ts:46</code>, and the build-output evidence above — stronger than the original candidate claimed, with the diagnosis corrected by the verifier.</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>The client's first load is the most fragile moment in the product — worst device, worst network, zero motivation, one shot — and it currently downloads ~200&nbsp;KB (pre-gzip) of unreachable code. The "client installs nothing" differentiator is undermined by making them download the provider application. And it matters <em>more</em> once idea #1 ships: when the calendar carries the reminder, first-load weight becomes nearly the entire client experience.</p></dd>
+    <dt>Downsides</dt>
+    <dd><p>Almost none — a lazy boundary adds one loading state to the mode branch. The cheapest item on this list relative to its payoff.</p></dd>
+  </dl>
+  <figure>
+    <svg viewBox="0 0 720 140" role="img" aria-label="Bar comparison: what a client downloads today versus after the fix">
+      <text class="svg-label" x="20" y="28">Client's first load today</text>
+      <rect x="20" y="36" width="130" height="22" rx="4" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1"/>
+      <text class="svg-label-soft" x="85" y="51" text-anchor="middle">app shell + client UI</text>
+      <rect x="152" y="36" width="240" height="22" rx="4" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1"/>
+      <text class="svg-label-soft" x="272" y="51" text-anchor="middle">schedule 121.8 KB — unreachable</text>
+      <rect x="394" y="36" width="160" height="22" rx="4" fill="var(--bad-soft)" stroke="var(--bad)" stroke-width="1"/>
+      <text class="svg-label-soft" x="474" y="51" text-anchor="middle">booking 80.1 KB — unreachable</text>
+      <text class="svg-label" x="20" y="96">After lazy mode-branch</text>
+      <rect x="20" y="104" width="130" height="22" rx="4" fill="var(--good-soft)" stroke="var(--good)" stroke-width="1"/>
+      <text class="svg-label-soft" x="85" y="119" text-anchor="middle">app shell + client UI</text>
+      <text class="svg-label-soft" x="170" y="119">provider chunks load only when a provider needs them</text>
+    </svg>
+    <figcaption>Measured from a real production build, not estimated. Sizes pre-gzip.</figcaption>
+  </figure>
+</article>
+
+<article class="idea" id="idea-6">
+  <div class="idea-head"><span class="rank">6.</span><h3>Make the hard constraints executable: CI gates for the rules that are prose today</h3></div>
+  <div class="chips">
+    <span class="chip conf-high">Confidence 85%</span>
+    <span class="chip cx">Complexity: Low</span>
+    <span class="chip frames">3 frames converged</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p>Every architectural invariant lives in Markdown and is enforced by whoever happened to read it. Encode the checkable ones: <code>no-restricted-imports</code> zones per module (index-only imports, <code>dexie</code> allowlist), <code>import/no-cycle</code>, grep gates for <code>dark:</code> variants / a hardcoded <code>/when-again/</code> / a <code>shared/</code> folder, a test pinning <code>listClients</code>'s <code>localeCompare</code> sort (the documented "do NOT clean up" Cyrillic trap), and — the verifier's sharpened remainder — a check on the <code>main.tsx</code> string-table composition (a module registered in <code>en</code> but not <code>bg</code> typechecks fine today) plus a glossary gate for cross-module drift: "Отменен" vs "Отказан" for <em>cancelled</em> is live right now across three string files. Per-module key parity is <em>already</em> tested in CI; these two gaps are what remain.</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> boundary audit clean repo-wide as of 2026-08-18 — true and unenforced; the glossary drift verified at <code>shell/strings.ts:129</code> / <code>handoff/strings.ts:62</code> vs <code>schedule/strings.ts:72</code>. <strong>reasoned:</strong> this repo's stated process is subagent-driven implementation, so the effective contributor count is unbounded and none of them remember a spec comment from three weeks ago. A rule that exists as prose has a per-agent violation probability; a gate makes every future agent-written PR safe by construction.</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>The cheapest moment to make an invariant executable is while it still holds — it locks in a property instead of recovering one. Pairs naturally with reconciling epics #9/#10 down to their real remaining scope (both verified as largely shipped), so the repo's map matches its territory in both directions.</p></dd>
+    <dt>Downsides</dt>
+    <dd><p>Lint-config surface and occasional false positives; the glossary gate needs a small curated term list to avoid becoming noise.</p></dd>
+  </dl>
+</article>
+
+<article class="idea" id="idea-7">
+  <div class="idea-head"><span class="rank">7.</span><h3>Decide what <code>shell</code> is: mode as the module seam — or no mode at all</h3></div>
+  <div class="chips">
+    <span class="chip conf-med">Confidence 55%</span>
+    <span class="chip cx">Complexity: High</span>
+    <span class="chip frames">2 frames, opposed conclusions — a genuine fork</span>
+  </div>
+  <dl class="fields">
+    <dt>Description</dt>
+    <dd><p><code>shell</code> is 30 files / ~2,046&nbsp;LOC with 11 public exports spanning app chrome, both home screens, settings, update UI, and theming — nearly double the next-largest module, and the default destination for every new screen. Two frames drew opposite conclusions, and both are defensible. <strong>Option A — mode as the axis:</strong> split out a <code>mode</code> module owning <code>ModeGate</code>/<code>FirstRunChooser</code>/switching, give each mode's home its own module, leave a thin frame; "which mode does this belong to?" becomes the placement rule for the next three screens. <strong>Option B — delete mode:</strong> treat provider/client as a property of <em>data</em>, not the device — one home with "Today" (appointments you own) and "Yours" (appointments you received), empty sections collapsed; the first booking or first imported link becomes onboarding. B also fixes the worst first-run moment: a stranger opening an import link being asked to declare an identity before seeing their appointment.</p></dd>
+    <dt>Basis</dt>
+    <dd><p><strong>direct:</strong> the export list and <code>ModeGate.tsx:18-19</code> verified line-exact; project memory records "providers are also clients; mode not locked at onboarding" — the north star both options serve. Caveat from verification: whether <code>/import</code> itself sits behind <code>ModeGate</code> was not traced; confirm before weighting B's onboarding argument.</p></dd>
+    <dt>Rationale</dt>
+    <dd><p>A module that is the default destination is a namespace, not a module. The product's core user is one human who is both provider and client; mode currently has no first-class home in the code (A) — or arguably shouldn't exist at all (B). Whichever way it goes, the decision determines where epic #5's screen and every subsequent screen lands, so it is cheapest to make now.</p></dd>
+    <dt>Downsides</dt>
+    <dd><p>Option B reworks a concept shipped three days ago and needs careful UX for the pure-provider majority. Option A is a large mechanical refactor with no user-visible payoff of its own. Ranked last not because it is weak but because it is the biggest decision with the least external forcing function.</p></dd>
+  </dl>
+</article>
+
+</section>
+
+<section id="rejection-summary">
+<h2>Rejection Summary</h2>
+<table>
+  <thead><tr><th>#</th><th>Idea</th><th>Reason rejected</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Draft persistence as an architecture unlock (retire the SW <code>prompt</code> strategy)</td><td>Central inference contradicted by issue #29 itself, which frames persistence as "belt-and-suspenders" alongside the SW choice, not a replacement. The small fix remains worth doing as filed.</td></tr>
+    <tr><td>2</td><td>Promote <code>formatDayLabel</code> into the <code>time</code> leaf</td><td>Consumer count was inflated (3 modules, not 5); mechanical relocation below the discussion floor. The claimed link to the <code>.ics</code> work was fabricated — an <code>.ics</code> DTSTART is a trivial string transform, not <code>formatDayLabel</code>.</td></tr>
+    <tr><td>3</td><td>Provider card scanned once + near-empty appointment payloads</td><td>Sound, but it is one byte-budget decision together with the human-legible link slug (below) — parked as a named future decision to make jointly, likely alongside idea #4's protocol work.</td></tr>
+    <tr><td>4</td><td>Human-legible slug in the share link</td><td>Same byte-budget decision as the provider card; parked with it.</td></tr>
+    <tr><td>5</td><td>Recovery-phrase-derived provider identity (reopen ADR-0002)</td><td>Sound, but ideas #2 and #4 cover the same device-death ground with better ROI; revisit if both ship and identity splits still hurt.</td></tr>
+    <tr><td>6</td><td>Client mode as a lifelong multi-provider visit record (Carte Jaune)</td><td>Sound and strategic — consumed into idea #1's sequencing decision (it is the candidate answer to "what keeps the client PWA alive once the calendar carries the reminder"), not lost.</td></tr>
+    <tr><td>7</td><td>Morning nudge strip (day-of WhatsApp/SMS reminders)</td><td>Mechanism sound; headline stats weakly sourced (the ~98% open rate is unverified marketing folklore; WhatsApp-dominance-in-Bulgaria unconfirmed). Lives naturally inside idea #3's screen as an adjacent option.</td></tr>
+    <tr><td>8</td><td>Standby list for freed slots</td><td>Real but small standalone; the airline analogy's own disclaimer missed that real standby is tier-ranked, not first-come. Adjacent to idea #3; build after the recall queue exists.</td></tr>
+    <tr><td>9</td><td>Never build the services editor — presets already exist</td><td>Its correction of the grounding was right (presets exist), but its own remaining scope was already shipped too: the preset pills render in the booking form today. What is left — one delete/edit affordance — is a small issue, not a direction.</td></tr>
+    <tr><td>10</td><td>Locale parity in CI</td><td>Half-solved already: per-module key parity is tested in CI. The real remainder (composition gap + glossary drift) was folded into idea #6.</td></tr>
+    <tr><td>11</td><td>Deterministic provider seal (visual identity)</td><td>Sound and honestly bounded (anti-confusion, not anti-impersonation) but lower expected value than the seven above; revisit after idea #4 settles the identity surfaces it would decorate.</td></tr>
+  </tbody>
+</table>
+<p>Note on process: two of the six generating frames' verifiers ran <em>against</em> the run's own grounding and found errors in it (an inflated consumer count; a superseded "no presets" claim). Both corrections are reflected above.</p>
+</section>
+
+<footer class="composition-signal">Composed 2026-08-18 by ce-ideate (surprise-me run, six ceiling-tier frames + adversarial verification) from repo grounding of <code>p-dim-popov/when-again</code> @ <code>29a71f2</code>, project docs/issues, and 2026 external research.</footer>
+
+</div>
+</body>
+</html>
